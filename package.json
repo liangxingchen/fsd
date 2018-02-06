@@ -1,0 +1,40 @@
+{
+  "name": "fsd-dev",
+  "version": "0.1.0",
+  "description": "General file system driver for Node.js",
+  "main": "index.js",
+  "scripts": {
+    "eslint": "eslint ./",
+    "fix": "eslint --fix ./",
+    "flow": "flow check --show-all-errors"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maichong/fsd.git"
+  },
+  "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/maichong/fsd/issues"
+  },
+  "homepage": "https://github.com/maichong/fsd#readme",
+  "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "babel-plugin-syntax-class-properties": "^6.13.0",
+    "babel-plugin-syntax-flow": "^6.18.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.17.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-flowtype": "^2.42.0",
+    "eslint-plugin-flowtype-errors": "^3.3.7",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.6.1",
+    "flow-bin": "^0.64.0",
+    "flow-declarations": "^0.3.1",
+    "lerna": "^2.8.0"
+  }
+}

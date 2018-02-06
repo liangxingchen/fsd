@@ -1,0 +1,15 @@
+[ignore]
+.*/build/.*
+.*/dist/.*
+.*/node_modules/.*
+scripts/.*
+.*/test/.*
+
+[libs]
+node_modules/flow-declarations/flow/
+flow/
+
+[options]
+suppress_comment= \\(.\\|\n\\)*\\$Flow
+esproposal.decorators=ignore
+esproposal.export_star_as=enable

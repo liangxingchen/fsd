@@ -1,0 +1,11 @@
+{
+  "name": "fsd",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  },
+  "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd",
+  "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
+  "license": "MIT"
+}
