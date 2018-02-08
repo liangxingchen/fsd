@@ -35,15 +35,12 @@ module.exports = class FSAdapter {
       let stream: stream$Readable = data;
       await new Promise((resolve, reject) => {
         fs.stat(p, (error, stat) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-          let writeStream = fs.createWriteStream({
+          let start = error ? 0 : stat.size;
+          let writeStream = fs.createWriteStream(p, {
             mode,
-            start: stat.size
+            start
           });
-          stream.pipe(writeStream).on('end', () => resolve()).on('error', (e) => reject(e));
+          stream.pipe(writeStream).on('close', resolve).on('error', reject);
         });
       });
       return;

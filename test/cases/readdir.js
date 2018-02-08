@@ -5,7 +5,9 @@ export default function (fsd: fsdFn) {
   test('readdir', (troot) => {
     test('mkdir abc', async(t) => {
       let dir = fsd('/abc');
-      await dir.mkdir();
+      if (!(await dir.exists())) {
+        await dir.mkdir();
+      }
       t.ok(await dir.exists(), 'mkdir error');
       t.end();
     });
