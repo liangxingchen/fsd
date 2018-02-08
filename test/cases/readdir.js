@@ -11,9 +11,16 @@ export default function (fsd: fsdFn) {
       let dir = fsd(dirPath);
       let aFile = fsd(aFilePath);
       let bFile = fsd(bFilePath);
-      await dir.mkdir();
-      await aFile.write();
-      await bFile.write();
+      if (!(await dir.exists())) {
+        await dir.mkdir();
+      }
+      if (!(await aFile.exists())) {
+        await aFile.mkdir();
+      }
+      if (!(await bFile.exists())) {
+        await bFile.mkdir();
+      }
+
       t.ok(await dir.exists(), 'mkdir error');
       t.ok(await aFile.exists(), 'write error');
       t.ok(await bFile.exists(), 'write error');

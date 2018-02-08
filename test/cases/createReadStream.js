@@ -4,22 +4,24 @@ import type { fsd as fsdFn } from 'fsd';
 export default function (fsd: fsdFn) {
   test('createReadStream', (troot) => {
     let filePath = `/awesome.txt`;
+    let testPath = '/testAwesome.txt';
+    let appendStr = 'hello world';
     test('before createReadStream', async(t) => {
       let file = fsd(filePath);
       if (!(await file.exists())) {
-        await file.append('hello world');
+        await file.append(appendStr);
       }
       t.end();
     });
 
     test('createReadStream awesome.txt', async(t) => {
       let file = fsd(filePath);
-      try {
-        await file.createReadStream();
-        t.ok(true, 'createReadStream no options');
-      } catch (err) {
-        t.notOk(err, 'createReadStream no options');
-      }
+      let testFile = fsd(testPath);
+      let stream = await file.createReadStream();
+      await testFile.write(stream);
+      let readStr = await testFile.read('utf8');
+      t.equal(readStr, appendStr, 'createReadStream no options');
+      await testFile.unlink();
       t.end();
     });
 

@@ -34,11 +34,11 @@ module.exports = class FSDFile {
       length = 0;
     }
     let options = {};
-    if (position) {
+    if (position || position === 0) {
       options.start = position;
     }
     if (length) {
-      options.end = position + length;
+      options.end = (position + length) - 1;
     }
     let stream = await this._adapter.createReadStream(this.path, options);
     return await new Promise((resolve, reject) => {
