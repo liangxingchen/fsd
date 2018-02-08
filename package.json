@@ -4,7 +4,7 @@
   "description": "General file system driver for Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test tape test/run.js",
+    "test": "cross-env NODE_ENV=test tape test/babel.js",
     "cover": "cross-env NODE_ENV=test nyc node_modules/.bin/tape test/run.js; nyc report --reporter=html",
     "eslint": "eslint ./",
     "fix": "eslint --fix ./",
@@ -20,8 +20,16 @@
     "url": "https://github.com/maichong/fsd/issues"
   },
   "homepage": "https://github.com/maichong/fsd#readme",
+  "nyc": {
+    "require": [
+      "babel-register"
+    ],
+    "sourceMap": false,
+    "instrument": false
+  },
   "devDependencies": {
     "babel-eslint": "^8.2.1",
+    "babel-plugin-istanbul": "^4.1.5",
     "babel-plugin-syntax-class-properties": "^6.13.0",
     "babel-plugin-syntax-flow": "^6.18.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
@@ -38,7 +46,7 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.6.1",
-    "flow-bin": "^0.64.0",
+    "flow-bin": "^0.65.0",
     "flow-declarations": "git+https://github.com/maichong/flow-declarations.git",
     "lerna": "^2.8.0",
     "mkdirp": "^0.5.1",

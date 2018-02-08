@@ -7,7 +7,6 @@ export default function (fsd: fsdFn) {
     test('mkdir abc', async(t) => {
       let dir = fsd('/abc');
       await dir.mkdir();
-      dir.rename('/123');
       t.ok(await dir.exists(), 'mkdir error');
       t.end();
     });

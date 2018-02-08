@@ -3,10 +3,6 @@ const glob = require('glob');
 const del = require('del');
 const mkdirp = require('mkdirp');
 
-require('babel-register')({
-  ignore: /node_modules/
-});
-
 const FSD = require('../packages/fsd/src/fsd');
 const FSAdapter = require('../packages/fsd-fs/src/index');
 const OSSAdapter = require('../packages/fsd-oss/src/index');
