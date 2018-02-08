@@ -4,17 +4,15 @@ import type { fsd as fsdFn } from 'fsd';
 export default function (fsd: fsdFn) {
   test('mkdir', (troot) => {
 
-    test('mkdir abc', async(t) => {
-      let dir = fsd('/abc');
+    test('mkdir awesome', async(t) => {
+      let dir = fsd('/awesome');
       await dir.mkdir();
-      t.ok(await dir.exists(), 'mkdir error');
+      t.ok(await dir.exists(), 'mkdir awesome');
       t.end();
     });
 
-    // .....
-
     test('clear', async(t) => {
-      let dir = fsd('/abc');
+      let dir = fsd('/awesome');
       if (await dir.exists()) {
         await dir.unlink();
       }
