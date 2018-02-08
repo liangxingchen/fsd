@@ -7,8 +7,10 @@
 .*/lib/.*
 
 [libs]
+flow-declarations/minimatch/
 flow-declarations/glob/
 flow-declarations/mz/
+flow-declarations/rimraf/
 flow-declarations/is-stream/
 flow/
 

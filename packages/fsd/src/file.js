@@ -27,7 +27,7 @@ module.exports = class FSDFile {
     return this._adapter.append(this.path, data);
   }
 
-  read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
+  async read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
     if (position && typeof position === 'string') {
       encoding = position;
       position = 0;
@@ -40,8 +40,8 @@ module.exports = class FSDFile {
     if (length) {
       options.end = position + length;
     }
-    let stream = this._adapter.createReadStream(this.path, options);
-    return new Promise((resolve, reject) => {
+    let stream = await this._adapter.createReadStream(this.path, options);
+    return await new Promise((resolve, reject) => {
       let buffers = [];
       stream.on('error', reject);
       stream.on('data', (data) => buffers.push(data));
