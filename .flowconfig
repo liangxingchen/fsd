@@ -2,11 +2,14 @@
 .*/build/.*
 .*/dist/.*
 .*/node_modules/.*
-scripts/.*
+.*/flow-declarations/.*
 .*/test/.*
+.*/lib/.*
 
 [libs]
-node_modules/flow-declarations/flow/
+flow-declarations/glob/
+flow-declarations/mz/
+flow-declarations/is-stream/
 flow/
 
 [options]

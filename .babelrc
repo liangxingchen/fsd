@@ -1,0 +1,17 @@
+{
+  "presets": [
+    [
+      "env", {
+      "targets": {
+        "node": "8.9"
+      }
+    }
+    ]
+  ],
+  "plugins": [
+    "syntax-flow",
+    "transform-class-properties",
+    "transform-flow-strip-types",
+    "transform-object-rest-spread"
+  ]
+}

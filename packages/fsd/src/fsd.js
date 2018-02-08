@@ -1,9 +1,13 @@
 // @flow
 
-import type { Options, fsd } from 'fsd';
+import type { DriverOptions } from 'fsd';
 
-function FSD(options: Options): fsd {
+const FSDFile = require('./file');
 
+function FSD(options: DriverOptions) {
+  return function fsd(path: string) {
+    return new FSDFile(path, options.adapter);
+  };
 }
 
 module.exports = FSD;

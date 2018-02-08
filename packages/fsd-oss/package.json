@@ -1,12 +1,12 @@
 {
-  "name": "fsd",
+  "name": "fsd-oss",
   "version": "0.0.1",
-  "description": "General file system driver for Node.js",
-  "main": "lib/fsd.js",
+  "description": "Aliyun OSS adapter for fsd",
+  "main": "lib/index.js",
   "scripts": {
     "build": "babel -d lib src"
   },
-  "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd",
+  "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd-oss",
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
   "devDependencies": {
@@ -19,6 +19,6 @@
     "babel-preset-env": "^1.6.1"
   },
   "dependencies": {
-    "is-stream": "^1.1.0"
+    "rimraf": "^2.6.2"
   }
 }

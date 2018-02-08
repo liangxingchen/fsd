@@ -1,14 +1,19 @@
 {
-  "name": "fsd",
+  "name": "fsd-fs",
   "version": "0.0.1",
-  "description": "General file system driver for Node.js",
-  "main": "lib/fsd.js",
+  "description": "File system adapter for fsd",
+  "main": "lib/index.js",
   "scripts": {
     "build": "babel -d lib src"
   },
-  "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd",
+  "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd-fs",
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
+  "dependencies": {
+    "glob": "^7.1.2",
+    "is-stream": "^1.1.0",
+    "mz": "^2.7.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-syntax-class-properties": "^6.13.0",
@@ -17,8 +22,5 @@
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1"
-  },
-  "dependencies": {
-    "is-stream": "^1.1.0"
   }
 }
