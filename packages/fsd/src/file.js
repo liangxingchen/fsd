@@ -90,7 +90,7 @@ module.exports = class FSDFile {
   }
 
   async readdir(recursion?: true | string): Promise<FSDFile[]> {
-    let files = this._adapter.readdir(this.path, recursion);
+    let files = await this._adapter.readdir(this.path, recursion);
     return files.map((file) => new FSDFile(file));
   }
 
