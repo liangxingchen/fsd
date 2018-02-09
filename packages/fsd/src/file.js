@@ -126,7 +126,7 @@ module.exports = class FSDFile {
       stream = new PassThrough();
       stream.end(data);
     }
-    return this._adapter.writePart(this.path, stream);
+    return this._adapter.writePart(this.path, part, stream);
   }
 
   completeMultipartUpload(parts: string[]): Promise<void> {
