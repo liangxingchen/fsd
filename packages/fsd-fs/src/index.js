@@ -165,6 +165,16 @@ module.exports = class FSAdapter {
     return files;
   }
 
+  async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
+    let info = URL.parse(path);
+    if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
+    let writeStream = await this.createWriteStream(partTask);
+    await new Promise((resolve, reject) => {
+      data.pipe(writeStream).on('end', resolve).on('error', reject);
+    });
+    return partTask;
+  }
+
   async completeMultipartUpload(path: string, parts: string[]): Promise<void> {
     let files = [];
     for (let part of parts) {

@@ -3,6 +3,7 @@
 import type { Adapter } from 'fsd';
 
 const Path = require('path');
+const { PassThrough } = require('stream');
 const isStream = require('is-stream');
 
 module.exports = class FSDFile {
@@ -56,15 +57,11 @@ module.exports = class FSDFile {
     });
   }
 
-  write(data: string | Buffer | stream$Readable): Promise<void> {
-    return this._write(this.path, data);
-  }
-
-  async _write(path: string, data: string | Buffer | stream$Readable): Promise<void> {
-    let stream = await this._adapter.createWriteStream(path);
+  async write(data: string | Buffer | stream$Readable): Promise<void> {
+    let stream = await this._adapter.createWriteStream(this.path);
     await new Promise((resolve, reject) => {
       stream.on('error', reject);
-      stream.on('close', resolve);
+      stream.on('finish', resolve);
       if (isStream.readable(data)) {
         data.pipe(stream);
       } else {
@@ -122,9 +119,14 @@ module.exports = class FSDFile {
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
-  writePart(part: string, data: string | Buffer | stream$Readable): Promise<void> {
+  writePart(part: string, data: string | Buffer | stream$Readable): Promise<string> {
     if (!part.startsWith('part:')) throw new Error('Invalid part link');
-    return this._write(part, data);
+    let stream: stream$Readable = data;
+    if (!isStream.readable(data)) {
+      stream = new PassThrough();
+      stream.end(data);
+    }
+    return this._adapter.writePart(this.path, stream);
   }
 
   completeMultipartUpload(parts: string[]): Promise<void> {
