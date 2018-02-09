@@ -2,9 +2,8 @@
 
 import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions } from 'fsd';
 
-const co = require('co');
 const Path = require('path');
-const fs = require('mz/fs');
+const co = require('co');
 const OSS = require('ali-oss');
 
 // const oss = OSS();
@@ -17,7 +16,7 @@ module.exports = class OSSAdapter {
   }
 
   async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
-    
+    await co(this._options.append(path, data));
   }
 
   async createReadStream(path: string, options?: ReadStreamOptions): Promise<stream$Readable> {
