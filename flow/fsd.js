@@ -48,7 +48,7 @@ declare module fsd {
     isFile(): Promise<boolean>;
     isDirectory(): Promise<boolean>;
     initMultipartUpload(partCount: number): Promise<string[]>;
-    writePart(part: string, data: string | Buffer | stream$Readable): Promise<void>;
+    writePart(partTask: string, data: string | Buffer | stream$Readable): Promise<string>;
     completeMultipartUpload(parts: string[]): Promise<void>;
     toString(): string;
     toJSON(): string;
@@ -69,6 +69,7 @@ declare module fsd {
     isFile(path: string): Promise<boolean>;
     isDirectory(path: string): Promise<boolean>;
     initMultipartUpload(path: string, partCount: number): Promise<string[]>;
+    writePart(path: string, partTask: string, data: string | Buffer | stream$Readable): Promise<string>;
     completeMultipartUpload(path: string, parts: string[]): Promise<void>;
   }
 
