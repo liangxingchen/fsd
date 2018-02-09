@@ -19,6 +19,8 @@
     "babel-preset-env": "^1.6.1"
   },
   "dependencies": {
-    "rimraf": "^2.6.2"
+    "rimraf": "^2.6.2",
+    "ali-oss": "^4.12.1",
+    "co": "^4.6.0"
   }
 }

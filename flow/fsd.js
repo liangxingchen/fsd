@@ -11,13 +11,12 @@ declare module fsd {
   }
 
   declare interface OSSAdapterOptions {
+    root: string;
+    urlPrefix: string;
     accessKeyId: string;
     accessKeySecret: number;
     bucket: string;
     endpoint: string;
-  }
-
-  declare interface OSSAdapterOptions {
   }
 
   declare interface ReadStreamOptions {
