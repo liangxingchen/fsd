@@ -166,9 +166,9 @@ module.exports = class FSAdapter {
   }
 
   async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
-    let info = URL.parse(path);
+    let info = URL.parse(partTask);
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
-    let writeStream = await this.createWriteStream(partTask);
+    let writeStream = await this.createWriteStream(path);
     await new Promise((resolve, reject) => {
       data.pipe(writeStream).on('end', resolve).on('error', reject);
     });

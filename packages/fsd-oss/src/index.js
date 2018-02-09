@@ -4,6 +4,7 @@ import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions } from 'f
 
 const Path = require('path');
 const co = require('co');
+const fs = require('mz/fs');
 const OSS = require('ali-oss');
 
 // const oss = OSS();
@@ -118,5 +119,40 @@ module.exports = class OSSAdapter {
     } catch (e) {
       return false;
     }
+  }
+
+  async initMultipartUpload(path: string, partCount: number): Promise<string[]> {
+    let res = await co(this._options._initMultipartUpload(path));
+    let taskId = 'upload-' + res.uploadId + '-';
+    let files = [];
+    for (let i = 1; i <= partCount; i += 1) {
+      files.push('part:' + taskId + i + path + '?' + i);
+    }
+    return files;
+  }
+
+  async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
+    let info = URL.parse(partTask);
+    if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
+    let stats = await fs.stat(path);
+    let matchs = info.hostname.match(/upload-(.+)-\d/);
+    if (!matchs) throw new Error('Invalid part hostname');
+    let uploadId = matchs[1];
+    let res = await co(this._options._uploadPart(path, uploadId, info.query, {
+      stream: data,
+      size: stats.size
+    }));
+    let etag = res.etag.replace(/"/g, '');
+    return uploadId + ',' + etag;
+  }
+
+  async completeMultipartUpload(path: string, parts: string[]): Promise<void> {
+    let onePart = parts[0];
+    let uploadId = onePart.split(',')[0];
+    let datas = parts.map((item, key) => ({
+      etag: item.split(',')[1],
+      number: key + 1
+    }));
+    await co(this._options._completeMultipartUpload(path, uploadId, datas));
   }
 };
