@@ -19,7 +19,8 @@ glob('cases/*', {
       del.sync('/tmp/fsd', { force: true });
       mkdirp.sync('/tmp/fsd');
       let adapter = new FSAdapter({
-        root: '/tmp/fsd',
+        //root: '/tmp/fsd',
+        root: process.cwd() + '/test',
         urlPrefix: 'http://localhost',
         tmpdir: '/tmp/fsd-tmp'
       });

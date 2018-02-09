@@ -27,21 +27,21 @@ module.exports = class FSDFile {
     return this._adapter.append(this.path, data);
   }
 
-  read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
+  async read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
     if (position && typeof position === 'string') {
       encoding = position;
       position = 0;
       length = 0;
     }
     let options = {};
-    if (position) {
+    if (position || position === 0) {
       options.start = position;
     }
     if (length) {
-      options.end = position + length;
+      options.end = (position + length) - 1;
     }
-    let stream = this._adapter.createReadStream(this.path, options);
-    return new Promise((resolve, reject) => {
+    let stream = await this._adapter.createReadStream(this.path, options);
+    return await new Promise((resolve, reject) => {
       let buffers = [];
       stream.on('error', reject);
       stream.on('data', (data) => buffers.push(data));
@@ -90,7 +90,7 @@ module.exports = class FSDFile {
   }
 
   async readdir(recursion?: true | string): Promise<FSDFile[]> {
-    let files = this._adapter.readdir(this.path, recursion);
+    let files = await this._adapter.readdir(this.path, recursion);
     return files.map((file) => new FSDFile(file));
   }
 
