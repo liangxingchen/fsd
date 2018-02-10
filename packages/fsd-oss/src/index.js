@@ -5,9 +5,9 @@ import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions } from 'f
 const Path = require('path');
 const buffer = require('buffer');
 const co = require('co');
-const fs = require('mz/fs');
 const OSS = require('ali-oss');
 const _ = require('lodash');
+const minimatch = require('minimatch')
 
 module.exports = class OSSAdapter {
   _options: OSSAdapterOptions;
@@ -110,10 +110,29 @@ module.exports = class OSSAdapter {
     if (!isExists) {
       throw new Error('The path is not found');
     }
-    let list = await co(this._oss.list({ prefix: p }));
-    for (let obj of list.objects) {
-      if (obj.name.endsWith('/')) {
-        list.objects.concat(this.readdir(obj.name, recursion));
+    let objects = await this.recursive(p, recursion);
+    if (recursion === true) {
+      recursion = '**/**';
+    }
+    let pattern = recursion || '**';
+    objects = _.filter(objects, (obj) => {
+      let name = obj.name.endsWith('/') ? obj.name.substr(0, obj.name.length - 1) : obj.name;
+      return name.length > p.length && minimatch(name, pattern);
+    });
+    let names = _.map(objects, (obj) => {
+      let name = obj.name.endsWith('/') ? obj.name.substr(0, obj.name.length - 1) : obj.name;
+      return name.substr(p.length + 1);
+    });
+    return names;
+  }
+
+  async recursive(path: string, recursion?: true | string) {
+    let list = await co(this._oss.list({ prefix: path }));
+    if (recursion) {
+      for (let obj of list.objects) {
+        if (obj.name.endsWith('/')) {
+          list.objects.concat(this.recursive(obj.name));
+        }
       }
     }
     return list.objects;
