@@ -13,8 +13,8 @@ declare module fsd {
   declare interface OSSAdapterOptions {
     root: string;
     urlPrefix: string;
-    accessKeyId: string;
-    accessKeySecret: number;
+    keyId: string;
+    secret: string;
     bucket: string;
     endpoint: string;
   }
