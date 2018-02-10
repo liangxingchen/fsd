@@ -227,7 +227,7 @@ module.exports = class OSSAdapter {
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<string[]> {
-    let res = await co(this._options._initMultipartUpload(path));
+    let res = await co(this._oss._initMultipartUpload(path));
     let taskId = 'upload-' + res.uploadId + '-';
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
@@ -243,7 +243,7 @@ module.exports = class OSSAdapter {
     let matchs = info.hostname.match(/upload-(.+)-\d/);
     if (!matchs) throw new Error('Invalid part hostname');
     let uploadId = matchs[1];
-    let res = await co(this._options._uploadPart(path, uploadId, info.query, {
+    let res = await co(this._oss._uploadPart(path, uploadId, info.query, {
       stream: data,
       size: stats.size
     }));
@@ -258,6 +258,6 @@ module.exports = class OSSAdapter {
       etag: item.split(',')[1],
       number: key + 1
     }));
-    await co(this._options._completeMultipartUpload(path, uploadId, datas));
+    await co(this._oss._completeMultipartUpload(path, uploadId, datas));
   }
 };
