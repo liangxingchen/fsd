@@ -98,16 +98,8 @@ module.exports = class OSSAdapter {
   async readdir(path: string, recursion?: true | string): Promise<string[]> {
     const { root } = this._options;
     let p = Path.join(root, path);
-    if (p.startsWith('/')) {
-      p = p.substr(1);
-    }
-    if (!p.endsWith('/')) {
-      p += '/';
-    }
     let isExists = await this.exists(p);
-    if (!isExists) {
-      throw new Error('The path is not found');
-    }
+    if (!isExists) throw new Error('The path is not found');
     let objects = await this.recursive(p, recursion);
     if (recursion === true) {
       recursion = '**/**';
@@ -169,16 +161,16 @@ module.exports = class OSSAdapter {
       let list = await co(this._oss.list({ prefix: from }));
       for (let obj of list.objects) {
         let fromPath = obj.name.substr(root.length + 1);
-        let basename = obj.name.substr(from.length + 1);
-        let toPath = to.substr(root.length + 1);
+        let basename = obj.name.substr(from.length);
+        let toPath = Path.join(to.substr(root.length + 1), basename);
         this.rename(fromPath, toPath);
       }
     }
     try {
       await co(this._oss.copy(path, dist));
-      await co(this.unlink(from));
+      await co(this._oss.delete(from));
     } catch (e) {
-      await co(this.unlink(to));
+      await co(this._oss.delete(to));
     }
   }
 
