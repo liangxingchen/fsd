@@ -4,6 +4,7 @@ import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions } from 'f
 
 const Path = require('path');
 const buffer = require('buffer');
+const fs = require('mz/fs');
 const co = require('co');
 const OSS = require('ali-oss');
 const _ = require('lodash');
