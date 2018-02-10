@@ -25,10 +25,16 @@ module.exports = class FSDFile {
   }
 
   append(data: string | Buffer | stream$Readable): Promise<void> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not end with /');
+    }
     return this._adapter.append(this.path, data);
   }
 
   async read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not end with /');
+    }
     if (position && typeof position === 'string') {
       encoding = position;
       position = 0;
@@ -58,6 +64,9 @@ module.exports = class FSDFile {
   }
 
   async write(data: string | Buffer | stream$Readable): Promise<void> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not end with /');
+    }
     let stream = await this._adapter.createWriteStream(this.path);
     await new Promise((resolve, reject) => {
       stream.on('error', reject);
@@ -71,10 +80,16 @@ module.exports = class FSDFile {
   }
 
   createReadStream(options?: ReadStreamOptions): Promise<stream$Readable> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not end with /');
+    }
     return this._adapter.createReadStream(this.path, options);
   }
 
   createWriteStream(options?: WriteStreamOptions): Promise<stream$Writable> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not end with /');
+    }
     return this._adapter.createWriteStream(this.path, options);
   }
 
@@ -83,10 +98,16 @@ module.exports = class FSDFile {
   }
 
   mkdir(prefix?: boolean): Promise<void> {
+    if (!this.path.endsWith('/')) {
+      throw new Error('the directory path ends with /');
+    }
     return this._adapter.mkdir(this.path, prefix);
   }
 
   async readdir(recursion?: true | string): Promise<FSDFile[]> {
+    if (!this.path.endsWith('/')) {
+      throw new Error('the directory path ends with /');
+    }
     let files = await this._adapter.readdir(this.path, recursion);
     return files.map((file) => new FSDFile(file));
   }
@@ -96,10 +117,26 @@ module.exports = class FSDFile {
   }
 
   copy(dist: string): Promise<FSDFile> {
+    if (dist === this.path) {
+      throw new Error('the same path');
+    }
+    if (this.path.endsWith('/') && !dist.endsWith('/')) {
+      throw new Error('The end with is inconsistent');
+    } else if (!this.path.endsWith('/') && dist.endsWith('/')) {
+      throw new Error('The end with is inconsistent');
+    }
     return this._adapter.copy(this.path, dist);
   }
 
   rename(dist: string): Promise<void> {
+    if (dist === this.path) {
+      throw new Error('the same path');
+    }
+    if (this.path.endsWith('/') && !dist.endsWith('/')) {
+      throw new Error('The end with is inconsistent');
+    } else if (!this.path.endsWith('/') && dist.endsWith('/')) {
+      throw new Error('The end with is inconsistent');
+    }
     return this._adapter.rename(this.path, dist);
   }
 
@@ -108,18 +145,30 @@ module.exports = class FSDFile {
   }
 
   isFile(): Promise<boolean> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not ends with /');
+    }
     return this._adapter.isFile(this.path);
   }
 
   isDirectory(): Promise<boolean> {
+    if (!this.path.endsWith('/')) {
+      throw new Error('the directory path ends with /');
+    }
     return this._adapter.isDirectory(this.path);
   }
 
   async initMultipartUpload(partCount: number): Promise<string[]> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not ends with /');
+    }
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
   writePart(part: string, data: string | Buffer | stream$Readable): Promise<string> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not ends with /');
+    }
     if (!part.startsWith('part:')) throw new Error('Invalid part link');
     let stream: stream$Readable = data;
     if (!isStream.readable(data)) {
@@ -130,6 +179,9 @@ module.exports = class FSDFile {
   }
 
   completeMultipartUpload(parts: string[]): Promise<void> {
+    if (this.path.endsWith('/')) {
+      throw new Error('the file path do not ends with /');
+    }
     return this._adapter.completeMultipartUpload(this.path, parts);
   }
 
