@@ -58,7 +58,7 @@ module.exports = class FSAdapter {
     if (path.startsWith('part:')) {
       let info = URL.parse(path);
       if (!info.pathname) throw new Error('Invalid part pathname');
-      p = Path.join(this._options.tmpdir, info.pathname);
+      p = Path.join(this._options.tmpdir, info.hostname);
     }
     return fs.createWriteStream(p, options);
   }
@@ -163,6 +163,16 @@ module.exports = class FSAdapter {
       files.push('part:' + taskId + i + path + '?' + i);
     }
     return files;
+  }
+
+  async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
+    let info = URL.parse(partTask);
+    if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
+    let writeStream = await this.createWriteStream(partTask);
+    await new Promise((resolve, reject) => {
+      data.pipe(writeStream).on('close', resolve).on('error', reject);
+    });
+    return partTask;
   }
 
   async completeMultipartUpload(path: string, parts: string[]): Promise<void> {
