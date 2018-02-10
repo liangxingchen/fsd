@@ -8,7 +8,7 @@ const fs = require('mz/fs');
 const co = require('co');
 const OSS = require('ali-oss');
 const _ = require('lodash');
-const minimatch = require('minimatch')
+const minimatch = require('minimatch');
 
 module.exports = class OSSAdapter {
   _options: OSSAdapterOptions;
@@ -16,7 +16,7 @@ module.exports = class OSSAdapter {
 
   constructor(options: OSSAdapterOptions) {
     this._options = Object.assign({
-      root: '/',
+      root: '',
       urlPrefix: '',
       keyId: process.env.FILE_OSS_KEYID || '',
       secret: process.env.FILE_OSS_SECRET || '',
@@ -67,15 +67,12 @@ module.exports = class OSSAdapter {
   async unlink(path: string): Promise<void> {
     const { root } = this._options;
     let p = Path.join(root, path);
-    p = p.startsWith('/') ? p.substr(1) : p;
-    let isExists = await this.exists(p);
+    let isExists = await this.exists(path);
     if (!isExists) throw new Error('The source path is not found');
-    let isDirectory = await this.isDirectory(p);
-    if (isDirectory) {
-      p = p.endsWith('/') ? p : p + '/';
+    if (path.endsWith('/')) {
       let list = await co(this._oss.list({ prefix: p }));
       for (let obj of list.objects) {
-        let name = obj.name.substr(root.length);
+        let name = obj.name.substr(root.length + 1);
         this.unlink(name);
       }
     }
@@ -84,6 +81,9 @@ module.exports = class OSSAdapter {
 
   async mkdir(path: string, prefix?: boolean): Promise<void> {
     const { root } = this._options;
+    if (path.endsWith('/')) {
+      path = path.substr(0, path.length - 1);
+    }
     let p = Path.join(root, path);
     let parent = Path.dirname(path);
     if (prefix && parent !== '/') {
@@ -93,9 +93,6 @@ module.exports = class OSSAdapter {
         // 目录不存在
         await this.mkdir(parent, true);
       }
-    }
-    if (p.startsWith('/')) {
-      p = p.substr(1);
     }
     await co(this._oss.put(p + '/', buffer.from('')));
   }
@@ -149,85 +146,63 @@ module.exports = class OSSAdapter {
   async copy(path: string, dist: string): Promise<void> {
     const { root } = this._options;
     let from = Path.join(root, path);
-    from = from.startsWith('/') ? from.substr(1) : from;
-    let to = Path.join(root, dist, Path.basename(path));
-    to = to.startsWith('/') ? to.substr(1) : to;
+    let to = Path.join(root, dist);
     let isSourceExists = await this.exists(from);
-    let isSourceDirectory = await this.isDirectory(from);
     let isTargetExists = await this.exists(to);
-    let isTargetDirectory = await this.isDirectory(to);
-    if (!isSourceExists) {
-      throw new Error('The source path is not found');
-    }
-    if (!isTargetExists || !isTargetDirectory) {
-      throw new Error('The target path is not found');
-    }
-    if (from === to) {
-      throw new Error('The target directory and the source directory are not consistent');
-    }
-    if (isSourceDirectory) {
-      from = from.endsWith('/') ? from : from + '/';
+    if (!isSourceExists) throw new Error('The source path is not found');
+    if (!isTargetExists) throw new Error('The target path is not found');
+    let basename = path.endsWith('/') ?
+      Path.basename(path.substr(0, path.length - 1)) + '/' : Path.basename(path);
+    if (path.endsWith('/')) {
       let list = await co(this._oss.list({ prefix: from }));
       for (let obj of list.objects) {
-        let fromPath = obj.name.substr(root.length);
-        let toPath = to.substr(root.length);
+        let fromPath = obj.name.substr(root.length + 1);
+        let toPath = to.substr(root.length + 1);
         this.copy(fromPath, toPath);
       }
     }
-    await co(this._oss.copy(from, to));
+    await co(this._oss.copy(from, Path.join(to, basename)));
   }
 
   async rename(path: string, dist: string): Promise<void> {
     const { root } = this._options;
     let from = Path.join(root, path);
-    from = from.startsWith('/') ? from.substr(1) : from;
     let to = Path.join(root, dist);
-    to = to.startsWith('/') ? to.substr(1) : to;
     let isSourceExists = await this.exists(from);
     let isTargetExists = await this.exists(to);
     if (!isSourceExists) throw new Error('The source path is not found');
     if (isTargetExists) throw new Error('Already exists');
-    let p = path;
-    try {
-      await co(this.copy(path, dist));
-    } catch (e) {
-      p = dist;
+    if (path.endsWith('/')) {
+      let list = await co(this._oss.list({ prefix: from }));
+      for (let obj of list.objects) {
+        let fromPath = obj.name.substr(root.length + 1);
+        let basename = obj.name.substr(from.length + 1);
+        let toPath = to.substr(root.length + 1);
+        this.rename(fromPath, toPath);
+      }
     }
-    await co(this.unlink(p));
+    try {
+      await co(this._oss.copy(path, dist));
+      await co(this.unlink(from));
+    } catch (e) {
+      await co(this.unlink(to));
+    }
   }
 
   async exists(path: string): Promise<boolean> {
     const { root } = this._options;
     let p = Path.join(root, path);
-    let isFile = true;
-    if (p.startsWith('/')) {
-      p = p.substr(1);
+    try {
+      await co(this._oss.get(p));
+      return true;
+    } catch (e) {
+      return false;
     }
-    if (!p.endsWith('/')) {
-      try {
-        await co(this._oss.get(p));
-        return true;
-      } catch (e) {
-        isFile = false;
-      }
-    }
-    if (p.endsWith('/') || !isFile) {
-      try {
-        await co(this._oss.get(p));
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
-    return false;
   }
 
   async isFile(path: string): Promise<boolean> {
     const { root } = this._options;
     let p = Path.join(root, path);
-    if (p.startsWith('/')) {
-      p = path.substr(1);
-    }
     try {
       await co(this._oss.get(p));
       return true;
@@ -239,12 +214,6 @@ module.exports = class OSSAdapter {
   async isDirectory(path: string): Promise<boolean> {
     const { root } = this._options;
     let p = Path.join(root, path);
-    if (p.startsWith('/')) {
-      p = p.substr(1);
-    }
-    if (!p.endsWith('/')) {
-      p += '/';
-    }
     try {
       await co(this._oss.get(p));
       return true;
