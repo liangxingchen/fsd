@@ -40,6 +40,9 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     p = p.startsWith('/') ? p.substr(1) : p;
+    if (typeof data === 'string') {
+      data = Buffer.from(data);
+    }
     await co(this._oss.append(p, data));
   }
 
@@ -47,7 +50,11 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     p = p.startsWith('/') ? p.substr(1) : p;
-    return co(this._oss.getStream(p, options));
+    let res = co(this._oss.getStream(p, options));
+    if (!res || !res.stream) {
+      throw new Error('no stream');
+    }
+    return res.stream;
   }
 
   async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
@@ -194,7 +201,7 @@ module.exports = class OSSAdapter {
     let p = Path.join(root, path);
     let isFile = true;
     if (p.startsWith('/')) {
-      p = path.substr(1);
+      p = p.substr(1);
     }
     if (!p.endsWith('/')) {
       try {
@@ -233,7 +240,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     if (p.startsWith('/')) {
-      p = path.substr(1);
+      p = p.substr(1);
     }
     if (!p.endsWith('/')) {
       p += '/';
