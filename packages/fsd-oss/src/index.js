@@ -8,6 +8,7 @@ const fs = require('mz/fs');
 const co = require('co');
 const OSS = require('ali-oss');
 const _ = require('lodash');
+const { PassThrough } = require('stream');
 const minimatch = require('minimatch');
 
 module.exports = class OSSAdapter {
@@ -15,6 +16,8 @@ module.exports = class OSSAdapter {
   _oss: Object;
 
   constructor(options: OSSAdapterOptions) {
+    let optionRoot = options.root ? options.root : '';
+    let root = optionRoot.startsWith('/') ? optionRoot.substr(1) : '';
     this._options = Object.assign({
       root: '',
       urlPrefix: '',
@@ -22,7 +25,7 @@ module.exports = class OSSAdapter {
       secret: process.env.FILE_OSS_SECRET || '',
       bucket: '',
       endpoint: ''
-    }, options);
+    }, options, { root });
     this._oss = OSS({
       accessKeyId: this._options.keyId,
       accessKeySecret: this._options.secret,
@@ -50,7 +53,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     p = p.startsWith('/') ? p.substr(1) : p;
-    let res = co(this._oss.getStream(p, options));
+    let res = await co(this._oss.getStream(p));
     if (!res || !res.stream) {
       throw new Error('no stream');
     }
@@ -61,20 +64,23 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     p = p.startsWith('/') ? p.substr(1) : p;
-    return co(this._oss.putStream(p, options));
+    let stream = new PassThrough();
+    co(this._oss.putStream(p, stream));
+    return stream;
   }
 
   async unlink(path: string): Promise<void> {
     const { root } = this._options;
     let p = Path.join(root, path);
+    p = p.startsWith('/') ? p.substr(1) : p;
     let isExists = await this.exists(path);
-    if (!isExists) throw new Error('The source path is not found');
+    if (!isExists) return;
     if (path.endsWith('/')) {
       let list = await co(this._oss.list({ prefix: p }));
-      for (let obj of list.objects) {
-        let name = obj.name.substr(root.length + 1);
-        this.unlink(name);
-      }
+      let objects = _.filter(list.objects, (obj) => obj.name !== p);
+      await Promise.all(objects.map(async(obj) => {
+        return await co(this._oss.delete(obj.name));
+      }));
     }
     await co(this._oss.delete(p));
   }
@@ -94,7 +100,7 @@ module.exports = class OSSAdapter {
         await this.mkdir(parent, true);
       }
     }
-    await co(this._oss.put(p + '/', buffer.from('')));
+    await co(this._oss.put(p + '/', Buffer.from('')));
   }
 
   async createUrl(path: string): Promise<string> {
@@ -105,63 +111,58 @@ module.exports = class OSSAdapter {
   async readdir(path: string, recursion?: true | string): Promise<string[]> {
     const { root } = this._options;
     let p = Path.join(root, path);
-    let isExists = await this.exists(p);
+    let isExists = await this.exists(path);
     if (!isExists) throw new Error('The path is not found');
-    let objects = await this.recursive(p, recursion);
+    let list = await co(this._oss.list({ prefix: p }));
+    let objects = _.filter(list.objects, (obj) => obj.name !== p);
     if (recursion === true) {
       recursion = '**/**';
     }
     let pattern = recursion || '**';
     objects = _.filter(objects, (obj) => {
       let name = obj.name.endsWith('/') ? obj.name.substr(0, obj.name.length - 1) : obj.name;
-      return name.length > p.length && minimatch(name, pattern);
+      if (!recursion) {
+        return minimatch(name, pattern) && name.substr(p.length).indexOf('/') < 0;
+      }
+      return minimatch(name, pattern);
     });
     let names = _.map(objects, (obj) => {
       let name = obj.name.endsWith('/') ? obj.name.substr(0, obj.name.length - 1) : obj.name;
-      return name.substr(p.length + 1);
+      return name.substr(p.length);
     });
     return names;
-  }
-
-  async recursive(path: string, recursion?: true | string) {
-    let list = await co(this._oss.list({ prefix: path }));
-    if (recursion) {
-      for (let obj of list.objects) {
-        if (obj.name.endsWith('/')) {
-          list.objects.concat(this.recursive(obj.name));
-        }
-      }
-    }
-    return list.objects;
   }
 
   async copy(path: string, dist: string): Promise<void> {
     const { root } = this._options;
     let from = Path.join(root, path);
     let to = Path.join(root, dist);
-    let isSourceExists = await this.exists(from);
-    let isTargetExists = await this.exists(to);
+    let isSourceExists = await this.exists(path);
     if (!isSourceExists) throw new Error('The source path is not found');
+    let p = dist.endsWith('/') ? Path.dirname(dist.substr(0, dist.length - 1)) + '/' : Path.dirname(dist) + '/';
+    let isTargetExists = await this.exists(p);
     if (!isTargetExists) throw new Error('The target path is not found');
-    let basename = path.endsWith('/') ?
-      Path.basename(path.substr(0, path.length - 1)) + '/' : Path.basename(path);
     if (path.endsWith('/')) {
       let list = await co(this._oss.list({ prefix: from }));
-      for (let obj of list.objects) {
-        let fromPath = obj.name.substr(root.length + 1);
-        let toPath = to.substr(root.length + 1);
-        this.copy(fromPath, toPath);
+      let objects = _.filter(list.objects, (obj) => obj.name !== from);
+      if (objects && objects.length > 0) {
+        for (let obj of list.objects) {
+          let basename = obj.name.endsWith('/') ? Path.basename(obj.name.substr(0, obj.name.length - 1)) + '/' : Path.basename(obj.name)
+          let fromPath = obj.name.substr(root.length + 1);
+          let toPath = Path.join(to.substr(root.length + 1), basename);
+          this.copy(fromPath, toPath);
+        }
       }
     }
-    await co(this._oss.copy(from, Path.join(to, basename)));
+    await co(this._oss.copy(to, from));
   }
 
   async rename(path: string, dist: string): Promise<void> {
     const { root } = this._options;
     let from = Path.join(root, path);
     let to = Path.join(root, dist);
-    let isSourceExists = await this.exists(from);
-    let isTargetExists = await this.exists(to);
+    let isSourceExists = await this.exists(path);
+    let isTargetExists = await this.exists(dist);
     if (!isSourceExists) throw new Error('The source path is not found');
     if (isTargetExists) throw new Error('Already exists');
     if (path.endsWith('/')) {
@@ -185,7 +186,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     try {
-      await co(this._oss.get(p));
+      await co(this._oss.head(p));
       return true;
     } catch (e) {
       return false;
@@ -196,7 +197,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     try {
-      await co(this._oss.get(p));
+      await co(this._oss.head(p));
       return true;
     } catch (e) {
       return false;
@@ -207,7 +208,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = Path.join(root, path);
     try {
-      await co(this._oss.get(p));
+      await co(this._oss.head(p));
       return true;
     } catch (e) {
       return false;

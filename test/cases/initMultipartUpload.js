@@ -1,5 +1,6 @@
 import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
+import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
   test('initMultipartUpload', (troot) => {
@@ -8,6 +9,7 @@ export default function (fsd: fsdFn) {
     test('before initMultipartUpload', async(t) => {
       let file = fsd(filePath);
       await file.write('test');
+      await sleep(100);
       t.ok(await file.exists(), 'write error');
       t.end();
     });
@@ -22,7 +24,6 @@ export default function (fsd: fsdFn) {
 
     test('clear initMultipartUpload', async(t) => {
       let file = fsd(filePath);
-
       if (await file.exists()) {
         await file.unlink();
       }
