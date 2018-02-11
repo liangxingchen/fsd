@@ -20,8 +20,8 @@ module.exports = class OSSAdapter {
     this._options = Object.assign({
       root: '',
       urlPrefix: '',
-      keyId: process.env.FILE_OSS_KEYID || '',
-      secret: process.env.FILE_OSS_SECRET || '',
+      keyId: '',
+      secret: '',
       bucket: '',
       endpoint: ''
     }, options, { root });
@@ -134,15 +134,21 @@ module.exports = class OSSAdapter {
     }
     let pattern = recursion || '**';
     do {
-      let list = this._oss.list({
+      let list = await co(this._oss.list({
         prefix: p,
         delimiter,
         marker: nextMarker,
         'max-keys': 1000
-      });
+      }));
       if (list.objects) {
         results = results.concat(list.objects);
         nextMarker = list.nextMarker;
+      }
+      if (list.prefixes) {
+        let rootDirectory = _.map(list.prefixes, (item) => {
+          return { name: item };
+        });
+        results = results.concat(rootDirectory);
       }
     } while (nextMarker);
     let objects = _.filter(results, (obj) => obj.name !== p);
@@ -170,11 +176,11 @@ module.exports = class OSSAdapter {
       let results = [];
       let nextMarker = '';
       do {
-        let list = this._oss.list({
+        let list = await co(this._oss.list({
           prefix: from,
           marker: nextMarker,
           'max-keys': 1000
-        });
+        }));
         if (list.objects) {
           results = results.concat(list.objects);
           nextMarker = list.nextMarker;
