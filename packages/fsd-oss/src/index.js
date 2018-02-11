@@ -135,15 +135,21 @@ module.exports = class OSSAdapter {
     }
     let pattern = recursion || '**';
     do {
-      let list = this._oss.list({
+      let list = await co(this._oss.list({
         prefix: p,
         delimiter,
         marker: nextMarker,
         'max-keys': 1000
-      });
+      }));
       if (list.objects) {
         results = results.concat(list.objects);
         nextMarker = list.nextMarker;
+      }
+      if (list.prefixes) {
+        let rootDirectory = _.map(list.prefixes, (item) => {
+          return { name: item };
+        });
+        results = results.concat(rootDirectory);
       }
     } while (nextMarker);
     let objects = _.filter(results, (obj) => obj.name !== p);
@@ -171,11 +177,11 @@ module.exports = class OSSAdapter {
       let results = [];
       let nextMarker = '';
       do {
-        let list = this._oss.list({
+        let list = await co(this._oss.list({
           prefix: from,
           marker: nextMarker,
           'max-keys': 1000
-        });
+        }));
         if (list.objects) {
           results = results.concat(list.objects);
           nextMarker = list.nextMarker;
