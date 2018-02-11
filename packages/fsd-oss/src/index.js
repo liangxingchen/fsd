@@ -39,20 +39,6 @@ module.exports = class OSSAdapter {
     }
   }
 
-  async recursive(path: string) {
-    let results = [];
-    let nextMarker = '';
-    do {
-      let list = this._oss.list({
-        marker: nextMarker,
-        'max-keys': 1000
-      });
-
-      results = results.concat(list.objects);
-      nextMarker = list.nextMarker;
-    } while (nextMarker);
-  }
-
   async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
     const { root } = this._options;
     let p = Path.join(root, path);
@@ -104,9 +90,11 @@ module.exports = class OSSAdapter {
         }
       } while (nextMarker);
       let objects = _.filter(results, (obj) => obj.name !== p);
-      await Promise.all(objects.map(async(obj) => {
-        return await co(this._oss.delete(obj.name));
-      }));
+      if (objects && objects.length > 0) {
+        await Promise.all(objects.map(async(obj) => {
+          return await co(this._oss.delete(obj.name));
+        }));
+      }
     }
     await co(this._oss.delete(p));
   }
