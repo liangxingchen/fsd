@@ -1,5 +1,6 @@
 import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
+import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
   test('writePart', (troot) => {
@@ -9,12 +10,12 @@ export default function (fsd: fsdFn) {
     test('before writePart', async(t) => {
       let file = fsd(filePath);
       await file.write(appendStr);
+      await sleep(200)
       t.ok(await file.exists(), 'write error');
       t.end();
     });
 
     test('writePart awesome.txt string', async(t) => {
-      let file = fsd(filePath);
       let uploadFile = fsd(uploadPath);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
@@ -22,6 +23,7 @@ export default function (fsd: fsdFn) {
       let tasks = await uploadFile.initMultipartUpload(1);
       let readStream = appendStr;
       let parts = await Promise.all(tasks.map(async(task) => await uploadFile.writePart(task, readStream)));
+      await sleep(200);
       await uploadFile.completeMultipartUpload(parts);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
@@ -34,7 +36,6 @@ export default function (fsd: fsdFn) {
     });
 
     test('writePart awesome.txt buffer', async(t) => {
-      let file = fsd(filePath);
       let uploadFile = fsd(uploadPath);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
@@ -61,7 +62,8 @@ export default function (fsd: fsdFn) {
       }
       let tasks = await uploadFile.initMultipartUpload(1);
       let readStream = await file.createReadStream();
-      let parts = await Promise.all(tasks.map(async(task) => await uploadFile.writePart(task, readStream)));
+      let size = Buffer.from(appendStr).length;
+      let parts = await Promise.all(tasks.map(async(task) => await uploadFile.writePart(task, readStream, size)));
       await uploadFile.completeMultipartUpload(parts);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');

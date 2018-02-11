@@ -19,18 +19,24 @@ glob('cases/*', {
       del.sync('/tmp/fsd', { force: true });
       mkdirp.sync('/tmp/fsd');
       let adapter = new FSAdapter({
-        //root: '/tmp/fsd',
-        root: process.cwd() + '/test',
+        root: '/tmp/fsd',
         urlPrefix: 'http://localhost',
         tmpdir: '/tmp/fsd-tmp'
       });
       cases(FSD({ adapter }));
     }
 
-    // {
-    //   // OSS
-    //   let adpater = new OSSAdapter({});
-    //   cases(FSD({ adapter }));
-    // }
+    {
+      // OSS
+      let adapter = new OSSAdapter({
+        accessKeyId: process.env.FILE_OSS_KEYID,
+        accessKeySecret: process.env.FILE_OSS_SECRET,
+        bucket: process.env.FILE_OSS_BUCKET,
+        endpoint: process.env.FILE_OSS_ENDPOINT,
+        urlPrefix: 'http://localhost',
+        root: '/fsd'
+      });
+      cases(FSD({ adapter }));
+    }
   }
 });

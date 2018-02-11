@@ -3,7 +3,7 @@ import type { fsd as fsdFn } from 'fsd';
 
 export default function (fsd: fsdFn) {
   test('toJSON', (troot) => {
-    let dirPath = '/abc';
+    let dirPath = '/abc/';
 
     test('before toJSON', async(t) => {
       let dir = fsd(dirPath);

@@ -1,5 +1,6 @@
 import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
+import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
   test('write', (troot) => {
@@ -36,6 +37,7 @@ export default function (fsd: fsdFn) {
       await testFile.unlink();
       let stream = await file.createReadStream();
       await testFile.write(stream);
+      await sleep(200);
       let readStr = await testFile.read('utf8');
       t.equal(readStr, appendStr, 'write stream');
       await testFile.unlink();

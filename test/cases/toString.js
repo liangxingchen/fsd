@@ -3,7 +3,7 @@ import type { fsd as fsdFn } from 'fsd';
 
 export default function (fsd: fsdFn) {
   test('toString', (troot) => {
-    let dirPath = '/abc';
+    let dirPath = '/abc/';
 
     test('before toString', async(t) => {
       let dir = fsd(dirPath);

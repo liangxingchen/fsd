@@ -3,8 +3,7 @@
 import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions } from 'fsd';
 
 const Path = require('path');
-const buffer = require('buffer');
-const fs = require('mz/fs');
+const URL = require('url');
 const co = require('co');
 const OSS = require('ali-oss');
 const _ = require('lodash');
@@ -108,7 +107,7 @@ module.exports = class OSSAdapter {
     let parent = Path.dirname(path);
     if (prefix && parent !== '/') {
       try {
-        await co(this._oss.get(Path.join(root, parent) + '/'));
+        await co(this._oss.head(Path.join(root, parent) + '/'));
       } catch (e) {
         // 目录不存在
         await this.mkdir(parent, true);
@@ -239,7 +238,8 @@ module.exports = class OSSAdapter {
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<string[]> {
-    let res = await co(this._oss._initMultipartUpload(path));
+    let p = Path.join(this._options.root, path);
+    let res = await co(this._oss._initMultipartUpload(p));
     let taskId = 'upload-' + res.uploadId + '-';
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
@@ -248,28 +248,29 @@ module.exports = class OSSAdapter {
     return files;
   }
 
-  async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
+  async writePart(path: string, partTask: string, data: stream$Readable, size: number): Promise<string> {
+    let p = Path.join(this._options.root, path);
     let info = URL.parse(partTask);
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
-    let stats = await fs.stat(path);
-    let matchs = info.hostname.match(/upload-(.+)-\d/);
+    let matchs = partTask.match(/^part:upload-(.+)-\d/);
     if (!matchs) throw new Error('Invalid part hostname');
     let uploadId = matchs[1];
-    let res = await co(this._oss._uploadPart(path, uploadId, info.query, {
+    let res = await co(this._oss._uploadPart(p, uploadId, info.query, {
       stream: data,
-      size: stats.size
+      size
     }));
     let etag = res.etag.replace(/"/g, '');
     return uploadId + ',' + etag;
   }
 
   async completeMultipartUpload(path: string, parts: string[]): Promise<void> {
+    let p = Path.join(this._options.root, path);
     let onePart = parts[0];
     let uploadId = onePart.split(',')[0];
     let datas = parts.map((item, key) => ({
       etag: item.split(',')[1],
       number: key + 1
     }));
-    await co(this._oss._completeMultipartUpload(path, uploadId, datas));
+    await co(this._oss._completeMultipartUpload(p, uploadId, datas));
   }
 };

@@ -165,17 +165,21 @@ module.exports = class FSDFile {
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
-  writePart(part: string, data: string | Buffer | stream$Readable): Promise<string> {
+  writePart(part: string, data: string | Buffer | stream$Readable, size?: number): Promise<string> {
     if (this.path.endsWith('/')) {
       throw new Error('the file path do not ends with /');
     }
     if (!part.startsWith('part:')) throw new Error('Invalid part link');
     let stream: stream$Readable = data;
     if (!isStream.readable(data)) {
+      if (typeof data === 'string') {
+        data = Buffer.from(data);
+      }
+      size = data.length;
       stream = new PassThrough();
       stream.end(data);
     }
-    return this._adapter.writePart(this.path, part, stream);
+    return this._adapter.writePart(this.path, part, stream, size);
   }
 
   completeMultipartUpload(parts: string[]): Promise<void> {
