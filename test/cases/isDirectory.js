@@ -10,7 +10,10 @@ export default function (fsd: fsdFn) {
     test('before isDirectory', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
-      await dir.mkdir();
+      if (await dir.exists()) {
+        await dir.unlink();
+      }
+      await dir.mkdir(true);
       await file.write();
       await sleep(100);
       t.ok(await dir.exists(), 'mk dir error');

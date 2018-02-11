@@ -5,10 +5,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function (fsd: fsdFn) {
   test('copy', (troot) => {
-    let dirPath = 'abc/';
-    let filePath = 'a.js';
-    let copyPath = 'abc/a.js';
-    let appendStr = 'test';
+    let dirPath = '/fsd/';
+    let filePath = '/fsd/a.txt';
+    let copyPath = '/fsd/b.txt';
+    let appendStr = 'hello world';
 
     test('before copy', async(t) => {
       let dir = fsd(dirPath);

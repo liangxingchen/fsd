@@ -7,6 +7,9 @@ export default function (fsd: fsdFn) {
 
     test('before toJSON', async(t) => {
       let dir = fsd(dirPath);
+      if(await dir.exists()){
+        await dir.unlink();
+      }
       await dir.mkdir();
       t.ok(await dir.exists(), 'mkdir error');
       t.end();

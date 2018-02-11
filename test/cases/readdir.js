@@ -5,15 +5,16 @@ import type { fsd as fsdFn } from 'fsd';
 
 export default function (fsd: fsdFn) {
   test('readdir', (troot) => {
-    let dirPath = 'abc/';
-    let filePaths = ['abc/abc/a.js', 'abc/b.js', 'abc/c.js', 'abc/a/d.js'];
+    let dirPath = '/abc/';
+    let filePaths = ['/abc/a.js', '/abc/b.js', '/abc/c.js'];
     let appendStr = 'hello world';
 
     test('before readdir', async(t) => {
       let dir = fsd(dirPath);
-      if (!(await dir.exists(true))) {
-        await dir.mkdir(true);
+      if (await dir.exists()) {
+        await dir.unlink();
       }
+      await dir.mkdir(true);
       await Promise.all(filePaths.map(async(item) => {
         let file = fsd(item);
         if (!(await file.exists())) {
@@ -39,7 +40,7 @@ export default function (fsd: fsdFn) {
       }
       t.end();
     });
-    
+
     troot.end();
   });
 }

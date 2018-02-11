@@ -29,8 +29,8 @@ glob('cases/*', {
     {
       // OSS
       let adapter = new OSSAdapter({
-        accessKeyId: process.env.FILE_OSS_KEYID,
-        accessKeySecret: process.env.FILE_OSS_SECRET,
+        keyId: process.env.FILE_OSS_KEYID,
+        secret: process.env.FILE_OSS_SECRET,
         bucket: process.env.FILE_OSS_BUCKET,
         endpoint: process.env.FILE_OSS_ENDPOINT,
         urlPrefix: 'http://localhost',

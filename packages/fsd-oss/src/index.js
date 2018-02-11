@@ -78,11 +78,11 @@ module.exports = class OSSAdapter {
       let results = [];
       let nextMarker = '';
       do {
-        let list = this._oss.list({
+        let list = await co(this._oss.list({
           prefix: p,
           marker: nextMarker,
           'max-keys': 1000
-        });
+        }));
         if (list.objects) {
           results = results.concat(list.objects);
           nextMarker = list.nextMarker;

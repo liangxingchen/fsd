@@ -7,7 +7,7 @@ export default function (fsd: fsdFn) {
     let validPath = '/qwe/asd';
     test('exists true', async(t) => {
       let dir = fsd(dirPath);
-      await dir.mkdir();
+      await dir.mkdir(true);
       let isExists = await dir.exists();
       t.ok(isExists, 'exists true OK');
       await dir.unlink();
@@ -19,6 +19,18 @@ export default function (fsd: fsdFn) {
       await dir.unlink();
       let isExists = await dir.exists();
       t.ok(!isExists, 'exists false Ok');
+      t.end();
+    });
+
+    test('clear exists', async(t) => {
+      let file = fsd(dirPath);
+      let validFile = fsd(validPath);
+      if (await file.exists()){
+        await file.unlink();
+      }
+      if (await validFile.exists()){
+        await validFile.unlink();
+      }
       t.end();
     });
 
