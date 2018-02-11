@@ -21,8 +21,8 @@ module.exports = class OSSAdapter {
     this._options = Object.assign({
       root: '',
       urlPrefix: '',
-      keyId: process.env.FILE_OSS_KEYID || '',
-      secret: process.env.FILE_OSS_SECRET || '',
+      keyId: '',
+      secret: '',
       bucket: '',
       endpoint: ''
     }, options, { root });
