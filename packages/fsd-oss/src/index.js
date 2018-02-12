@@ -196,10 +196,6 @@ module.exports = class OSSAdapter {
           let name = obj.name.substr(from.length);
           await co(this._oss.copy(Path.join(to, name), obj.name));
         }));
-        // for (let obj of objects) {
-        //   let name = obj.name.substr(from.length);
-        //   this._oss.copy(Path.join(to, name), obj.name);
-        // }
       }
     }
     await co(this._oss.copy(to, from));
