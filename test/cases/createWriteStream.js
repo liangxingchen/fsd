@@ -29,9 +29,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > clear createWriteStream', async(t) => {
       let file = fsd(filePath);
-      if (await file.exists()) {
-        await file.unlink();
-      }
+      await file.unlink();
       t.end();
     });
 

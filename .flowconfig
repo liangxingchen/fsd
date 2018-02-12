@@ -1,6 +1,6 @@
 [ignore]
 .*/build/.*
-.*/dist/.*
+.*/dest/.*
 .*/node_modules/.*
 .*/flow-declarations/.*
 .*/test/.*

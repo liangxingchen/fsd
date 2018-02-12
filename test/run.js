@@ -1,5 +1,10 @@
 require('dotenv').config();
 
+process.on('unhandledRejection', (reason, p) => {
+  console.error('Unhandled Rejection at:', p, '\nreason:', reason);
+  process.exit(1);
+});
+
 const Path = require('path');
 const glob = require('glob');
 const del = require('del');

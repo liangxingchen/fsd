@@ -19,6 +19,7 @@
     "babel-preset-env": "^1.6.1"
   },
   "dependencies": {
+    "debug": "^3.1.0",
     "is-stream": "^1.1.0"
   }
 }

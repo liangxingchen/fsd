@@ -21,9 +21,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > clear createUrl', async(t) => {
       let dir = fsd('/abc/');
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
+      await dir.unlink();
       t.end();
     });
 

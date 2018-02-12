@@ -5,9 +5,9 @@ import sleep from '../sleep';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > writePart', (troot) => {
-    const DATA_STRING = 'hello world';
-    const FILE_PATH = '/awesome.txt';
-    const UPLOAD_FILE_PATH = '/uploadAwesome.txt';
+    const DATA_STRING = _.repeat('上传，hello world', 10240);
+    const FILE_PATH = '/data.txt';
+    const UPLOAD_FILE_PATH = '/upload.txt';
     const TASK_COUNT = 3;
 
     troot.test(fsd.adapter.name + ' > before writePart', async(t) => {
@@ -16,9 +16,7 @@ export default function (fsd: fsdFn) {
       await sleep(200);
       t.ok(await file.exists(), 'write error');
       let upload = fsd(UPLOAD_FILE_PATH);
-      if (await upload.exists()) {
-        await upload.unlink();
-      }
+      await upload.unlink();
       t.end();
     });
 
@@ -84,7 +82,7 @@ export default function (fsd: fsdFn) {
       t.ok(_.isArray(tasks), 'upload tasks is array');
       t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
       let parts = await Promise.all(tasks.map(async(task) => {
-        return await uploadFile.writePart(task, await file.createReadStream());
+        return await uploadFile.writePart(task, await file.createReadStream(), Buffer.from(DATA_STRING).length);
       }));
       t.ok(_.isArray(parts), 'upload parts is array');
       t.equal(parts.length, TASK_COUNT, 'upload parts count');
@@ -103,13 +101,9 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > clear writePart', async(t) => {
       let file = fsd(FILE_PATH);
-      if (await file.exists()) {
-        await file.unlink();
-      }
+      await file.unlink();
       let uploadFile = fsd(UPLOAD_FILE_PATH);
-      if (await uploadFile.exists()) {
-        await uploadFile.unlink();
-      }
+      await uploadFile.unlink();
       t.end();
     });
 

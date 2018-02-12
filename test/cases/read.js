@@ -25,7 +25,6 @@ export default function (fsd: fsdFn) {
       let res = await file.read(2, 1);
       let eq = str.substr(2, 1);
       t.equal(res.toString(), eq, 'read position length');
-      t.ok(res, 'read position length');
       t.end();
     });
 
@@ -33,15 +32,13 @@ export default function (fsd: fsdFn) {
       let file = fsd(filePath);
       let res = await file.read(0, 4, 'utf8');
       let eq = str.substr(0, 4);
-      t.equal(res.toString(), eq, 'read position length encoding');
+      t.equal(res, eq, 'read position length encoding');
       t.end();
     });
 
     troot.test(fsd.adapter.name + ' > clear read', async(t) => {
       let file = fsd(filePath);
-      if (await file.exists()) {
-        await file.unlink();
-      }
+      await file.unlink();
       t.end();
     });
     troot.end();

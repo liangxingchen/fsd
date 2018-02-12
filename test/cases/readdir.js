@@ -1,7 +1,7 @@
 import test from 'tape';
 import _ from 'lodash';
-import Path from 'path';
 import type { fsd as fsdFn } from 'fsd';
+import sleep from '../sleep';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > readdir', (troot) => {
@@ -11,33 +11,30 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > before readdir', async(t) => {
       let dir = fsd(dirPath);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
+      await dir.unlink();
       await dir.mkdir(true);
+      await sleep(200);
       await Promise.all(filePaths.map(async(item) => {
         let file = fsd(item);
         if (!(await file.exists())) {
           await file.write(appendStr);
         }
       }));
+      await sleep(200);
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > readdir abc', async(t) => {
+    troot.test(fsd.adapter.name + ' > readdir /abc', async(t) => {
       let dir = fsd(dirPath);
       let files = await dir.readdir();
-      let names = _.map(files, (file) => Path.join(dirPath, file.path));
-      let arr = _.intersection(names, filePaths);
-      t.equal(arr.length, filePaths.length, 'readdir OK');
+      let names = _.map(files, (file) => file.path);
+      t.deepEqual(names, filePaths, 'readdir /abc ok');
       t.end();
     });
 
     troot.test(fsd.adapter.name + ' > clear readdir', async(t) => {
       let dir = fsd(dirPath);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
+      await dir.unlink();
       t.end();
     });
 

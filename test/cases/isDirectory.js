@@ -10,9 +10,7 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > before isDirectory', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
+      await dir.unlink();
       await dir.mkdir(true);
       await file.write();
       await sleep(100);
@@ -41,12 +39,8 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > clear isDirectory', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
-      if (await file.exists()) {
-        await file.unlink();
-      }
+      await dir.unlink();
+      await file.unlink();
       t.end();
     });
 

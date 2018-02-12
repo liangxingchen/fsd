@@ -25,12 +25,8 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > clear exists', async(t) => {
       let file = fsd(dirPath);
       let validFile = fsd(validPath);
-      if (await file.exists()){
-        await file.unlink();
-      }
-      if (await validFile.exists()){
-        await validFile.unlink();
-      }
+      await file.unlink();
+      await validFile.unlink();
       t.end();
     });
 

@@ -9,9 +9,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > mkdir awesome', async(t) => {
       let dir = fsd(path);
-      if(await dir.exists()){
-        await dir.unlink();
-      }
+      await dir.unlink();
       await sleep(100);
       await dir.mkdir(true);
       t.ok(await dir.exists(), 'mkdir awesome');
@@ -20,24 +18,18 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > mkdir awesome prefix', async(t) => {
       let dir = fsd(deepPath);
-      if(await dir.exists()){
-        await dir.unlink();
-      }
+      await dir.unlink();
       await sleep(100);
       await dir.mkdir(true);
       t.ok(await dir.exists(), 'mkdir awesome prefix');
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear', async(t) => {
+    troot.test(fsd.adapter.name + ' > mkdir clear', async(t) => {
       let dir = fsd(path);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
+      await dir.unlink();
       let deepDir = fsd(deepPath);
-      if (await deepDir.exists()) {
-        await deepDir.unlink();
-      }
+      await deepDir.unlink();
       t.end();
     });
 

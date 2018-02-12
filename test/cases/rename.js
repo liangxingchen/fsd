@@ -26,12 +26,8 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > clear rename', async(t) => {
       let renameDir = fsd(renameDirPath);
       let dir = fsd(dirPath);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
-      if (await renameDir.exists()) {
-        await renameDir.unlink();
-      }
+      await dir.unlink();
+      await renameDir.unlink();
       t.end();
     });
 

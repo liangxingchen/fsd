@@ -7,9 +7,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > before toJSON', async(t) => {
       let dir = fsd(dirPath);
-      if(await dir.exists()){
-        await dir.unlink();
-      }
+      await dir.unlink();
       await dir.mkdir();
       t.ok(await dir.exists(), 'mkdir error');
       t.end();
@@ -24,9 +22,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > clear toJSON', async(t) => {
       let dir = fsd(dirPath);
-      if (await dir.exists()) {
-        await dir.unlink();
-      }
+      await dir.unlink();
       t.end();
     });
 
