@@ -1,6 +1,6 @@
 import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
-import sleep from '../utils';
+import sleep from '../sleep';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > isFile', (troot) => {
@@ -32,10 +32,10 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > isFile false', async(t) => {
       let dir = fsd(dirPath);
       try {
-        let isFile = await dir.isFile();
-        t.ok(isFile, 'isFile false ok');
+        await dir.isFile();
+        t.fail('isFile fail, when path ends with /');
       } catch (err) {
-        t.error(err, err.message);
+        t.pass('isFile throw error, when path ends with /');
       }
       t.end();
     });

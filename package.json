@@ -50,6 +50,7 @@
     "flow-bin": "^0.65.0",
     "flow-declarations": "git+https://github.com/maichong/flow-declarations.git",
     "lerna": "^2.8.0",
+    "lodash": "^4.17.5",
     "mkdirp": "^0.5.1",
     "nyc": "^11.4.1",
     "tape": "^4.8.0"

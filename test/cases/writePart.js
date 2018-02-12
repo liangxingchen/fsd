@@ -1,84 +1,114 @@
 import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
-import sleep from '../utils';
+import _ from 'lodash';
+import sleep from '../sleep';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > writePart', (troot) => {
-    let filePath = '/awesome.txt';
-    let appendStr = 'hello world';
-    let uploadPath = '/uploadAwesome.txt';
+    const DATA_STRING = 'hello world';
+    const FILE_PATH = '/awesome.txt';
+    const UPLOAD_FILE_PATH = '/uploadAwesome.txt';
+    const TASK_COUNT = 3;
+
     troot.test(fsd.adapter.name + ' > before writePart', async(t) => {
-      let file = fsd(filePath);
-      await file.write(appendStr);
-      await sleep(200)
+      let file = fsd(FILE_PATH);
+      await file.write(DATA_STRING);
+      await sleep(200);
       t.ok(await file.exists(), 'write error');
+      let upload = fsd(UPLOAD_FILE_PATH);
+      if (await upload.exists()) {
+        await upload.unlink();
+      }
       t.end();
     });
 
     troot.test(fsd.adapter.name + ' > writePart awesome.txt string', async(t) => {
-      let uploadFile = fsd(uploadPath);
+      let uploadFile = fsd(UPLOAD_FILE_PATH);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
       }
-      let tasks = await uploadFile.initMultipartUpload(1);
-      let readStream = appendStr;
-      let parts = await Promise.all(tasks.map(async(task) => await uploadFile.writePart(task, readStream)));
+      let tasks = await uploadFile.initMultipartUpload(TASK_COUNT);
+      t.ok(_.isArray(tasks), 'upload tasks is array');
+      t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
+      let parts = await Promise.all(tasks.map(async(task) => {
+        return await uploadFile.writePart(task, DATA_STRING);
+      }));
+      t.ok(_.isArray(parts), 'upload parts is array');
+      t.equal(parts.length, TASK_COUNT, 'upload parts count');
       await sleep(200);
       await uploadFile.completeMultipartUpload(parts);
+      await sleep(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(str, appendStr, 'equal writePart awesome.txt string');
+        t.equal(str, _.repeat(DATA_STRING, TASK_COUNT), 'File content error after completeMultipartUpload');
       } else {
-        t.error(new Error('upload file not exists'), 'writePart awesome.txt');
+        t.fail('File not exists after completeMultipartUpload');
       }
-      uploadFile.unlink().then();
+      await uploadFile.unlink();
       t.end();
     });
 
     troot.test(fsd.adapter.name + ' > writePart awesome.txt buffer', async(t) => {
-      let uploadFile = fsd(uploadPath);
+      let uploadFile = fsd(UPLOAD_FILE_PATH);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
       }
-      let tasks = await uploadFile.initMultipartUpload(1);
-      let readStream = Buffer.from(appendStr);
-      let parts = await Promise.all(tasks.map(async(task) => await uploadFile.writePart(task, readStream)));
+      let tasks = await uploadFile.initMultipartUpload(TASK_COUNT);
+      t.ok(_.isArray(tasks), 'upload tasks is array');
+      t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
+      let parts = await Promise.all(tasks.map(async(task) => {
+        return await uploadFile.writePart(task, Buffer.from(DATA_STRING));
+      }));
+      t.ok(_.isArray(parts), 'upload parts is array');
+      t.equal(parts.length, TASK_COUNT, 'upload parts count');
+      await sleep(200);
       await uploadFile.completeMultipartUpload(parts);
+      await sleep(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(str, appendStr, 'equal writePart awesome.txt buffer');
+        t.equal(str, _.repeat(DATA_STRING, TASK_COUNT), 'File content error after completeMultipartUpload');
       } else {
-        t.error(new Error('upload file not exists'), 'writePart awesome.txt');
+        t.fail('File not exists after completeMultipartUpload');
       }
-      uploadFile.unlink().then();
+      await uploadFile.unlink();
       t.end();
     });
 
     troot.test(fsd.adapter.name + ' > writePart awesome.txt stream', async(t) => {
-      let file = fsd(filePath);
-      let uploadFile = fsd(uploadPath);
+      let file = fsd(FILE_PATH);
+      let uploadFile = fsd(UPLOAD_FILE_PATH);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
       }
-      let tasks = await uploadFile.initMultipartUpload(1);
-      let readStream = await file.createReadStream();
-      let size = Buffer.from(appendStr).length;
-      let parts = await Promise.all(tasks.map(async(task) => await uploadFile.writePart(task, readStream, size)));
+      let tasks = await uploadFile.initMultipartUpload(TASK_COUNT);
+      t.ok(_.isArray(tasks), 'upload tasks is array');
+      t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
+      let parts = await Promise.all(tasks.map(async(task) => {
+        return await uploadFile.writePart(task, await file.createReadStream());
+      }));
+      t.ok(_.isArray(parts), 'upload parts is array');
+      t.equal(parts.length, TASK_COUNT, 'upload parts count');
+      await sleep(200);
       await uploadFile.completeMultipartUpload(parts);
+      await sleep(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(str, appendStr, 'equal writePart awesome.txt stream');
+        t.equal(str, _.repeat(DATA_STRING, TASK_COUNT), 'File content error after completeMultipartUpload');
       } else {
-        t.error(new Error('upload file not exists'), 'writePart awesome.txt');
+        t.fail('File not exists after completeMultipartUpload');
       }
-      uploadFile.unlink().then();
+      await uploadFile.unlink();
       t.end();
     });
 
     troot.test(fsd.adapter.name + ' > clear writePart', async(t) => {
-      let file = fsd(filePath);
+      let file = fsd(FILE_PATH);
       if (await file.exists()) {
         await file.unlink();
+      }
+      let uploadFile = fsd(UPLOAD_FILE_PATH);
+      if (await uploadFile.exists()) {
+        await uploadFile.unlink();
       }
       t.end();
     });

@@ -26,14 +26,14 @@ module.exports = class FSDFile {
 
   append(data: string | Buffer | stream$Readable): Promise<void> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not end with /');
+      throw new Error('append failed, file path should not ends with /');
     }
     return this._adapter.append(this.path, data);
   }
 
   async read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not end with /');
+      throw new Error('read failed, file path should not ends with /');
     }
     if (position && typeof position === 'string') {
       encoding = position;
@@ -65,7 +65,7 @@ module.exports = class FSDFile {
 
   async write(data: string | Buffer | stream$Readable): Promise<void> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not end with /');
+      throw new Error('write failed, file path should not ends with /');
     }
     let stream = await this._adapter.createWriteStream(this.path);
     await new Promise((resolve, reject) => {
@@ -81,14 +81,14 @@ module.exports = class FSDFile {
 
   createReadStream(options?: ReadStreamOptions): Promise<stream$Readable> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not end with /');
+      throw new Error('createReadStream failed, file path should not ends with /');
     }
     return this._adapter.createReadStream(this.path, options);
   }
 
   createWriteStream(options?: WriteStreamOptions): Promise<stream$Writable> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not end with /');
+      throw new Error('createReadStream failed, file path should not ends with /');
     }
     return this._adapter.createWriteStream(this.path, options);
   }
@@ -99,14 +99,14 @@ module.exports = class FSDFile {
 
   mkdir(prefix?: boolean): Promise<void> {
     if (!this.path.endsWith('/')) {
-      throw new Error('the directory path ends with /');
+      throw new Error('mkdir failed, directory path should be ends with /');
     }
     return this._adapter.mkdir(this.path, prefix);
   }
 
   async readdir(recursion?: true | string): Promise<FSDFile[]> {
     if (!this.path.endsWith('/')) {
-      throw new Error('the directory path ends with /');
+      throw new Error('readdir failed, directory path should be ends with /');
     }
     let files = await this._adapter.readdir(this.path, recursion);
     return files.map((file) => new FSDFile(file));
@@ -118,24 +118,24 @@ module.exports = class FSDFile {
 
   copy(dist: string): Promise<FSDFile> {
     if (dist === this.path) {
-      throw new Error('the same path');
+      throw new Error('copy failed, dist path should not equal to source path');
     }
     if (this.path.endsWith('/') && !dist.endsWith('/')) {
-      throw new Error('The end with is inconsistent');
+      throw new Error('copy failed, dist path should be ends with /');
     } else if (!this.path.endsWith('/') && dist.endsWith('/')) {
-      throw new Error('The end with is inconsistent');
+      throw new Error('copy failed, dist path should not ends with /');
     }
     return this._adapter.copy(this.path, dist);
   }
 
   rename(dist: string): Promise<void> {
     if (dist === this.path) {
-      throw new Error('the same path');
+      throw new Error('rename failed, dist path should not equal to source path');
     }
     if (this.path.endsWith('/') && !dist.endsWith('/')) {
-      throw new Error('The end with is inconsistent');
+      throw new Error('copy failed, dist path should be ends with /');
     } else if (!this.path.endsWith('/') && dist.endsWith('/')) {
-      throw new Error('The end with is inconsistent');
+      throw new Error('copy failed, dist path should not ends with /');
     }
     return this._adapter.rename(this.path, dist);
   }
@@ -146,28 +146,28 @@ module.exports = class FSDFile {
 
   isFile(): Promise<boolean> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not ends with /');
+      throw new Error('isFile failed, file path should not ends with /');
     }
     return this._adapter.isFile(this.path);
   }
 
   isDirectory(): Promise<boolean> {
     if (!this.path.endsWith('/')) {
-      throw new Error('the directory path ends with /');
+      throw new Error('isDirectory failed, file path should be ends with /');
     }
     return this._adapter.isDirectory(this.path);
   }
 
   async initMultipartUpload(partCount: number): Promise<string[]> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not ends with /');
+      throw new Error('initMultipartUpload failed, file path should not ends with /');
     }
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
   writePart(part: string, data: string | Buffer | stream$Readable, size?: number): Promise<string> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not ends with /');
+      throw new Error('writePart failed, file path should not ends with /');
     }
     if (!part.startsWith('part:')) throw new Error('Invalid part link');
     let stream: stream$Readable = data;
@@ -184,7 +184,7 @@ module.exports = class FSDFile {
 
   completeMultipartUpload(parts: string[]): Promise<void> {
     if (this.path.endsWith('/')) {
-      throw new Error('the file path do not ends with /');
+      throw new Error('completeMultipartUpload failed, file path should not ends with /');
     }
     return this._adapter.completeMultipartUpload(this.path, parts);
   }

@@ -1,6 +1,6 @@
 import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
-import sleep from '../utils';
+import sleep from '../sleep';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > write', (troot) => {

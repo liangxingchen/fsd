@@ -39,6 +39,7 @@ module.exports = class FSAdapter {
         fs.stat(p, (error, stat) => {
           let start = error ? 0 : stat.size;
           let writeStream = fs.createWriteStream(p, {
+            flags: 'a',
             mode,
             start
           });
@@ -159,12 +160,12 @@ module.exports = class FSAdapter {
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<string[]> {
-    let taskId = 'upload-' + Math.random() + '-';
-    let files = [];
+    let taskId = 'upload-' + Math.random().toString().substr(2) + '-';
+    let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push('part:' + taskId + i + path + '?' + i);
+      tasks.push('part:' + taskId + i + path + '?' + i);
     }
-    return files;
+    return tasks;
   }
 
   async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
