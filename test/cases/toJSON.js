@@ -2,10 +2,10 @@ import test from 'tape';
 import type { fsd as fsdFn } from 'fsd';
 
 export default function (fsd: fsdFn) {
-  test('toJSON', (troot) => {
+  test(fsd.adapter.name + ' > toJSON', (troot) => {
     let dirPath = '/abc/';
 
-    test('before toJSON', async(t) => {
+    troot.test(fsd.adapter.name + ' > before toJSON', async(t) => {
       let dir = fsd(dirPath);
       if(await dir.exists()){
         await dir.unlink();
@@ -15,14 +15,14 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('toJSON', async(t) => {
+    troot.test(fsd.adapter.name + ' > toJSON', async(t) => {
       let dir = fsd(dirPath);
       let data = await dir.toJSON();
       t.equal(data, dirPath, 'toJSON OK');
       t.end();
     });
 
-    test('clear toJSON', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear toJSON', async(t) => {
       let dir = fsd(dirPath);
       if (await dir.exists()) {
         await dir.unlink();

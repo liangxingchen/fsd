@@ -3,11 +3,11 @@ import type { fsd as fsdFn } from 'fsd';
 import sleep from '../utils'
 
 export default function (fsd: fsdFn) {
-  test('mkdir', (troot) => {
+  test(fsd.adapter.name + ' > mkdir', (troot) => {
     let path = '/abc/';
     let deepPath = '/bbc/mk/mk/';
 
-    test('mkdir awesome', async(t) => {
+    troot.test(fsd.adapter.name + ' > mkdir awesome', async(t) => {
       let dir = fsd(path);
       if(await dir.exists()){
         await dir.unlink();
@@ -18,7 +18,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('mkdir awesome prefix', async(t) => {
+    troot.test(fsd.adapter.name + ' > mkdir awesome prefix', async(t) => {
       let dir = fsd(deepPath);
       if(await dir.exists()){
         await dir.unlink();
@@ -29,7 +29,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear', async(t) => {
       let dir = fsd(path);
       if (await dir.exists()) {
         await dir.unlink();

@@ -3,18 +3,18 @@ import type { fsd as fsdFn } from 'fsd';
 import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
-  test('createWriteStream', (troot) => {
+  test(fsd.adapter.name + ' > createWriteStream', (troot) => {
     let filePath = `awesome.txt`;
     let writePath = 'writeAwesome.txt';
     let str = 'hello world';
-    test('before createWriteStream', async(t) => {
+    troot.test(fsd.adapter.name + ' > before createWriteStream', async(t) => {
       let file = fsd(filePath);
       await file.write(str);
       await sleep(100);
       t.end();
     });
 
-    test('createWriteStream awesome.txt writeAwesome.txt', async(t) => {
+    troot.test(fsd.adapter.name + ' > createWriteStream awesome.txt writeAwesome.txt', async(t) => {
       let readFile = fsd(filePath);
       let writeFile = fsd(writePath);
       let readStream = await readFile.createReadStream();
@@ -27,7 +27,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear createWriteStream', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear createWriteStream', async(t) => {
       let file = fsd(filePath);
       if (await file.exists()) {
         await file.unlink();

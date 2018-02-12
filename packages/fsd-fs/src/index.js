@@ -11,9 +11,11 @@ const glob = require('glob');
 const rimraf = require('rimraf');
 
 module.exports = class FSAdapter {
+  name: string;
   _options: FSAdapterOptions;
 
   constructor(options: FSAdapterOptions) {
+    this.name = 'FSAdapter';
     this._options = Object.assign({
       urlPrefix: '',
       root: '/',
@@ -58,7 +60,7 @@ module.exports = class FSAdapter {
     if (path.startsWith('part:')) {
       let info = URL.parse(path);
       if (!info.pathname) throw new Error('Invalid part pathname');
-      p = Path.join(this._options.tmpdir, info.hostname);
+      p = Path.join(this._options.tmpdir, info.hostname || '');
     }
     return fs.createWriteStream(p, options);
   }

@@ -4,11 +4,11 @@ import type { fsd as fsdFn } from 'fsd';
 import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
-  test('createReadStream', (troot) => {
+  test(fsd.adapter.name + ' > createReadStream', (troot) => {
     let filePath = `awesome.txt`;
     let testPath = 'testAwesome.txt';
     let appendStr = 'hello world';
-    test('before createReadStream', async(t) => {
+    troot.test(fsd.adapter.name + ' > before createReadStream', async(t) => {
       let file = fsd(filePath);
       if (!(await file.exists())) {
         await file.write(appendStr);
@@ -19,7 +19,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('createReadStream awesome.txt', async(t) => {
+    troot.test(fsd.adapter.name + ' > createReadStream awesome.txt', async(t) => {
       let file = fsd(filePath);
       let testFile = fsd(testPath);
       
@@ -35,7 +35,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear createReadStream', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear createReadStream', async(t) => {
       let file = fsd(filePath);
       if (await file.exists()) {
         await file.unlink();

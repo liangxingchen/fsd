@@ -3,11 +3,11 @@ import type { fsd as fsdFn } from 'fsd';
 import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
-  test('isFile', (troot) => {
+  test(fsd.adapter.name + ' > isFile', (troot) => {
     let dirPath = '/abc/';
     let filePath = '/abc/a.js';
 
-    test('before isFile', async(t) => {
+    troot.test(fsd.adapter.name + ' > before isFile', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
       await dir.mkdir();
@@ -18,7 +18,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('isFile true', async(t) => {
+    troot.test(fsd.adapter.name + ' > isFile true', async(t) => {
       let file = fsd(filePath);
       try {
         let isFile = await file.isFile();
@@ -29,7 +29,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('isFile false', async(t) => {
+    troot.test(fsd.adapter.name + ' > isFile false', async(t) => {
       let dir = fsd(dirPath);
       try {
         let isFile = await dir.isFile();
@@ -40,7 +40,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear isFile', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear isFile', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
       if (await dir.exists()) {

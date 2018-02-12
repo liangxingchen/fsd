@@ -4,12 +4,12 @@ import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
 
-  test('append', (troot) => {
+  test(fsd.adapter.name + ' > append', (troot) => {
     let filePath = `/awesome.txt`;
     let testPath = '/testAwesome.txt';
     let appendStr = 'hello world';
 
-    test('append string', async(t) => {
+    troot.test(fsd.adapter.name + ' > append string', async(t) => {
       let file = fsd(filePath);
       await file.unlink();
       await sleep(200);
@@ -20,7 +20,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('append buffer', async(t) => {
+    troot.test(fsd.adapter.name + ' > append buffer', async(t) => {
       let file = fsd(filePath);
       await file.unlink();
       await sleep(200);
@@ -31,7 +31,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('append stream', async(t) => {
+    troot.test(fsd.adapter.name + ' > append stream', async(t) => {
       let file = fsd(filePath);
       let testFile = fsd(testPath);
       await testFile.unlink();
@@ -43,7 +43,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear append', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear append', async(t) => {
       let file = fsd(filePath);
       if (await file.exists()) {
         await file.unlink();

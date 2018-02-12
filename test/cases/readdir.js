@@ -4,12 +4,12 @@ import Path from 'path';
 import type { fsd as fsdFn } from 'fsd';
 
 export default function (fsd: fsdFn) {
-  test('readdir', (troot) => {
+  test(fsd.adapter.name + ' > readdir', (troot) => {
     let dirPath = '/abc/';
     let filePaths = ['/abc/a.js', '/abc/b.js', '/abc/c.js'];
     let appendStr = 'hello world';
 
-    test('before readdir', async(t) => {
+    troot.test(fsd.adapter.name + ' > before readdir', async(t) => {
       let dir = fsd(dirPath);
       if (await dir.exists()) {
         await dir.unlink();
@@ -24,7 +24,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('readdir abc', async(t) => {
+    troot.test(fsd.adapter.name + ' > readdir abc', async(t) => {
       let dir = fsd(dirPath);
       let files = await dir.readdir();
       let names = _.map(files, (file) => Path.join(dirPath, file.path));
@@ -33,7 +33,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear readdir', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear readdir', async(t) => {
       let dir = fsd(dirPath);
       if (await dir.exists()) {
         await dir.unlink();

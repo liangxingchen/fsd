@@ -3,11 +3,11 @@ import type { fsd as fsdFn } from 'fsd';
 import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
-  test('writePart', (troot) => {
+  test(fsd.adapter.name + ' > writePart', (troot) => {
     let filePath = '/awesome.txt';
     let appendStr = 'hello world';
     let uploadPath = '/uploadAwesome.txt';
-    test('before writePart', async(t) => {
+    troot.test(fsd.adapter.name + ' > before writePart', async(t) => {
       let file = fsd(filePath);
       await file.write(appendStr);
       await sleep(200)
@@ -15,7 +15,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('writePart awesome.txt string', async(t) => {
+    troot.test(fsd.adapter.name + ' > writePart awesome.txt string', async(t) => {
       let uploadFile = fsd(uploadPath);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
@@ -35,7 +35,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('writePart awesome.txt buffer', async(t) => {
+    troot.test(fsd.adapter.name + ' > writePart awesome.txt buffer', async(t) => {
       let uploadFile = fsd(uploadPath);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
@@ -54,7 +54,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('writePart awesome.txt stream', async(t) => {
+    troot.test(fsd.adapter.name + ' > writePart awesome.txt stream', async(t) => {
       let file = fsd(filePath);
       let uploadFile = fsd(uploadPath);
       if (await uploadFile.exists()) {
@@ -75,7 +75,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('clear writePart', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear writePart', async(t) => {
       let file = fsd(filePath);
       if (await file.exists()) {
         await file.unlink();

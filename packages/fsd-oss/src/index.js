@@ -11,36 +11,38 @@ const { PassThrough } = require('stream');
 const minimatch = require('minimatch');
 
 module.exports = class OSSAdapter {
+  name: string;
   _options: OSSAdapterOptions;
   _oss: Object;
 
   constructor(options: OSSAdapterOptions) {
-    let optionRoot = options.root ? options.root : '';
-    let root = optionRoot.startsWith('/') ? optionRoot.substr(1) : '';
-    this._options = Object.assign({
-      root: '',
-      urlPrefix: '',
-      keyId: '',
-      secret: '',
-      bucket: '',
-      endpoint: ''
-    }, options, { root });
+    this.name = 'OSSAdapter';
+    if (!options.accessKeyId) throw new Error('option accessKeyId is required for fsd-oss');
+    if (!options.accessKeySecret) throw new Error('option accessKeySecret is required for fsd-oss');
+    // $Flow
+    options = _.assign({}, options, { root: options.root || '' });
+    this._options = options;
     this._oss = OSS({
-      accessKeyId: this._options.keyId,
-      accessKeySecret: this._options.secret,
-      bucket: this._options.bucket,
-      endpoint: this._options.endpoint
+      accessKeyId: options.accessKeyId,
+      accessKeySecret: options.accessKeySecret,
+      stsToken: options.stsToken,
+      bucket: options.bucket,
+      endpoint: options.endpoint,
+      region: options.region,
+      internal: options.internal,
+      secure: options.secure,
+      timeout: options.timeout
     });
-    let { urlPrefix } = this._options;
-    if (urlPrefix.endsWith('/')) {
+    let { urlPrefix } = options;
+    if (urlPrefix && urlPrefix.endsWith('/')) {
       urlPrefix = urlPrefix.substr(0, urlPrefix.length - 1);
-      this._options.urlPrefix = urlPrefix;
+      options.urlPrefix = urlPrefix;
     }
   }
 
   async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     p = p.startsWith('/') ? p.substr(1) : p;
     if (typeof data === 'string') {
       data = Buffer.from(data);
@@ -50,7 +52,7 @@ module.exports = class OSSAdapter {
 
   async createReadStream(path: string, options?: ReadStreamOptions): Promise<stream$Readable> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     p = p.startsWith('/') ? p.substr(1) : p;
     let res = await co(this._oss.getStream(p));
     if (!res || !res.stream) {
@@ -61,7 +63,7 @@ module.exports = class OSSAdapter {
 
   async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     p = p.startsWith('/') ? p.substr(1) : p;
     let stream = new PassThrough();
     co(this._oss.putStream(p, stream));
@@ -70,7 +72,7 @@ module.exports = class OSSAdapter {
 
   async unlink(path: string): Promise<void> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     p = p.startsWith('/') ? p.substr(1) : p;
     let isExists = await this.exists(path);
     if (!isExists) return;
@@ -90,8 +92,10 @@ module.exports = class OSSAdapter {
       } while (nextMarker);
       let objects = _.filter(results, (obj) => obj.name !== p);
       if (objects && objects.length > 0) {
+        // TODO 使用 async/eachLimit 解决性能问题
+        // TODO 应该在while循环体内部完成删除逻辑
         await Promise.all(objects.map(async(obj) => {
-          return await co(this._oss.delete(obj.name));
+          await co(this._oss.delete(obj.name));
         }));
       }
     }
@@ -103,11 +107,11 @@ module.exports = class OSSAdapter {
     if (path.endsWith('/')) {
       path = path.substr(0, path.length - 1);
     }
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     let parent = Path.dirname(path);
     if (prefix && parent !== '/') {
       try {
-        await co(this._oss.head(Path.join(root, parent) + '/'));
+        await co(this._oss.head(Path.join(root || '', parent) + '/'));
       } catch (e) {
         // 目录不存在
         await this.mkdir(parent, true);
@@ -125,7 +129,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let results = [];
     let nextMarker = '';
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     let isExists = await this.exists(path);
     if (!isExists) throw new Error('The path is not found');
     let delimiter = recursion ? '' : '/';
@@ -145,9 +149,7 @@ module.exports = class OSSAdapter {
         nextMarker = list.nextMarker;
       }
       if (list.prefixes) {
-        let rootDirectory = _.map(list.prefixes, (item) => {
-          return { name: item };
-        });
+        let rootDirectory = _.map(list.prefixes, (item) => ({ name: item }));
         results = results.concat(rootDirectory);
       }
     } while (nextMarker);
@@ -165,8 +167,8 @@ module.exports = class OSSAdapter {
 
   async copy(path: string, dist: string): Promise<void> {
     const { root } = this._options;
-    let from = Path.join(root, path);
-    let to = Path.join(root, dist);
+    let from = Path.join(root || '', path);
+    let to = Path.join(root || '', dist);
     let isSourceExists = await this.exists(path);
     if (!isSourceExists) throw new Error('The source path is not found');
     let p = dist.endsWith('/') ? Path.dirname(dist.substr(0, dist.length - 1)) + '/' : Path.dirname(dist) + '/';
@@ -188,9 +190,11 @@ module.exports = class OSSAdapter {
       } while (nextMarker);
       let objects = _.filter(results, (obj) => obj.name !== from);
       if (objects && objects.length > 0) {
+        // TODO 使用 async/eachLimit 解决性能问题
+        // TODO 应该在while循环体内部完成拷贝逻辑
         await Promise.all(objects.map(async(obj) => {
           let name = obj.name.substr(from.length);
-          return await co(this._oss.copy(Path.join(to, name), obj.name));
+          await co(this._oss.copy(Path.join(to, name), obj.name));
         }));
         // for (let obj of objects) {
         //   let name = obj.name.substr(from.length);
@@ -202,17 +206,15 @@ module.exports = class OSSAdapter {
   }
 
   async rename(path: string, dist: string): Promise<void> {
-    let isSourceExists = await this.exists(path);
-    let isTargetExists = await this.exists(dist);
-    if (!isSourceExists) throw new Error('The source path is not found');
-    if (isTargetExists) throw new Error('Already exists');
+    if (!await this.exists(path)) throw new Error('Source path not found');
+    if (await this.exists(dist)) throw new Error('Target path already exists');
     await this.copy(path, dist);
     await this.unlink(path);
   }
 
   async exists(path: string): Promise<boolean> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     try {
       await co(this._oss.head(p));
       return true;
@@ -223,7 +225,7 @@ module.exports = class OSSAdapter {
 
   async isFile(path: string): Promise<boolean> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     try {
       await co(this._oss.head(p));
       return true;
@@ -234,7 +236,7 @@ module.exports = class OSSAdapter {
 
   async isDirectory(path: string): Promise<boolean> {
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = Path.join(root || '', path);
     try {
       await co(this._oss.head(p));
       return true;
@@ -244,8 +246,9 @@ module.exports = class OSSAdapter {
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<string[]> {
-    let p = Path.join(this._options.root, path);
+    let p = Path.join(this._options.root || '', path);
     let res = await co(this._oss._initMultipartUpload(p));
+    // TODO 重构ID格式
     let taskId = 'upload-' + res.uploadId + '-';
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
@@ -255,9 +258,10 @@ module.exports = class OSSAdapter {
   }
 
   async writePart(path: string, partTask: string, data: stream$Readable, size: number): Promise<string> {
-    let p = Path.join(this._options.root, path);
+    let p = Path.join(this._options.root || '', path);
     let info = URL.parse(partTask);
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
+    // TODO 重构ID格式
     let matchs = partTask.match(/^part:upload-(.+)-\d/);
     if (!matchs) throw new Error('Invalid part hostname');
     let uploadId = matchs[1];
@@ -266,14 +270,16 @@ module.exports = class OSSAdapter {
       size
     }));
     let etag = res.etag.replace(/"/g, '');
+    // TODO 重构ID格式
     return uploadId + ',' + etag;
   }
 
   async completeMultipartUpload(path: string, parts: string[]): Promise<void> {
-    let p = Path.join(this._options.root, path);
+    let p = Path.join(this._options.root || '', path);
     let onePart = parts[0];
     let uploadId = onePart.split(',')[0];
     let datas = parts.map((item, key) => ({
+      // TODO 重构ID格式
       etag: item.split(',')[1],
       number: key + 1
     }));

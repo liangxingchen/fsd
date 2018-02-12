@@ -3,11 +3,11 @@ import type { fsd as fsdFn } from 'fsd';
 import sleep from '../utils';
 
 export default function (fsd: fsdFn) {
-  test('isDirectory', (troot) => {
+  test(fsd.adapter.name + ' > isDirectory', (troot) => {
     let dirPath = '/abc/';
     let filePath = '/abc/a.js';
 
-    test('before isDirectory', async(t) => {
+    troot.test(fsd.adapter.name + ' > before isDirectory', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
       if (await dir.exists()) {
@@ -21,29 +21,24 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    test('isDirectory true', async(t) => {
+    troot.test(fsd.adapter.name + ' > isDirectory true', async(t) => {
       let dir = fsd(dirPath);
+      t.ok(await dir.isDirectory(), 'isDirectory true ok');
+      t.end();
+    });
+
+    troot.test(fsd.adapter.name + ' > isDirectory false', async(t) => {
+      let file = fsd(filePath);
       try {
-        let isDirectory = await dir.isDirectory();
-        t.ok(isDirectory, 'isDirectory true ok');
+        await file.isDirectory();
+        t.fail('isDirectory throw error when target is a file');
       } catch (err) {
-        t.error(err, err.message);
+        t.pass('isDirectory throw error when target is a file');
       }
       t.end();
     });
 
-    test('isDirectory false', async(t) => {
-      let dir = fsd(filePath);
-      try {
-        let isDirectory = await dir.isDirectory();
-        t.ok(isDirectory, 'isDirectory false ok');
-      } catch (err) {
-        t.error(err, err.message);
-      }
-      t.end();
-    });
-
-    test('clear isDirectory', async(t) => {
+    troot.test(fsd.adapter.name + ' > clear isDirectory', async(t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
       if (await dir.exists()) {
