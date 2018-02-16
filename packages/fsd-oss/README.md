@@ -1,2 +1,36 @@
-# fsd
-General file system driver for Node.js
+# fsd-oss
+
+FSD OSS文件读写适配器。
+
+```js
+const FSD = require('fsd');
+const OSSAdapter = require('fsd-oss');
+
+const adapter = new OSSAdapter(config);
+const fsd = FSD({ adapter: adapter });
+
+let file = fsd('/test.txt');
+
+let content = await fsd.read();
+
+```
+
+FSD 文档： https://github.com/maichong/fsd
+
+适配器初始化选项：
+
+| 选项              | 类型               | 必须   | 说明                           |
+| --------------- | ---------------- | ---- | ---------------------------- |
+| root            | string           |      | 以OSS子目录作为存储根路径，例如 '/uploads' |
+| urlPrefix       | string           |      | URL前缀，用于生成下载链接               |
+| accessKeyId     | string           | Yes  | OSS访问KEY                     |
+| accessKeySecret | string           | Yes  | OSS访问秘钥                      |
+| bucket          | string           |      |                              |
+| region          | string           |      |                              |
+| internal        | boolean          |      |                              |
+| secure          | boolean          |      |                              |
+| endpoint        | string           |      |                              |
+| timeout         | string \| number |      |                              |
+
+OSS 相关参数设置参考 https://github.com/ali-sdk/ali-oss#ossoptions
+
