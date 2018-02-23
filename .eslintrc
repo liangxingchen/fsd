@@ -4,15 +4,20 @@
     "node": true,
     "browser": true
   },
-  "globals": {
-  },
+  "globals": {},
   "parser": "babel-eslint",
-  "plugins": ["flowtype", "flowtype-errors"],
+  "plugins": [
+    "flowtype",
+    "flowtype-errors"
+  ],
   "rules": {
     "flowtype/define-flow-type": 1,
     "flowtype/use-flow-type": 1,
     "flowtype-errors/show-errors": 2,
-    "arrow-parens": [2, "always"],
+    "arrow-parens": [
+      2,
+      "always"
+    ],
     "class-methods-use-this": 0,
     "prefer-const": 0,
     "prefer-template": 0,
@@ -25,8 +30,22 @@
     "no-prototype-builtins": 0,
     "no-underscore-dangle": 0,
     "no-continue": 0,
-    "no-console": [1, {"allow": ["warn", "error", "trace"]}],
-    "no-multiple-empty-lines": ["error", {"max": 1}],
+    "no-console": [
+      1,
+      {
+        "allow": [
+          "warn",
+          "error",
+          "trace"
+        ]
+      }
+    ],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 1
+      }
+    ],
     "no-return-await": 0,
     "no-restricted-syntax": [
       "error",
@@ -34,7 +53,8 @@
       "WithStatement"
     ],
     "comma-dangle": [
-      "error", {
+      "error",
+      {
         "arrays": "only-multiline",
         "objects": "only-multiline",
         "imports": "never",
@@ -43,14 +63,23 @@
       }
     ],
     "space-before-function-paren": [
-      "error", {
+      "error",
+      {
         "anonymous": "always",
         "named": "never",
-        "asyncArrow": "never"
+        "asyncArrow": "always"
       }
     ],
-    "consistent-return": ["error", {"treatUndefinedAsUnspecified": true}],
-    "spaced-comment": [0, "always"],
+    "consistent-return": [
+      "error",
+      {
+        "treatUndefinedAsUnspecified": true
+      }
+    ],
+    "spaced-comment": [
+      0,
+      "always"
+    ],
     "func-names": 0,
     "import/extensions": 0,
     "import/no-unresolved": 0,
@@ -58,6 +87,12 @@
     "import/no-duplicates": 2,
     "import/prefer-default-export": 0,
     "radix": 0,
-    "max-len": [2, {"code": 120, "ignoreComments": true}]
+    "max-len": [
+      2,
+      {
+        "code": 120,
+        "ignoreComments": true
+      }
+    ]
   }
 }

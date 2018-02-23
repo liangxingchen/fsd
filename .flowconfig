@@ -18,6 +18,7 @@ flow-declarations/minimatch/
 flow-declarations/glob/
 flow-declarations/mz/
 flow-declarations/rimraf/
+flow-declarations/slash/
 flow-declarations/is-stream/
 
 [options]

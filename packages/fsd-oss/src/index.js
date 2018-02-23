@@ -1,15 +1,13 @@
 // @flow
 
-import type {
-  ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part
-} from 'fsd';
+import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part } from 'fsd';
 
 const util = require('util');
 const Path = require('path');
 const URL = require('url');
 const co = require('co');
 const OSS = require('ali-oss');
-const _ = require('lodash');
+const slash = require('slash');
 const { PassThrough } = require('stream');
 const minimatch = require('minimatch');
 const eachLimit = util.promisify(require('async/eachLimit'));
@@ -27,7 +25,7 @@ module.exports = class OSSAdapter {
     /* istanbul ignore if */
     if (!options.accessKeySecret) throw new Error('option accessKeySecret is required for fsd-oss');
     // $Flow
-    options = _.assign({}, options, { root: options.root || '/' });
+    options = Object.assign({}, options, { root: options.root || '/' });
     if (options.root[0] !== '/') {
       options.root = '/' + options.root;
     }
@@ -53,7 +51,7 @@ module.exports = class OSSAdapter {
   async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
     debug('append %s', path);
     const { root } = this._options;
-    let p = Path.join(root, path).substr(1);
+    let p = slash(Path.join(root, path)).substr(1);
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
@@ -63,7 +61,7 @@ module.exports = class OSSAdapter {
   async createReadStream(path: string, options?: ReadStreamOptions): Promise<stream$Readable> {
     debug('createReadStream %s options: %o', path, options);
     const { root } = this._options;
-    let p = Path.join(root, path).substr(1);
+    let p = slash(Path.join(root, path)).substr(1);
     let opts = {};
     if (options) {
       let start = options.start || 0;
@@ -87,7 +85,7 @@ module.exports = class OSSAdapter {
   async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
     debug('createWriteStream %s', path);
     const { root } = this._options;
-    let p = Path.join(root, path).substr(1);
+    let p = slash(Path.join(root, path)).substr(1);
     let stream = new PassThrough();
     co(this._oss.putStream(p, stream));
     return stream;
@@ -96,7 +94,7 @@ module.exports = class OSSAdapter {
   async unlink(path: string): Promise<void> {
     debug('unlink %s', path);
     const { root } = this._options;
-    let p = Path.join(root, path).substr(1);
+    let p = slash(Path.join(root, path)).substr(1);
     let isExists = await this.exists(path);
     if (!isExists) return;
     if (path.endsWith('/')) {
@@ -142,7 +140,7 @@ module.exports = class OSSAdapter {
       }
     }
     const { root } = this._options;
-    let p = Path.join(root, path).substr(1);
+    let p = slash(Path.join(root, path)).substr(1);
     let res = await co(this._oss.put(p, Buffer.from('')));
     debug('mkdir result: %O', res);
   }
@@ -161,7 +159,7 @@ module.exports = class OSSAdapter {
     }
 
     const { root } = this._options;
-    let p = Path.join(root, path).substr(1);
+    let p = slash(Path.join(root, path)).substr(1);
 
     let results: string[] = [];
     let nextMarker = '';
@@ -177,7 +175,7 @@ module.exports = class OSSAdapter {
       if (list.objects) {
         list.objects.forEach((object) => {
           let { name } = object;
-          let relative = Path.relative(p, name);
+          let relative = slash(Path.relative(p, name));
           if (!relative) return;
           if (pattern && !minimatch(relative, pattern)) return;
           results.push(relative);
@@ -207,8 +205,8 @@ module.exports = class OSSAdapter {
     if (!await this.exists(destDir)) throw new Error('The target directory is not exists!');
 
     const { root } = this._options;
-    let from = Path.join(root, path).substr(1);
-    let to = Path.join(root, dest).substr(1);
+    let from = slash(Path.join(root, path)).substr(1);
+    let to = slash(Path.join(root, dest)).substr(1);
 
     if (path.endsWith('/')) {
       debug('copy directory %s -> %s', from, to);
@@ -225,8 +223,8 @@ module.exports = class OSSAdapter {
           await eachLimit(list.objects, 10, async (object) => {
             let { name } = object;
             debug(' -> copy %s', name);
-            let relative = Path.relative(from, name);
-            let target = Path.join(to, relative);
+            let relative = slash(Path.relative(from, name));
+            let target = slash(Path.join(to, relative));
             await co(this._oss.copy(target, name));
           });
         }
@@ -250,7 +248,7 @@ module.exports = class OSSAdapter {
   async exists(path: string): Promise<boolean> {
     debug('check exists %s', path);
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = slash(Path.join(root, path));
     debug('full path: %s', p);
     try {
       let res = await co(this._oss.head(p));
@@ -265,7 +263,7 @@ module.exports = class OSSAdapter {
   async isFile(path: string): Promise<boolean> {
     debug('check is file %s', path);
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = slash(Path.join(root, path));
     try {
       await co(this._oss.head(p));
       return true;
@@ -277,7 +275,7 @@ module.exports = class OSSAdapter {
   async isDirectory(path: string): Promise<boolean> {
     debug('check is directory %s', path);
     const { root } = this._options;
-    let p = Path.join(root, path);
+    let p = slash(Path.join(root, path));
     try {
       await co(this._oss.head(p));
       return true;
@@ -288,7 +286,7 @@ module.exports = class OSSAdapter {
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let p = Path.join(this._options.root, path);
+    let p = slash(Path.join(this._options.root, path));
     let res = await co(this._oss._initMultipartUpload(p));
     let { uploadId } = res;
     let files = [];
@@ -300,7 +298,7 @@ module.exports = class OSSAdapter {
 
   async writePart(path: Task, partTask: string, data: stream$Readable, size: number): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
-    let p = Path.join(this._options.root, path);
+    let p = slash(Path.join(this._options.root, path));
     let info = URL.parse(partTask);
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
@@ -319,7 +317,7 @@ module.exports = class OSSAdapter {
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();
-    let p = Path.join(this._options.root, path).substr(1);
+    let p = slash(Path.join(this._options.root, path).substr(1));
     debug('update id: %s, target: %s', uploadId, p);
     let datas = parts.map((item, key) => ({
       etag: item.split('#')[1],

@@ -1,8 +1,6 @@
 //@flow
 
-import type {
-  ReadStreamOptions, WriteStreamOptions, FSAdapterOptions, Task, Part
-} from 'fsd';
+import type { ReadStreamOptions, WriteStreamOptions, FSAdapterOptions, Task, Part } from 'fsd';
 
 const util = require('util');
 const os = require('os');
