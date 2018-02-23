@@ -3,6 +3,7 @@
 import type { Adapter, Task, Part } from 'fsd';
 
 const Path = require('path');
+const slash = require('slash');
 const { PassThrough } = require('stream');
 const isStream = require('is-stream');
 const debug = require('debug')('fsd');
@@ -126,7 +127,7 @@ module.exports = class FSDFile {
       throw new Error('readdir failed, directory path should be ends with /');
     }
     let files = await this._adapter.readdir(this.path, recursion);
-    return files.map((file) => new FSDFile(Path.join(this.path, file), this._adapter));
+    return files.map((file) => new FSDFile(slash(Path.join(this.path, file)), this._adapter));
   }
 
   createUrl(): Promise<string> {
@@ -137,7 +138,7 @@ module.exports = class FSDFile {
   async copy(dest: string): Promise<FSDFile> {
     debug('copy %s to %s', this.path, dest);
     if (!Path.isAbsolute(dest)) {
-      dest = Path.join(Path.dirname(this.path), dest);
+      dest = slash(Path.join(Path.dirname(this.path), dest));
     }
     /* istanbul ignore if */
     if (dest === this.path) {
