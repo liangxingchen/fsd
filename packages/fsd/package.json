@@ -4,7 +4,8 @@
   "description": "General file system driver for Node.js",
   "main": "lib/fsd.js",
   "scripts": {
-    "build": "babel -d lib src"
+    "build": "babel -d lib src",
+    "prepublish": "npm run build"
   },
   "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd",
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
