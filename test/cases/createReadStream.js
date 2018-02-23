@@ -5,38 +5,38 @@ import sleep from '../sleep';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > createReadStream', (troot) => {
-    let filePath = `awesome.txt`;
-    let testPath = 'testAwesome.txt';
-    let appendStr = 'hello world';
-    troot.test(fsd.adapter.name + ' > before createReadStream', async(t) => {
-      let file = fsd(filePath);
-      if (!(await file.exists())) {
-        await file.write(appendStr);
-        await sleep(100);
-      }
-      let data=await file.read('utf8');
-      t.equal(data,appendStr,'write data error')
+    const ROOT = '/READ-STREAM/';
+    const FILE = '/READ-STREAM/awesome.txt';
+    const TEST = '/READ-STREAM/test.txt';
+    let DATA = 'hello world';
+    troot.test(fsd.adapter.name + ' > before createReadStream', async (t) => {
+      await fsd(ROOT).mkdir();
+      let file = fsd(FILE);
+      await file.write(DATA);
+      await sleep(100);
+      let data = await file.read('utf8');
+      t.equal(data, DATA, 'write data error')
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > createReadStream awesome.txt', async(t) => {
-      let file = fsd(filePath);
-      let testFile = fsd(testPath);
-      
+    troot.test(fsd.adapter.name + ' > createReadStream awesome.txt', async (t) => {
+      let file = fsd(FILE);
+      let testFile = fsd(TEST);
+
       let stream = await file.createReadStream();
-    
+
       await testFile.write(stream);
       await sleep(100);
-   
+
       let readStr = await testFile.read('utf8');
-      
-      t.equal(readStr, appendStr, 'createReadStream no options');
+
+      t.equal(readStr, DATA, 'createReadStream no options');
       await testFile.unlink();
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear createReadStream', async(t) => {
-      let file = fsd(filePath);
+    troot.test(fsd.adapter.name + ' > clear createReadStream', async (t) => {
+      let file = fsd(ROOT);
       await file.unlink();
       t.end();
     });

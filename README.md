@@ -14,8 +14,8 @@ fsd 由两个方面的库组成，fsd主库和各种其他的存储读写适配
 
 当前的适配器库有：
 
-| 适配器库    | 说明                     |
-| ------- | ---------------------- |
+| 适配器库    | 说明                                       |
+| ------- | ---------------------------------------- |
 | fsd-fs  | 本地文件系统适配器，读写本地磁盘的文件。  [详细设置](https://github.com/maichong/fsd/tree/master/packages/fsd-fs) |
 | fsd-oss | 阿里云OSS适配器，读写OSS云存储的文件。[详细设置](https://github.com/maichong/fsd/tree/master/packages/fsd-oss) |
 
@@ -346,6 +346,26 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 返回值：
 
 `Promise<boolean>`
+
+
+
+### #size()
+
+获取文件大小，文件夹始终返回0。
+
+返回值：
+
+`Promise<number>`
+
+
+
+### #lastModified()
+
+获取文件的最后修改时间。
+
+返回值：
+
+`Promise<Date>`
 
 
 

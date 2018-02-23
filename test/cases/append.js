@@ -5,47 +5,48 @@ import sleep from '../sleep';
 export default function (fsd: fsdFn) {
 
   test(fsd.adapter.name + ' > append', (troot) => {
-    let filePath = `/awesome.txt`;
-    let testPath = '/testAwesome.txt';
-    let appendStr = 'hello world';
+    const ROOT = fsd('/append/');
+    const FILE = fsd(`/append/awesome.txt`);
+    const TEST = fsd('/append/testAwesome.txt');
+    const DATA = 'hello world';
 
-    troot.test(fsd.adapter.name + ' > append string', async(t) => {
-      let file = fsd(filePath);
-      await file.unlink();
+    troot.test(fsd.adapter.name + ' > append string', async (t) => {
+      await ROOT.mkdir();
+      await FILE.unlink();
       await sleep(200);
-      await file.append(appendStr);
+      await FILE.append(DATA);
       await sleep(200);
-      let str = await file.read('utf8');
-      t.equal(str, appendStr, 'append string');
+      let str = await FILE.read('utf8');
+      t.equal(str, DATA, 'append string');
+      await FILE.append(DATA);
+      await sleep(200);
+      str = await FILE.read('utf8');
+      t.equal(str, DATA + DATA, 'append string');
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > append buffer', async(t) => {
-      let file = fsd(filePath);
-      await file.unlink();
+    troot.test(fsd.adapter.name + ' > append buffer', async (t) => {
+      await FILE.unlink();
       await sleep(200);
-      let buf = Buffer.from(appendStr);
-      await file.append(buf);
-      let str = await file.read('utf8');
-      t.equal(str, appendStr, 'append buffer');
+      let buf = Buffer.from(DATA);
+      await FILE.append(buf);
+      let str = await FILE.read('utf8');
+      t.equal(str, DATA, 'append buffer');
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > append stream', async(t) => {
-      let file = fsd(filePath);
-      let testFile = fsd(testPath);
-      await testFile.unlink();
-      let stream = await file.createReadStream();
-      await testFile.append(stream);
-      let readStr = await testFile.read('utf8');
-      t.equal(readStr, appendStr, 'append stream');
-      await testFile.unlink();
+    troot.test(fsd.adapter.name + ' > append stream', async (t) => {
+      await TEST.unlink();
+      let stream = await FILE.createReadStream();
+      await TEST.append(stream);
+      let readStr = await TEST.read('utf8');
+      t.equal(readStr, DATA, 'append stream');
+      await TEST.unlink();
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear append', async(t) => {
-      let file = fsd(filePath);
-      await file.unlink();
+    troot.test(fsd.adapter.name + ' > clear append', async (t) => {
+      await ROOT.unlink();
       t.end();
     });
 

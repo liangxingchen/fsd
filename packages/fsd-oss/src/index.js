@@ -1,6 +1,6 @@
 // @flow
 
-import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part } from 'fsd';
+import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part, FileMetadata } from 'fsd';
 
 const util = require('util');
 const Path = require('path');
@@ -55,7 +55,11 @@ module.exports = class OSSAdapter {
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
-    await co(this._oss.append(p, data));
+    let options = {};
+    try {
+      options.position = await this.size(path);
+    } catch (e) { }
+    await co(this._oss.append(p, data, options));
   }
 
   async createReadStream(path: string, options?: ReadStreamOptions): Promise<stream$Readable> {
@@ -84,6 +88,7 @@ module.exports = class OSSAdapter {
 
   async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
     debug('createWriteStream %s', path);
+    if (options && options.start) throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
     let stream = new PassThrough();
@@ -132,7 +137,7 @@ module.exports = class OSSAdapter {
     debug('mkdir result: %O', res);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<string[]> {
+  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string, metadata: FileMetadata }>> {
     debug('readdir %s', path);
     let delimiter = recursion ? '' : '/';
     let pattern = '';
@@ -145,7 +150,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
 
-    let results: string[] = [];
+    let results: Array<{ name: string, metadata: FileMetadata }> = [];
     let nextMarker = '';
     do {
       let list = await co(this._oss.list({
@@ -155,14 +160,20 @@ module.exports = class OSSAdapter {
         'max-keys': 1000
       }));
       debug('list: %O', list);
-      nextMarker = list.nextMarker;
+      ({ nextMarker } = list);
       if (list.objects) {
         list.objects.forEach((object) => {
           let { name } = object;
           let relative = slash(Path.relative(p, name));
           if (!relative) return;
           if (pattern && !minimatch(relative, pattern)) return;
-          results.push(relative);
+          results.push({
+            name: relative,
+            metadata: {
+              size: object.size,
+              lastModified: new Date(object.lastModified)
+            }
+          });
         });
       }
     } while (nextMarker);
@@ -202,7 +213,7 @@ module.exports = class OSSAdapter {
           'max-keys': 1000
         }));
         debug('list result: %O', list);
-        nextMarker = list.nextMarker;
+        ({ nextMarker } = list);
         if (list.objects && list.objects.length) {
           await eachLimit(list.objects, 10, async (object) => {
             let { name } = object;
@@ -258,14 +269,33 @@ module.exports = class OSSAdapter {
 
   async isDirectory(path: string): Promise<boolean> {
     debug('check is directory %s', path);
-    const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(this._options.root, path)).substr(1);
     try {
       await co(this._oss.head(p));
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  async size(path: string): Promise<number> {
+    debug('get file size %s', path);
+    let p = slash(Path.join(this._options.root, path)).substr(1);
+    let list = await co(this._oss.list({
+      prefix: p,
+      'max-keys': 1
+    }));
+
+    if (!list.objects || !list.objects.length || list.objects[0].name !== p) throw new Error(`${path} is not exist!`);
+    return list.objects[0].size;
+  }
+
+  async lastModified(path: string): Promise<Date> {
+    debug('get file lastModified %s', path);
+    let p = slash(Path.join(this._options.root, path)).substr(1);
+    let res = await co(this._oss.head(p));
+    let { headers } = res.res;
+    return new Date(headers['last-modified'] || headers.date);
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {

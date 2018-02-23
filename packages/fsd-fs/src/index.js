@@ -98,16 +98,17 @@ module.exports = class FSAdapter {
     await fs.mkdir(p);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<string[]> {
+  async readdir(path: string, recursion?: true | string): Promise<Array<{ path: string }>> {
     debug('readdir %s', path);
     if (recursion === true) {
       recursion = '**/*';
     }
     let pattern: string = recursion || '*';
     let p = Path.join(this._options.root, path);
-    return await glob(pattern, {
+    let files = await glob(pattern, {
       cwd: p
     });
+    return files.map((name) => ({ name }));
   }
 
   async createUrl(path: string): Promise<string> {
@@ -161,6 +162,20 @@ module.exports = class FSAdapter {
     } catch (e) {
       return false;
     }
+  }
+
+  async size(path: string): Promise<number> {
+    debug('get file size %s', path);
+    let p = Path.join(this._options.root, path);
+    let stat = await fs.stat(p);
+    return stat.size;
+  }
+
+  async lastModified(path: string): Promise<Date> {
+    debug('get file lastModified %s', path);
+    let p = Path.join(this._options.root, path);
+    let stat = await fs.stat(p);
+    return stat.mtime;
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
