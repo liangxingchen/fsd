@@ -1,6 +1,8 @@
 //@flow
 
-import type { ReadStreamOptions, WriteStreamOptions, FSAdapterOptions } from 'fsd';
+import type {
+  ReadStreamOptions, WriteStreamOptions, FSAdapterOptions, Task, Part
+} from 'fsd';
 
 const util = require('util');
 const os = require('os');
@@ -64,7 +66,7 @@ module.exports = class FSAdapter {
   async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
     debug('createWriteStream %s', path);
     let p = Path.join(this._options.root, path);
-    if (path.startsWith('part:')) {
+    if (path.startsWith('task:')) {
       let info = URL.parse(path);
       /* istanbul ignore if */
       if (!info.pathname) throw new Error('Invalid part pathname');
@@ -163,17 +165,17 @@ module.exports = class FSAdapter {
     }
   }
 
-  async initMultipartUpload(path: string, partCount: number): Promise<string[]> {
+  async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
     let taskId = 'upload-' + Math.random().toString().substr(2) + '-';
     let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
-      tasks.push('part:' + taskId + i + path + '?' + i);
+      tasks.push('task:' + taskId + i + path + '?' + i);
     }
     return tasks;
   }
 
-  async writePart(path: string, partTask: string, data: stream$Readable): Promise<string> {
+  async writePart(path: string, partTask: Task, data: stream$Readable): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
     let info = URL.parse(partTask);
     /* istanbul ignore if */
@@ -182,10 +184,10 @@ module.exports = class FSAdapter {
     await new Promise((resolve, reject) => {
       data.pipe(writeStream).on('close', resolve).on('error', reject);
     });
-    return partTask;
+    return partTask.replace('task:', 'part:');
   }
 
-  async completeMultipartUpload(path: string, parts: string[]): Promise<void> {
+  async completeMultipartUpload(path: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', path);
     let files = [];
     for (let part of parts) {

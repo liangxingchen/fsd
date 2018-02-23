@@ -4,32 +4,27 @@ import sleep from '../sleep'
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > mkdir', (troot) => {
-    let path = '/abc/';
-    let deepPath = '/bbc/mk/mk/';
+    const DIR = fsd('/abc/');
+    const SUB_DIR = fsd('/abc/mk/mk/');
 
-    troot.test(fsd.adapter.name + ' > mkdir awesome', async(t) => {
-      let dir = fsd(path);
-      await dir.unlink();
-      await sleep(100);
-      await dir.mkdir(true);
-      t.ok(await dir.exists(), 'mkdir awesome');
+    troot.test(fsd.adapter.name + ' > mkdir', async (t) => {
+      await DIR.mkdir();
+      await sleep(200);
+      t.ok(await DIR.exists(), 'mkdir');
+      await DIR.unlink();
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > mkdir awesome prefix', async(t) => {
-      let dir = fsd(deepPath);
-      await dir.unlink();
-      await sleep(100);
-      await dir.mkdir(true);
-      t.ok(await dir.exists(), 'mkdir awesome prefix');
+    troot.test(fsd.adapter.name + ' > mkdir sub dir', async (t) => {
+      await SUB_DIR.mkdir(true);
+      t.ok(await SUB_DIR.exists(), 'mkdir sub dir');
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > mkdir clear', async(t) => {
-      let dir = fsd(path);
-      await dir.unlink();
-      let deepDir = fsd(deepPath);
-      await deepDir.unlink();
+    troot.test(fsd.adapter.name + ' > mkdir clear', async (t) => {
+      await DIR.unlink();
+      await sleep(200);
+      t.ok(!await SUB_DIR.exists(), 'remove sub dir');
       t.end();
     });
 

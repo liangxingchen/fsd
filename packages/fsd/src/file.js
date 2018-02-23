@@ -1,6 +1,6 @@
 // @Flow
 
-import type { Adapter } from 'fsd';
+import type { Adapter, Task, Part } from 'fsd';
 
 const Path = require('path');
 const { PassThrough } = require('stream');
@@ -193,7 +193,7 @@ module.exports = class FSDFile {
     return this._adapter.isDirectory(this.path);
   }
 
-  async initMultipartUpload(partCount: number): Promise<string[]> {
+  async initMultipartUpload(partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', this.path, partCount);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -202,14 +202,14 @@ module.exports = class FSDFile {
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
-  writePart(task: string, data: string | Buffer | stream$Readable, size?: number): Promise<string> {
+  writePart(task: Task, data: string | Buffer | stream$Readable, size?: number): Promise<Part> {
     debug('writePart %s, task: %s', this.path, task);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
       throw new Error('writePart failed, file path should not ends with /');
     }
     /* istanbul ignore if */
-    if (!task.startsWith('part:')) throw new Error('Invalid part link');
+    if (!task.startsWith('task:')) throw new Error('Invalid task link');
     let stream: stream$Readable = data;
     if (!isStream.readable(data)) {
       if (typeof data === 'string') {
@@ -222,7 +222,7 @@ module.exports = class FSDFile {
     return this._adapter.writePart(this.path, task, stream, size);
   }
 
-  completeMultipartUpload(parts: string[]): Promise<void> {
+  completeMultipartUpload(parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
