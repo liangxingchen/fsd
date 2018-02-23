@@ -1,6 +1,6 @@
 {
   "name": "fsd-oss",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "Aliyun OSS adapter for fsd",
   "main": "lib/index.js",
   "scripts": {
