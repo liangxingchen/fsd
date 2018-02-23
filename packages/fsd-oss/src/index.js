@@ -95,35 +95,22 @@ module.exports = class OSSAdapter {
     debug('unlink %s', path);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let isExists = await this.exists(path);
-    if (!isExists) return;
     if (path.endsWith('/')) {
       let nextMarker = '';
-      let dirs = [];
       do {
         let list = await co(this._oss.list({
           prefix: p,
           marker: nextMarker,
           'max-keys': 1000
         }));
-        nextMarker = list.nextMarker;
+        ({ nextMarker } = list);
         if (list.objects && list.objects.length) {
-          await eachLimit(list.objects, 10, async (object) => {
-            let { name } = object;
-            if (name.endsWith('/')) {
-              dirs.unshift(name);
-              return;
-            }
-            await co(this._oss.delete(name));
-          });
+          let objects = list.objects.map((o) => o.name);
+          await co(this._oss.deleteMulti(objects, {
+            quiet: true
+          }));
         }
       } while (nextMarker);
-      if (dirs.length) {
-        debug('remove dirs: %o', dirs);
-        await eachLimit(dirs, 10, async (dir) => {
-          await co(this._oss.delete(dir));
-        });
-      }
     } else {
       await co(this._oss.delete(p));
     }
