@@ -18,6 +18,10 @@ module.exports = class FSDFile {
 
   constructor(path: string, adapter: Adapter) {
     debug('initialize file %s', path);
+    if (!path) throw new Error('FSD File must initialize with path');
+    if (path[0] !== '/') {
+      path = '/' + path;
+    }
     this._adapter = adapter;
     this.path = path;
     let info = Path.parse(path);

@@ -147,9 +147,6 @@ module.exports = class OSSAdapter {
 
   async readdir(path: string, recursion?: true | string): Promise<string[]> {
     debug('readdir %s', path);
-    let isExists = await this.exists(path);
-    /* istanbul ignore if */
-    if (!isExists) throw new Error('path is not exists');
     let delimiter = recursion ? '' : '/';
     let pattern = '';
     if (recursion === true) {
@@ -248,7 +245,7 @@ module.exports = class OSSAdapter {
   async exists(path: string): Promise<boolean> {
     debug('check exists %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path));
+    let p = slash(Path.join(root, path)).substr(1);
     debug('full path: %s', p);
     try {
       let res = await co(this._oss.head(p));
@@ -263,7 +260,7 @@ module.exports = class OSSAdapter {
   async isFile(path: string): Promise<boolean> {
     debug('check is file %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path));
+    let p = slash(Path.join(root, path)).substr(1);
     try {
       await co(this._oss.head(p));
       return true;
@@ -275,7 +272,7 @@ module.exports = class OSSAdapter {
   async isDirectory(path: string): Promise<boolean> {
     debug('check is directory %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path));
+    let p = slash(Path.join(root, path)).substr(1);
     try {
       await co(this._oss.head(p));
       return true;
@@ -286,7 +283,7 @@ module.exports = class OSSAdapter {
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let p = slash(Path.join(this._options.root, path));
+    let p = slash(Path.join(this._options.root, path)).substr(1);
     let res = await co(this._oss._initMultipartUpload(p));
     let { uploadId } = res;
     let files = [];
@@ -298,7 +295,7 @@ module.exports = class OSSAdapter {
 
   async writePart(path: Task, partTask: string, data: stream$Readable, size: number): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
-    let p = slash(Path.join(this._options.root, path));
+    let p = slash(Path.join(this._options.root, path)).substr(1);
     let info = URL.parse(partTask);
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
@@ -317,7 +314,7 @@ module.exports = class OSSAdapter {
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();
-    let p = slash(Path.join(this._options.root, path).substr(1));
+    let p = slash(Path.join(this._options.root, path)).substr(1);
     debug('update id: %s, target: %s', uploadId, p);
     let datas = parts.map((item, key) => ({
       etag: item.split('#')[1],
