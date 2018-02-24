@@ -1,6 +1,8 @@
 // @flow
 
-import type { ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part, FileMetadata } from 'fsd';
+import type {
+  ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part, FileMetadata, CreateUrlOptions
+} from 'fsd';
 
 const util = require('util');
 const Path = require('path');
@@ -41,11 +43,6 @@ module.exports = class OSSAdapter {
       secure: options.secure,
       timeout: options.timeout
     });
-    let { urlPrefix } = options;
-    if (urlPrefix && urlPrefix.endsWith('/')) {
-      urlPrefix = urlPrefix.substr(0, urlPrefix.length - 1);
-      options.urlPrefix = urlPrefix;
-    }
   }
 
   async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
@@ -180,10 +177,11 @@ module.exports = class OSSAdapter {
     return results;
   }
 
-  async createUrl(path: string): Promise<string> {
-    debug('readdir %s', path);
-    let { urlPrefix } = this._options;
-    return urlPrefix + path;
+  async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
+    debug('createUrl %s', path);
+    const { root } = this._options;
+    let p = slash(Path.join(root, path)).substr(1);
+    return this._oss.signatureUrl(p, options);
   }
 
   async copy(path: string, dest: string): Promise<void> {
@@ -194,10 +192,6 @@ module.exports = class OSSAdapter {
     // 检查目标文件是否存在
     /* istanbul ignore if */
     if (await this.exists(dest)) throw new Error('The dest path is already exists!');
-    // 检查目标目录是否存在
-    let destDir = Path.dirname(dest) + '/';
-    /* istanbul ignore if */
-    if (!await this.exists(destDir)) throw new Error('The target directory is not exists!');
 
     const { root } = this._options;
     let from = slash(Path.join(root, path)).substr(1);

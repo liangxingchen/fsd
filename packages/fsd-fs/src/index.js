@@ -111,7 +111,7 @@ module.exports = class FSAdapter {
     return files.map((name) => ({ name }));
   }
 
-  async createUrl(path: string): Promise<string> {
+  async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
     debug('createUrl %s', path);
     let { urlPrefix } = this._options;
     return urlPrefix + path;

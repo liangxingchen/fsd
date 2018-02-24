@@ -1,6 +1,6 @@
 // @Flow
 
-import type { Adapter, Task, Part, FileMetadata } from 'fsd';
+import type { Adapter, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
 
 const Path = require('path');
 const slash = require('slash');
@@ -152,9 +152,9 @@ module.exports = class FSDFile {
     return files.map(({ name, metadata }) => new FSDFile(slash(Path.join(this.path, name)), this._adapter, metadata));
   }
 
-  createUrl(): Promise<string> {
+  createUrl(options?: CreateUrlOptions): Promise<string> {
     debug('createUrl %s', this.path);
-    return this._adapter.createUrl(this.path);
+    return this._adapter.createUrl(this.path, options);
   }
 
   async copy(dest: string): Promise<FSDFile> {
