@@ -244,13 +244,19 @@ module.exports = class OSSAdapter {
     debug('check exists %s', path);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    debug('full path: %s', p);
+    // 检查目录是否存在
+    if (path.endsWith('/')) {
+      let list = await co(this._oss.list({
+        prefix: p,
+        'max-keys': 1
+      }));
+      return list.objects && list.objects.length;
+    }
+    // 检查文件是否存在
     try {
-      let res = await co(this._oss.head(p));
-      debug('head result: %O', res);
+      await co(this._oss.head(p));
       return true;
     } catch (e) {
-      debug('head error: %O', e);
       return false;
     }
   }

@@ -220,7 +220,7 @@ module.exports = class FSDFile {
 
   async size(): Promise<number> {
     if (this.path.endsWith('/')) return 0;
-    if (typeof this._size === 'number') {
+    if (typeof this._size !== 'number') {
       this._size = await this._adapter.size(this.path);
     }
     return this._size;
