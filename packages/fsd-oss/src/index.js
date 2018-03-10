@@ -301,7 +301,7 @@ module.exports = class OSSAdapter {
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
     let p = slash(Path.join(this._options.root, path)).substr(1);
-    let res = await co(this._oss._initMultipartUpload(p));
+    let res = await co(this._oss.initMultipartUpload(p));
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
@@ -337,6 +337,6 @@ module.exports = class OSSAdapter {
       etag: item.split('#')[1],
       number: key + 1
     }));
-    await co(this._oss._completeMultipartUpload(p, uploadId, datas));
+    await co(this._oss.completeMultipartUpload(p, uploadId, datas));
   }
 };

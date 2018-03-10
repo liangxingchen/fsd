@@ -11,7 +11,7 @@
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
   "dependencies": {
-    "ali-oss": "^4.12.2",
+    "ali-oss": "^4.13.0",
     "async": "^2.6.0",
     "co": "^4.6.0",
     "debug": "^3.1.0",
