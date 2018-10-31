@@ -1,6 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-import sleep from '../sleep';
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
+import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > isFile', (troot) => {
@@ -12,7 +12,7 @@ export default function (fsd: fsdFn) {
       let file = fsd(filePath);
       await dir.mkdir();
       await file.write();
-      await sleep(100);
+      await delay(100);
       t.ok(await dir.exists(), 'mkdir error');
       t.ok(await file.exists(), 'write error');
       t.end();

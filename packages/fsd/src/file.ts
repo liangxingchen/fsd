@@ -1,15 +1,14 @@
-// @Flow
+import { Adapter, FileMetadata, ReadStreamOptions, WriteStreamOptions, CreateUrlOptions, Task, Part } from 'fsd';
+import Path = require('path');
+import slash = require('slash');
+import { PassThrough } from 'stream';
+import isStream = require('is-stream');
+import Debugger = require('debug');
 
-import type { Adapter, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
-
-const Path = require('path');
-const slash = require('slash');
-const { PassThrough } = require('stream');
-const isStream = require('is-stream');
-const debug = require('debug')('fsd');
+const debug = Debugger('fsd');
 
 module.exports = class FSDFile {
-  _adapter: Adapter;
+  _adapter: Adapter<any>;
   _size: number | null;
   _lastModified: Date | null;
   path: string;
@@ -18,18 +17,18 @@ module.exports = class FSDFile {
   name: string;
   ext: string;
 
-  constructor(path: string | FSDFile, adapter: Adapter, metadata?: FileMetadata) {
+  constructor(path: string | FSDFile, adapter: Adapter<any>, metadata?: FileMetadata) {
     debug('initialize file %s', path);
     if (!path) throw new Error('FSD File must initialize with path');
     if (typeof path === 'object' && path.path) {
       ({ path } = path);
     }
-    if (path[0] !== '/') {
+    if ((<string>path)[0] !== '/') {
       path = '/' + path;
     }
     this._adapter = adapter;
-    this.path = path;
-    let info = Path.parse(path);
+    this.path = path as string;
+    let info = Path.parse(path as string);
     this.dir = info.dir;
     this.base = info.base;
     this.name = info.name;
@@ -39,7 +38,7 @@ module.exports = class FSDFile {
     this._lastModified = metadata.lastModified || null;
   }
 
-  append(data: string | Buffer | stream$Readable): Promise<void> {
+  append(data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -61,7 +60,7 @@ module.exports = class FSDFile {
       position = 0;
       length = 0;
     }
-    let options = {};
+    let options: ReadStreamOptions = {};
     if (position || position === 0) {
       options.start = position;
     }
@@ -69,8 +68,8 @@ module.exports = class FSDFile {
       options.end = (position + length) - 1;
     }
     let stream = await this._adapter.createReadStream(this.path, options);
-    return await new Promise((resolve, reject) => {
-      let buffers = [];
+    let res: Promise<Buffer | string> = new Promise((resolve, reject) => {
+      let buffers: Buffer[] = [];
       stream.on('error', reject);
       stream.on('data', (data) => buffers.push(data));
       stream.on('end', () => {
@@ -82,9 +81,11 @@ module.exports = class FSDFile {
         }
       });
     });
+
+    return await res;
   }
 
-  async write(data: string | Buffer | stream$Readable): Promise<void> {
+  async write(data?: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('write %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -97,14 +98,14 @@ module.exports = class FSDFile {
       stream.on('error', reject);
       stream.on('finish', resolve);
       if (isStream.readable(data)) {
-        data.pipe(stream);
+        (<NodeJS.ReadableStream>data).pipe(stream);
       } else {
-        stream.end(data);
+        stream.end(<string>data);
       }
     });
   }
 
-  createReadStream(options?: ReadStreamOptions): Promise<stream$Readable> {
+  createReadStream(options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -113,7 +114,7 @@ module.exports = class FSDFile {
     return this._adapter.createReadStream(this.path, options);
   }
 
-  createWriteStream(options?: WriteStreamOptions): Promise<stream$Writable> {
+  createWriteStream(options?: WriteStreamOptions): Promise<NodeJS.WritableStream> {
     debug('createWriteStream %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -242,7 +243,7 @@ module.exports = class FSDFile {
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
-  writePart(task: Task, data: string | Buffer | stream$Readable, size?: number): Promise<Part> {
+  writePart(task: Task, data: string | Buffer | NodeJS.ReadableStream, size?: number): Promise<Part> {
     debug('writePart %s, task: %s', this.path, task);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -250,13 +251,16 @@ module.exports = class FSDFile {
     }
     /* istanbul ignore if */
     if (!task.startsWith('task:')) throw new Error('Invalid task link');
-    let stream: stream$Readable = data;
-    if (!isStream.readable(data)) {
+    let stream: NodeJS.ReadableStream;
+    if (isStream.readable(data)) {
+      stream = <NodeJS.ReadableStream>data;
+    } else {
       if (typeof data === 'string') {
         data = Buffer.from(data);
       }
-      size = data.length;
+      size = (<Buffer | string>data).length;
       stream = new PassThrough();
+      // @ts-ignore PassThrough 有end方法
       stream.end(data);
     }
     return this._adapter.writePart(this.path, task, stream, size);

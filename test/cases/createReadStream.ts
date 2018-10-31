@@ -1,7 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-
-import sleep from '../sleep';
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
+import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > createReadStream', (troot) => {
@@ -13,7 +12,7 @@ export default function (fsd: fsdFn) {
       await fsd(ROOT).mkdir();
       let file = fsd(FILE);
       await file.write(DATA);
-      await sleep(100);
+      await delay(100);
       let data = await file.read('utf8');
       t.equal(data, DATA, 'write data error')
       t.end();
@@ -26,7 +25,7 @@ export default function (fsd: fsdFn) {
       let stream = await file.createReadStream();
 
       await testFile.write(stream);
-      await sleep(100);
+      await delay(100);
 
       let readStr = await testFile.read('utf8');
 

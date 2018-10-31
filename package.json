@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "description": "General file system driver for Node.js",
   "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "cross-env NODE_ENV=test tape test/babel.js",
-    "cover": "cross-env NODE_ENV=test nyc node_modules/.bin/tape test/run.js; nyc report --reporter=html",
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build",
+    "test": "cross-env NODE_ENV=test tape test/ts.js",
+    "cover": "cross-env NODE_ENV=test nyc node_modules/.bin/tape test/ts.js; nyc report --reporter=html",
     "eslint": "eslint ./",
     "fix": "eslint --fix ./",
     "flow": "flow check --show-all-errors"
@@ -21,38 +24,42 @@
   },
   "homepage": "https://github.com/maichong/fsd#readme",
   "nyc": {
-    "require": [
-      "babel-register"
+    "extension": [
+      ".ts",
+      ".tsx"
     ],
-    "sourceMap": false,
-    "instrument": false
+    "exclude": [
+      "coverage",
+      "test",
+      "**/lib/**",
+      "**/*.d.ts"
+    ],
+    "reporter": [
+      "html"
+    ],
+    "all": true
   },
   "devDependencies": {
-    "babel-eslint": "^8.2.2",
-    "babel-plugin-istanbul": "^4.1.5",
-    "babel-plugin-syntax-class-properties": "^6.13.0",
-    "babel-plugin-syntax-flow": "^6.18.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-register": "^6.26.0",
-    "cross-env": "^5.1.4",
+    "@types/ali-oss": "^6.0.0",
+    "@types/async": "^2.0.50",
+    "@types/debug": "0.0.31",
+    "@types/delay": "^3.1.0",
+    "@types/glob": "^7.1.1",
+    "@types/is-stream": "^1.1.0",
+    "@types/lodash": "^4.14.117",
+    "@types/mz": "0.0.32",
+    "@types/node": "^10.12.1",
+    "@types/rimraf": "^2.0.2",
+    "cross-env": "^5.2.0",
     "del": "^3.0.0",
-    "dotenv": "^5.0.1",
-    "eslint": "^4.18.2",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-flowtype": "^2.46.1",
-    "eslint-plugin-flowtype-errors": "^3.5.1",
-    "eslint-plugin-import": "^2.9.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-react": "^7.7.0",
-    "flow-bin": "^0.67.1",
-    "flow-declarations": "git+https://github.com/maichong/flow-declarations.git",
-    "lerna": "^2.9.0",
-    "lodash": "^4.17.5",
+    "delay": "^4.1.0",
+    "dotenv": "^6.1.0",
+    "lerna": "^3.4.3",
+    "lodash": "^4.17.11",
     "mkdirp": "^0.5.1",
-    "nyc": "^11.4.1",
-    "tape": "^4.9.0"
+    "nyc": "^13.1.0",
+    "tape": "^4.9.1",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.4"
   }
 }

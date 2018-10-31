@@ -1,6 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-import sleep from '../sleep';
+import test = require('tape');
+import delay from 'delay';
+import { fsd as fsdFn } from '../../packages/fsd'
 
 export default function (fsd: fsdFn) {
 
@@ -13,13 +13,13 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > append string', async (t) => {
       await ROOT.mkdir();
       await FILE.unlink();
-      await sleep(200);
+      await delay(200);
       await FILE.append(DATA);
-      await sleep(200);
+      await delay(200);
       let str = await FILE.read('utf8');
       t.equal(str, DATA, 'append string');
       await FILE.append(DATA);
-      await sleep(200);
+      await delay(200);
       str = await FILE.read('utf8');
       t.equal(str, DATA + DATA, 'append string');
       t.end();
@@ -27,7 +27,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > append buffer', async (t) => {
       await FILE.unlink();
-      await sleep(200);
+      await delay(200);
       let buf = Buffer.from(DATA);
       await FILE.append(buf);
       let str = await FILE.read('utf8');

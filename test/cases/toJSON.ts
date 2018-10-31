@@ -1,5 +1,5 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > toJSON', (troot) => {

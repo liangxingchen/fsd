@@ -1,6 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-import sleep from '../sleep';
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
+import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > lastModified', (troot) => {
@@ -17,7 +17,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > lastModified date', async (t) => {
       await FILE.write(DATA);
-      await sleep(200);
+      await delay(200);
       t.ok((await FILE.lastModified()) instanceof Date, 'Date type');
       t.end();
     });
@@ -26,9 +26,9 @@ export default function (fsd: fsdFn) {
       await APPEND.append(DATA);
       let time1 = await APPEND.lastModified();
       t.ok(time1 instanceof Date, 'Date type');
-      await sleep(1200);
+      await delay(1200);
       await APPEND.append(DATA);
-      await sleep(200);
+      await delay(200);
       let time2 = await APPEND.lastModified();
       t.ok(time2 instanceof Date, 'Date type');
       console.log('time1', time1);

@@ -1,17 +1,23 @@
 //@flow
 
-import type { ReadStreamOptions, WriteStreamOptions, FSAdapterOptions, Task, Part } from 'fsd';
+import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
+import { FSAdapterOptions } from 'fsd-fs';
 
-const util = require('util');
-const os = require('os');
-const URL = require('url');
-const Path = require('path');
-const fs = require('mz/fs');
-const isStream = require('is-stream');
-const glob = util.promisify(require('glob'));
-const rimraf = util.promisify(require('rimraf'));
-const cpr = util.promisify(require('cpr'));
-const debug = require('debug')('fsd-fs');
+import util = require('util');
+import os = require('os');
+import URL = require('url');
+import Path = require('path');
+import fs = require('mz/fs');
+import isStream = require('is-stream');
+import _glob = require('glob');
+import _rimraf = require('rimraf');
+import Debugger = require('debug');
+const _cpr = require('cpr');
+
+const glob = util.promisify(_glob);
+const rimraf = util.promisify(_rimraf);
+const cpr = util.promisify(_cpr);
+const debug = Debugger('fsd-fs');
 
 module.exports = class FSAdapter {
   name: string;
@@ -32,13 +38,12 @@ module.exports = class FSAdapter {
     }
   }
 
-  async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
+  async append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', path);
     let { root, mode } = this._options;
     let p = Path.join(root, path);
     if (isStream.readable(data)) {
-      // $Flow
-      let stream: stream$Readable = data;
+      let stream: NodeJS.ReadableStream = <NodeJS.ReadableStream>data;
       await new Promise((resolve, reject) => {
         fs.stat(p, (error, stat) => {
           let start = error ? 0 : stat.size;
@@ -52,16 +57,16 @@ module.exports = class FSAdapter {
       });
       return;
     }
-    await fs.appendFile(p, data, { mode });
+    await fs.appendFile(p, <string | Buffer>data, { mode });
   }
 
-  async createReadStream(path: string, options?: ReadStreamOptions): Promise<stream$Readable> {
+  async createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', path, options);
     let p = Path.join(this._options.root, path);
     return fs.createReadStream(p, options);
   }
 
-  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
+  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream> {
     debug('createWriteStream %s', path);
     let p = Path.join(this._options.root, path);
     if (path.startsWith('task:')) {
@@ -98,7 +103,7 @@ module.exports = class FSAdapter {
     await fs.mkdir(p);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<Array<{ path: string }>> {
+  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string, metadata?: FileMetadata }>> {
     debug('readdir %s', path);
     if (recursion === true) {
       recursion = '**/*';
@@ -126,6 +131,7 @@ module.exports = class FSAdapter {
     if (!await fs.exists(from)) throw new Error(`source file '${path}' is not exists!`);
     /* istanbul ignore if */
     if (await fs.exists(to)) throw new Error(`dest file '${dest}' is already exists!`);
+    // @ts-ignore 第三和第四个参数可选
     await cpr(from, to);
   }
 
@@ -188,7 +194,7 @@ module.exports = class FSAdapter {
     return tasks;
   }
 
-  async writePart(path: string, partTask: Task, data: stream$Readable): Promise<Part> {
+  async writePart(path: string, partTask: Task, data: NodeJS.ReadableStream): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
     let info = URL.parse(partTask);
     /* istanbul ignore if */

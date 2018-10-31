@@ -3,25 +3,17 @@
   "version": "0.3.2",
   "description": "General file system driver for Node.js",
   "main": "lib/fsd.js",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "babel -d lib src",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd",
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-plugin-syntax-class-properties": "^6.13.0",
-    "babel-plugin-syntax-flow": "^6.18.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1"
-  },
   "dependencies": {
-    "debug": "^3.1.0",
+    "debug": "^4.1.0",
     "is-stream": "^1.1.0",
-    "slash": "^1.0.0"
+    "slash": "^2.0.0"
   }
 }

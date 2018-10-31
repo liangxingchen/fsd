@@ -1,24 +1,27 @@
 // @flow
 
-import type {
-  ReadStreamOptions, WriteStreamOptions, OSSAdapterOptions, Task, Part, FileMetadata, CreateUrlOptions
+import {
+  ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions
 } from 'fsd';
+import { OSSAdapterOptions } from '..';
+import OSS, { AppendObjectOptions, GetStreamOptions } from 'ali-oss';
+import util = require('util');
+import Path = require('path');
+import URL = require('url');
+import slash = require('slash');
+import Stream = require('stream');
+import minimatch = require('minimatch');
+import _eachLimit = require('async/eachLimit');
+import Debugger = require('debug');
 
-const util = require('util');
-const Path = require('path');
-const URL = require('url');
-const co = require('co');
-const OSS = require('ali-oss');
-const slash = require('slash');
-const { PassThrough } = require('stream');
-const minimatch = require('minimatch');
-const eachLimit = util.promisify(require('async/eachLimit'));
-const debug = require('debug')('fsd-oss');
+const oss: typeof OSS = require('ali-oss');
+const eachLimit = util.promisify(_eachLimit);
+const debug = Debugger('fsd-oss');
 
 module.exports = class OSSAdapter {
   name: string;
   _options: OSSAdapterOptions;
-  _oss: Object;
+  _oss: OSS;
 
   constructor(options: OSSAdapterOptions) {
     this.name = 'OSSAdapter';
@@ -32,7 +35,7 @@ module.exports = class OSSAdapter {
       options.root = '/' + options.root;
     }
     this._options = options;
-    this._oss = OSS({
+    this._oss = new oss({
       accessKeyId: options.accessKeyId,
       accessKeySecret: options.accessKeySecret,
       stsToken: options.stsToken,
@@ -45,25 +48,26 @@ module.exports = class OSSAdapter {
     });
   }
 
-  async append(path: string, data: string | Buffer | stream$Readable): Promise<void> {
+  async append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', path);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
-    let options = {};
+    let options: AppendObjectOptions = {};
     try {
+      // @ts-ignore number -> string
       options.position = await this.size(path);
     } catch (e) { }
-    await co(this._oss.append(p, data, options));
+    await this._oss.append(p, data, options);
   }
 
-  async createReadStream(path: string, options?: ReadStreamOptions): Promise<stream$Readable> {
+  async createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', path, options);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let opts = {};
+    let opts: GetStreamOptions = {};
     if (options) {
       let start = options.start || 0;
       let end = options.end || 0;
@@ -77,19 +81,19 @@ module.exports = class OSSAdapter {
         opts.headers = { Range: 'bytes=' + Range };
       }
     }
-    let res = await co(this._oss.getStream(p, opts));
+    let res = await this._oss.getStream(p, opts);
     /* istanbul ignore if */
     if (!res || !res.stream) throw new Error('no stream');
     return res.stream;
   }
 
-  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<stream$Writable> {
+  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream> {
     debug('createWriteStream %s', path);
     if (options && options.start) throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let stream = new PassThrough();
-    co(this._oss.putStream(p, stream));
+    let stream = new Stream.PassThrough();
+    this._oss.putStream(p, stream);
     return stream;
   }
 
@@ -100,21 +104,21 @@ module.exports = class OSSAdapter {
     if (path.endsWith('/')) {
       let nextMarker = '';
       do {
-        let list = await co(this._oss.list({
+        let list = await this._oss.list({
           prefix: p,
           marker: nextMarker,
           'max-keys': 1000
-        }));
+        }, {});
         ({ nextMarker } = list);
         if (list.objects && list.objects.length) {
           let objects = list.objects.map((o) => o.name);
-          await co(this._oss.deleteMulti(objects, {
-            quiet: true
-          }));
+          await this._oss.deleteMulti(objects, {
+            quite: true
+          });
         }
       } while (nextMarker);
     } else {
-      await co(this._oss.delete(p));
+      await this._oss.delete(p);
     }
   }
 
@@ -130,7 +134,7 @@ module.exports = class OSSAdapter {
     }
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let res = await co(this._oss.put(p, Buffer.from('')));
+    let res = await this._oss.put(p, Buffer.from(''));
     debug('mkdir result: %O', res);
   }
 
@@ -150,12 +154,12 @@ module.exports = class OSSAdapter {
     let results: Array<{ name: string, metadata: FileMetadata }> = [];
     let nextMarker = '';
     do {
-      let list = await co(this._oss.list({
+      let list = await this._oss.list({
         prefix: p,
         delimiter,
         marker: nextMarker,
         'max-keys': 1000
-      }));
+      }, {});
       debug('list: %O', list);
       ({ nextMarker } = list);
       if (list.objects) {
@@ -201,26 +205,27 @@ module.exports = class OSSAdapter {
       debug('copy directory %s -> %s', from, to);
       let nextMarker = '';
       do {
-        let list = await co(this._oss.list({
+        let list = await this._oss.list({
           prefix: from,
           marker: nextMarker,
           'max-keys': 1000
-        }));
+        }, {});
         debug('list result: %O', list);
         ({ nextMarker } = list);
         if (list.objects && list.objects.length) {
+          // @ts-ignore eachLimit 有三个参数
           await eachLimit(list.objects, 10, async (object) => {
             let { name } = object;
             debug(' -> copy %s', name);
             let relative = slash(Path.relative(from, name));
             let target = slash(Path.join(to, relative));
-            await co(this._oss.copy(target, name));
+            await this._oss.copy(target, name);
           });
         }
       } while (nextMarker);
     } else {
       debug('copy file %s -> %s', from, to);
-      await co(this._oss.copy(to, from));
+      await this._oss.copy(to, from);
     }
   }
 
@@ -240,15 +245,15 @@ module.exports = class OSSAdapter {
     let p = slash(Path.join(root, path)).substr(1);
     // 检查目录是否存在
     if (path.endsWith('/')) {
-      let list = await co(this._oss.list({
+      let list = await this._oss.list({
         prefix: p,
         'max-keys': 1
-      }));
-      return list.objects && list.objects.length;
+      }, {});
+      return list.objects && list.objects.length > 0;
     }
     // 检查文件是否存在
     try {
-      await co(this._oss.head(p));
+      await this._oss.head(p);
       return true;
     } catch (e) {
       return false;
@@ -260,7 +265,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
     try {
-      await co(this._oss.head(p));
+      await this._oss.head(p);
       return true;
     } catch (e) {
       return false;
@@ -271,7 +276,7 @@ module.exports = class OSSAdapter {
     debug('check is directory %s', path);
     let p = slash(Path.join(this._options.root, path)).substr(1);
     try {
-      await co(this._oss.head(p));
+      await this._oss.head(p);
       return true;
     } catch (e) {
       return false;
@@ -281,10 +286,10 @@ module.exports = class OSSAdapter {
   async size(path: string): Promise<number> {
     debug('get file size %s', path);
     let p = slash(Path.join(this._options.root, path)).substr(1);
-    let list = await co(this._oss.list({
+    let list = await this._oss.list({
       prefix: p,
       'max-keys': 1
-    }));
+    }, {});
 
     if (!list.objects || !list.objects.length || list.objects[0].name !== p) throw new Error(`${path} is not exist!`);
     return list.objects[0].size;
@@ -293,15 +298,15 @@ module.exports = class OSSAdapter {
   async lastModified(path: string): Promise<Date> {
     debug('get file lastModified %s', path);
     let p = slash(Path.join(this._options.root, path)).substr(1);
-    let res = await co(this._oss.head(p));
-    let { headers } = res.res;
+    let res = await this._oss.head(p);
+    let headers: any = res.res.headers;
     return new Date(headers['last-modified'] || headers.date);
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
     let p = slash(Path.join(this._options.root, path)).substr(1);
-    let res = await co(this._oss.initMultipartUpload(p));
+    let res = await this._oss.initMultipartUpload(p);
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
@@ -310,17 +315,18 @@ module.exports = class OSSAdapter {
     return files;
   }
 
-  async writePart(path: Task, partTask: string, data: stream$Readable, size: number): Promise<Part> {
+  async writePart(path: Task, partTask: string, data: NodeJS.ReadableStream, size: number): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
     let p = slash(Path.join(this._options.root, path)).substr(1);
     let info = URL.parse(partTask);
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();
-    let res = await co(this._oss._uploadPart(p, uploadId, info.query, {
+    // @ts-ignore _uploadPart
+    let res = await this._oss._uploadPart(p, uploadId, info.query, {
       stream: data,
       size
-    }));
+    });
     let etag = res.etag.replace(/"/g, '');
     return partTask.replace('task:', 'part:') + '#' + etag;
   }
@@ -337,6 +343,6 @@ module.exports = class OSSAdapter {
       etag: item.split('#')[1],
       number: key + 1
     }));
-    await co(this._oss.completeMultipartUpload(p, uploadId, datas));
+    await this._oss.completeMultipartUpload(p, uploadId, datas);
   }
 };

@@ -1,6 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-import sleep from '../sleep';
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
+import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > copy', (troot) => {
@@ -17,10 +17,10 @@ export default function (fsd: fsdFn) {
       if (!await dir.exists()) {
         await dir.mkdir();
       }
-      await sleep(200);
+      await delay(200);
       t.ok(await dir.exists(), 'before copy: mkdir');
       await file.write(DATA_STRING);
-      await sleep(200);
+      await delay(200);
       t.ok(await file.exists(), 'before copy: write file');
       t.end();
     });
@@ -28,7 +28,7 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > copy file', async(t) => {
       let file = fsd(SOURCE_PATH);
       await file.copy(DIST_PATH);
-      await sleep(200);
+      await delay(200);
       t.ok(await fsd(DIST_PATH).exists(), 'copied file ok');
       t.end();
     });
@@ -36,7 +36,7 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > copy dir', async(t) => {
       let dir = fsd(DIR_PATH);
       await dir.copy(DIST_DIR_PATH);
-      await sleep(200);
+      await delay(200);
       t.ok(await fsd(DIST_DIR_PATH).exists(), 'copied dir ok');
       let destFile = fsd(DIST_DIR_FILE_PATH);
       t.equal(await destFile.read('utf8'), DATA_STRING, 'copied file content ok');

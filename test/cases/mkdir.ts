@@ -1,6 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-import sleep from '../sleep'
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
+import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > mkdir', (troot) => {
@@ -9,7 +9,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > mkdir', async (t) => {
       await DIR.mkdir();
-      await sleep(200);
+      await delay(200);
       t.ok(await DIR.exists(), 'mkdir');
       await DIR.unlink();
       t.end();
@@ -23,7 +23,7 @@ export default function (fsd: fsdFn) {
 
     troot.test(fsd.adapter.name + ' > mkdir clear', async (t) => {
       await DIR.unlink();
-      await sleep(200);
+      await delay(200);
       t.ok(!await SUB_DIR.exists(), 'remove sub dir');
       t.end();
     });

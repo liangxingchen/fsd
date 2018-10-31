@@ -1,6 +1,6 @@
-import test from 'tape';
-import type { fsd as fsdFn } from 'fsd';
-import sleep from '../sleep';
+import test = require('tape');
+import { fsd as fsdFn } from '../../packages/fsd'
+import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > initMultipartUpload', (troot) => {
@@ -9,7 +9,7 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > before initMultipartUpload', async(t) => {
       let file = fsd(filePath);
       await file.write('test');
-      await sleep(100);
+      await delay(100);
       t.ok(await file.exists(), 'write error');
       t.end();
     });

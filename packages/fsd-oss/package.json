@@ -3,29 +3,21 @@
   "version": "0.3.3",
   "description": "Aliyun OSS adapter for fsd",
   "main": "lib/index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "babel -d lib src",
+    "build": "tsc",
     "prepublish": "npm run build"
   },
   "repository": "https://github.com/maichong/fsd/tree/master/packages/fsd-oss",
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
   "dependencies": {
-    "ali-oss": "^4.13.0",
-    "async": "^2.6.0",
+    "ali-oss": "^6.0.1",
+    "async": "^2.6.1",
     "co": "^4.6.0",
-    "debug": "^3.1.0",
+    "debug": "^4.1.0",
     "minimatch": "^3.0.4",
     "rimraf": "^2.6.2",
-    "slash": "^1.0.0"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-plugin-syntax-class-properties": "^6.13.0",
-    "babel-plugin-syntax-flow": "^6.18.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1"
+    "slash": "^2.0.0"
   }
 }
