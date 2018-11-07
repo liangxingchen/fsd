@@ -34,6 +34,7 @@ declare namespace FSD {
     base: string;
     name: string;
     ext: string;
+    needEnsureDir: boolean;
     append(data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
     read(encoding: string): Promise<string>;
     read(position?: number, length?: number): Promise<Buffer>;
@@ -61,6 +62,7 @@ declare namespace FSD {
 
   class Adapter<T> {
     name: string;
+    needEnsureDir: boolean;
     constructor(options: T);
     append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
     createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;

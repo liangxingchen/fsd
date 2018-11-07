@@ -20,11 +20,13 @@ const debug = Debugger('fsd-oss');
 
 module.exports = class OSSAdapter {
   name: string;
+  needEnsureDir: boolean;
   _options: OSSAdapterOptions;
   _oss: OSS;
 
   constructor(options: OSSAdapterOptions) {
     this.name = 'OSSAdapter';
+    this.needEnsureDir = false;
     /* istanbul ignore if */
     if (!options.accessKeyId) throw new Error('option accessKeyId is required for fsd-oss');
     /* istanbul ignore if */

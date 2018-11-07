@@ -21,10 +21,12 @@ const debug = Debugger('fsd-fs');
 
 module.exports = class FSAdapter {
   name: string;
+  needEnsureDir: boolean;
   _options: FSAdapterOptions;
 
   constructor(options: FSAdapterOptions) {
     this.name = 'FSAdapter';
+    this.needEnsureDir = true;
     this._options = Object.assign({
       urlPrefix: '',
       root: '/',
@@ -86,12 +88,13 @@ module.exports = class FSAdapter {
 
   async mkdir(path: string, prefix?: boolean): Promise<void> {
     debug('mkdir %s', path);
-    let p = Path.join(this._options.root, path);
+    let fsPath = Path.join(this._options.root, path);
     let parent = Path.dirname(path);
     if (prefix && parent !== '/') {
       // 递归
       try {
-        let stat = await fs.stat(parent);
+        let parentFsPath = Path.join(this._options.root, parent);
+        let stat = await fs.stat(parentFsPath);
         if (!stat.isDirectory()) {
           await this.mkdir(parent, true);
         }
@@ -100,7 +103,7 @@ module.exports = class FSAdapter {
         await this.mkdir(parent, true);
       }
     }
-    await fs.mkdir(p);
+    await fs.mkdir(fsPath);
   }
 
   async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string, metadata?: FileMetadata }>> {

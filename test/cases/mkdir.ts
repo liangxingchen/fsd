@@ -4,8 +4,9 @@ import delay from 'delay';
 
 export default function (fsd: fsdFn) {
   test(fsd.adapter.name + ' > mkdir', (troot) => {
-    const DIR = fsd('/abc/');
-    const SUB_DIR = fsd('/abc/mk/mk/');
+    const DIR = fsd('/mkdir/');
+    const SUB_DIR = fsd('/mkdir/mk/mk/');
+    const FILE = fsd('/mkdir/auto/make/parent/dir.txt');
 
     troot.test(fsd.adapter.name + ' > mkdir', async (t) => {
       await DIR.mkdir();
@@ -18,6 +19,27 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > mkdir sub dir', async (t) => {
       await SUB_DIR.mkdir(true);
       t.ok(await SUB_DIR.exists(), 'mkdir sub dir');
+      t.end();
+    });
+
+    troot.test(fsd.adapter.name + ' > ensure parent dir', async (t) => {
+      if (FILE.needEnsureDir) {
+        let dir = fsd(FILE.dir);
+        await dir.mkdir(true);
+        t.ok(await dir.exists());
+      }
+      await FILE.write('test');
+      t.ok(await FILE.exists());
+      await DIR.unlink();
+      if (FILE.needEnsureDir) {
+        try {
+          await FILE.write('test');
+          t.fail('should throw error if needEnsureDir');
+        } catch (e) {
+          // should throw error
+          t.pass('throw error if needEnsureDir');
+        }
+      }
       t.end();
     });
 

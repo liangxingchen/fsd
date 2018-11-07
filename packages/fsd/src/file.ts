@@ -11,6 +11,7 @@ module.exports = class FSDFile {
   _adapter: Adapter<any>;
   _size: number | null;
   _lastModified: Date | null;
+  needEnsureDir: boolean;
   path: string;
   dir: string;
   base: string;
@@ -27,9 +28,13 @@ module.exports = class FSDFile {
       path = '/' + path;
     }
     this._adapter = adapter;
+    this.needEnsureDir = adapter.needEnsureDir;
     this.path = path as string;
     let info = Path.parse(path as string);
     this.dir = info.dir;
+    if (this.dir !== '/') {
+      this.dir += '/';
+    }
     this.base = info.base;
     this.name = info.name;
     this.ext = info.ext;
