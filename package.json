@@ -10,8 +10,7 @@
     "test": "cross-env NODE_ENV=test tape test/ts.js",
     "cover": "cross-env NODE_ENV=test nyc node_modules/.bin/tape test/ts.js; nyc report --reporter=html",
     "eslint": "eslint ./",
-    "fix": "eslint --fix ./",
-    "flow": "flow check --show-all-errors"
+    "fix": "eslint --fix ./"
   },
   "repository": {
     "type": "git",
@@ -40,26 +39,26 @@
     "all": true
   },
   "devDependencies": {
-    "@types/ali-oss": "^6.0.0",
-    "@types/async": "^2.0.50",
+    "@types/ali-oss": "^6.0.3",
+    "@types/async": "^2.4.1",
     "@types/debug": "0.0.31",
     "@types/delay": "^3.1.0",
     "@types/glob": "^7.1.1",
     "@types/is-stream": "^1.1.0",
-    "@types/lodash": "^4.14.117",
+    "@types/lodash": "^4.14.121",
     "@types/mz": "0.0.32",
-    "@types/node": "^10.12.1",
+    "@types/node": "^11.9.4",
     "@types/rimraf": "^2.0.2",
     "cross-env": "^5.2.0",
     "del": "^3.0.0",
     "delay": "^4.1.0",
-    "dotenv": "^6.1.0",
-    "lerna": "^3.4.3",
+    "dotenv": "^6.2.0",
+    "lerna": "^3.13.0",
     "lodash": "^4.17.11",
     "mkdirp": "^0.5.1",
-    "nyc": "^13.1.0",
-    "tape": "^4.9.1",
-    "ts-node": "^7.0.1",
-    "typescript": "^3.1.4"
+    "nyc": "^13.3.0",
+    "tape": "^4.10.1",
+    "ts-node": "^8.0.2",
+    "typescript": "^3.3.3"
   }
 }

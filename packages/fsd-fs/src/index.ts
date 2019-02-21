@@ -1,5 +1,3 @@
-//@flow
-
 import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
 import { FSAdapterOptions } from 'fsd-fs';
 

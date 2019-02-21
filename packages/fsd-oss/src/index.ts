@@ -1,10 +1,8 @@
-// @flow
-
 import {
   ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions
 } from 'fsd';
 import { OSSAdapterOptions } from '..';
-import OSS, { AppendObjectOptions, GetStreamOptions } from 'ali-oss';
+import OSS = require('ali-oss');
 import util = require('util');
 import Path = require('path');
 import URL = require('url');
@@ -14,7 +12,6 @@ import minimatch = require('minimatch');
 import _eachLimit = require('async/eachLimit');
 import Debugger = require('debug');
 
-const oss: typeof OSS = require('ali-oss');
 const eachLimit = util.promisify(_eachLimit);
 const debug = Debugger('fsd-oss');
 
@@ -31,13 +28,12 @@ module.exports = class OSSAdapter {
     if (!options.accessKeyId) throw new Error('option accessKeyId is required for fsd-oss');
     /* istanbul ignore if */
     if (!options.accessKeySecret) throw new Error('option accessKeySecret is required for fsd-oss');
-    // $Flow
     options = Object.assign({}, options, { root: options.root || '/' });
     if (options.root[0] !== '/') {
       options.root = '/' + options.root;
     }
     this._options = options;
-    this._oss = new oss({
+    this._oss = new OSS({
       accessKeyId: options.accessKeyId,
       accessKeySecret: options.accessKeySecret,
       stsToken: options.stsToken,
@@ -57,7 +53,7 @@ module.exports = class OSSAdapter {
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
-    let options: AppendObjectOptions = {};
+    let options: OSS.AppendObjectOptions = {};
     try {
       // @ts-ignore number -> string
       options.position = await this.size(path);
@@ -69,7 +65,7 @@ module.exports = class OSSAdapter {
     debug('createReadStream %s options: %o', path, options);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let opts: GetStreamOptions = {};
+    let opts: OSS.GetStreamOptions = {};
     if (options) {
       let start = options.start || 0;
       let end = options.end || 0;
