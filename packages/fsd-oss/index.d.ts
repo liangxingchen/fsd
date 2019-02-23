@@ -3,6 +3,8 @@ import { Adapter } from 'fsd';
 declare namespace OSSAdpter {
   interface OSSAdapterOptions {
     root?: string;
+    urlPrefix?: string;
+    publicRead?: boolean;
     accessKeyId: string;
     accessKeySecret: string;
     stsToken?: string;

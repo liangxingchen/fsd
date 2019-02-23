@@ -181,9 +181,16 @@ module.exports = class OSSAdapter {
 
   async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
     debug('createUrl %s', path);
-    const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
-    return this._oss.signatureUrl(p, options);
+    const { root, urlPrefix, publicRead } = this._options;
+    let p = slash(Path.join(root, path));
+    if (urlPrefix && publicRead) {
+      return urlPrefix + p;
+    }
+    let url = this._oss.signatureUrl(p.substr(1), options);
+    if (urlPrefix) {
+      url = url.replace(/https?\:\/\/[^/]+/, urlPrefix);
+    }
+    return url;
   }
 
   async copy(path: string, dest: string): Promise<void> {

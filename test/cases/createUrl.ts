@@ -14,8 +14,9 @@ export default function (fsd: fsdFn) {
     troot.test(fsd.adapter.name + ' > createUrl abc', async (t) => {
       let filePath = '/cases/createUrl.js';
       let dir = fsd(filePath);
-      let createUrl = await dir.createUrl();
-      t.ok(createUrl.length, 'createUrl OK');
+      let url = await dir.createUrl();
+      t.ok(url.length, 'createUrl OK');
+      t.ok(url.startsWith('http://localhost/'), url);
       t.end();
     });
 

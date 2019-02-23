@@ -23,6 +23,7 @@ FSD 文档： https://github.com/maichong/fsd
 | --------------- | ---------------- | ---- | ---------------------------- |
 | root            | string           |      | 以OSS子目录作为存储根路径，例如 '/uploads' |
 | urlPrefix       | string           |      | URL前缀，用于生成下载链接               |
+| publicRead      | boolean          |      | bucket是否允许公共读               |
 | accessKeyId     | string           | Yes  | OSS访问KEY                     |
 | accessKeySecret | string           | Yes  | OSS访问秘钥                      |
 | bucket          | string           |      |                              |

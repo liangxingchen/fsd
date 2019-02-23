@@ -42,6 +42,7 @@ glob('cases/*', {
       bucket: process.env.FILE_OSS_BUCKET,
       endpoint: process.env.FILE_OSS_ENDPOINT,
       urlPrefix: 'http://localhost',
+      publicRead: true,
       root: '/fsd'
     });
 
