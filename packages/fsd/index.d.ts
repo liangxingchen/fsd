@@ -22,13 +22,14 @@ declare namespace FSD {
     response?: {
       'content-type'?: string;
       'content-disposition'?: string;
-    }
+    };
   }
 
   type Task = string;
   type Part = string;
 
   class FSDFile {
+    instanceOfFSDFile: true;
     path: string;
     dir: string;
     base: string;
@@ -61,6 +62,7 @@ declare namespace FSD {
   }
 
   class Adapter<T> {
+    instanceOfFSDAdapter: true;
     name: string;
     needEnsureDir: boolean;
     constructor(options: T);
@@ -69,7 +71,7 @@ declare namespace FSD {
     createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream>;
     unlink(path: string): Promise<void>;
     mkdir(path: string, prefix?: boolean): Promise<void>;
-    readdir(path: string, recursion?: true | string | any): Promise<Array<{ name: string, metadata?: FileMetadata }>>;
+    readdir(path: string, recursion?: true | string | any): Promise<Array<{ name: string; metadata?: FileMetadata }>>;
     createUrl(path: string, options?: CreateUrlOptions): Promise<string>;
     copy(path: string, dest: string): Promise<void>;
     rename(path: string, dest: string): Promise<void>;
@@ -98,17 +100,19 @@ declare namespace FSD {
      * 此方法调用时可不必先调用writePart，能直接使用其他File对象writePart方法返回的Part
      * parts 参数顺序可以和initMultipartUpload返回的列表顺序不一样
      * @param {string} path 目标路径
-     * @param {Part[]} parts 
+     * @param {Part[]} parts
      */
     completeMultipartUpload(path: string, parts: Part[]): Promise<void>;
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-name-casing
   interface fsd {
-    (path: string): FSDFile;
     adapter: Adapter<any>;
+    (path: string): FSDFile;
   }
 }
 
+// eslint-disable-next-line no-redeclare
 declare function FSD(options: FSD.DriverOptions): FSD.fsd;
 
 export = FSD;

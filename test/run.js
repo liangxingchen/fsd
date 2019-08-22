@@ -21,6 +21,7 @@ glob('cases/*', {
     // FS
     del.sync('/tmp/fsd', { force: true });
     mkdirp.sync('/tmp/fsd');
+    mkdirp.sync('/tmp/fsd-tmp');
     let adapter = new FSAdapter({
       root: '/tmp/fsd',
       urlPrefix: 'http://localhost',

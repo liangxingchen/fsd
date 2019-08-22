@@ -1,3 +1,5 @@
 import { eachLimit } from 'async';
 
-export = eachLimit;
+declare const el: typeof eachLimit;
+
+export = el;

@@ -9,8 +9,8 @@
     "build": "lerna run build",
     "test": "cross-env NODE_ENV=test tape test/ts.js",
     "cover": "cross-env NODE_ENV=test nyc node_modules/.bin/tape test/ts.js; nyc report --reporter=html",
-    "eslint": "eslint ./",
-    "fix": "eslint --fix ./"
+    "eslint": "eslint --ext .ts ./",
+    "fix": "eslint --ext .ts --fix ./"
   },
   "repository": {
     "type": "git",
@@ -31,6 +31,8 @@
       "coverage",
       "test",
       "**/lib/**",
+      ".history/",
+      ".*",
       "**/*.d.ts"
     ],
     "reporter": [
@@ -39,26 +41,35 @@
     "all": true
   },
   "devDependencies": {
-    "@types/ali-oss": "^6.0.3",
-    "@types/async": "^2.4.1",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-typescript": "^7.3.3",
+    "@types/ali-oss": "^6.0.4",
+    "@types/async": "^3.0.1",
     "@types/debug": "0.0.31",
     "@types/delay": "^3.1.0",
     "@types/glob": "^7.1.1",
-    "@types/is-stream": "^1.1.0",
-    "@types/lodash": "^4.14.121",
+    "@types/is-stream": "^2.0.0",
+    "@types/lodash": "^4.14.137",
     "@types/mz": "0.0.32",
-    "@types/node": "^11.9.4",
+    "@types/node": "^12.7.2",
     "@types/rimraf": "^2.0.2",
+    "@typescript-eslint/eslint-plugin": "^1.12.0",
+    "@typescript-eslint/parser": "^1.12.0",
+    "babel-eslint": "^10.0.2",
     "cross-env": "^5.2.0",
-    "del": "^3.0.0",
-    "delay": "^4.1.0",
-    "dotenv": "^6.2.0",
-    "lerna": "^3.13.0",
-    "lodash": "^4.17.11",
+    "del": "^5.0.0",
+    "delay": "^4.3.0",
+    "dotenv": "^8.1.0",
+    "eslint": "^6.2.1",
+    "eslint-config-alloy": "^2.0.5",
+    "lerna": "^3.16.4",
+    "lodash": "^4.17.15",
     "mkdirp": "^0.5.1",
-    "nyc": "^13.3.0",
-    "tape": "^4.10.1",
-    "ts-node": "^8.0.2",
+    "nyc": "^14.1.1",
+    "tape": "^4.11.0",
+    "ts-node": "^8.3.0",
     "typescript": "^3.3.3"
   }
 }

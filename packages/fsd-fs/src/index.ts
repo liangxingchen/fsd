@@ -1,15 +1,15 @@
+import * as util from 'util';
+import * as os from 'os';
+import * as URL from 'url';
+import * as Path from 'path';
+import * as fs from 'mz/fs';
+import * as isStream from 'is-stream';
+import * as _glob from 'glob';
+import * as _rimraf from 'rimraf';
+import * as Debugger from 'debug';
 import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
 import { FSAdapterOptions } from 'fsd-fs';
 
-import util = require('util');
-import os = require('os');
-import URL = require('url');
-import Path = require('path');
-import fs = require('mz/fs');
-import isStream = require('is-stream');
-import _glob = require('glob');
-import _rimraf = require('rimraf');
-import Debugger = require('debug');
 const _cpr = require('cpr');
 
 const glob = util.promisify(_glob);
@@ -18,11 +18,13 @@ const cpr = util.promisify(_cpr);
 const debug = Debugger('fsd-fs');
 
 module.exports = class FSAdapter {
+  instanceOfFSDAdapter: true;
   name: string;
   needEnsureDir: boolean;
   _options: FSAdapterOptions;
 
   constructor(options: FSAdapterOptions) {
+    this.instanceOfFSDAdapter = true;
     this.name = 'FSAdapter';
     this.needEnsureDir = true;
     this._options = Object.assign({
@@ -43,7 +45,7 @@ module.exports = class FSAdapter {
     let { root, mode } = this._options;
     let p = Path.join(root, path);
     if (isStream.readable(data)) {
-      let stream: NodeJS.ReadableStream = <NodeJS.ReadableStream>data;
+      let stream: NodeJS.ReadableStream = data;
       await new Promise((resolve, reject) => {
         fs.stat(p, (error, stat) => {
           let start = error ? 0 : stat.size;
@@ -57,7 +59,7 @@ module.exports = class FSAdapter {
       });
       return;
     }
-    await fs.appendFile(p, <string | Buffer>data, { mode });
+    await fs.appendFile(p, data as string | Buffer, { mode });
   }
 
   async createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
@@ -104,7 +106,7 @@ module.exports = class FSAdapter {
     await fs.mkdir(fsPath);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string, metadata?: FileMetadata }>> {
+  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string; metadata?: FileMetadata }>> {
     debug('readdir %s', path);
     if (recursion === true) {
       recursion = '**/*';
@@ -187,10 +189,10 @@ module.exports = class FSAdapter {
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let taskId = 'upload-' + Math.random().toString().substr(2) + '-';
+    let taskId = `upload-${Math.random().toString().substr(2)}-`;
     let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
-      tasks.push('task:' + taskId + i + path + '?' + i);
+      tasks.push(`task:${taskId}${i}${path}?${i}`);
     }
     return tasks;
   }
@@ -215,9 +217,9 @@ module.exports = class FSAdapter {
       if (!part.startsWith('part:')) throw new Error(`${part} is not a part file`);
       let info = URL.parse(part);
       /* istanbul ignore if */
-      if (!info.hostname) throw new Error('Invalid part link: ' + part);
+      if (!info.hostname) throw new Error(`Invalid part link: ${part}`);
       /* istanbul ignore if */
-      if (info.pathname !== path) throw new Error('Invalid part link: ' + part + ' for path: ' + path);
+      if (info.pathname !== path) throw new Error(`Invalid part link: ${part} for path: ${path}`);
       let file = Path.join(this._options.tmpdir, info.hostname);
       /* istanbul ignore if */
       if (!await fs.exists(file)) throw new Error(`part file ${part} is not exists`);

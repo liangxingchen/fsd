@@ -1,9 +1,9 @@
-import { Adapter, FileMetadata, ReadStreamOptions, WriteStreamOptions, CreateUrlOptions, Task, Part } from 'fsd';
-import Path = require('path');
-import slash = require('slash');
+import * as Path from 'path';
+import * as slash from 'slash';
+import * as Debugger from 'debug';
+import * as isStream from 'is-stream';
 import { PassThrough } from 'stream';
-import isStream = require('is-stream');
-import Debugger = require('debug');
+import { Adapter, FileMetadata, ReadStreamOptions, WriteStreamOptions, CreateUrlOptions, Task, Part } from '..';
 
 const debug = Debugger('fsd');
 
@@ -11,6 +11,7 @@ module.exports = class FSDFile {
   _adapter: Adapter<any>;
   _size: number | null;
   _lastModified: Date | null;
+  instanceOfFSDFile: true;
   needEnsureDir: boolean;
   path: string;
   dir: string;
@@ -24,9 +25,10 @@ module.exports = class FSDFile {
     if (typeof path === 'object' && path.path) {
       ({ path } = path);
     }
-    if ((<string>path)[0] !== '/') {
-      path = '/' + path;
+    if (path[0] !== '/') {
+      path = `/${path}`;
     }
+    this.instanceOfFSDFile = true;
     this._adapter = adapter;
     this.needEnsureDir = adapter.needEnsureDir;
     this.path = path as string;
@@ -103,9 +105,9 @@ module.exports = class FSDFile {
       stream.on('error', reject);
       stream.on('finish', resolve);
       if (isStream.readable(data)) {
-        (<NodeJS.ReadableStream>data).pipe(stream);
+        (data as NodeJS.ReadableStream).pipe(stream);
       } else {
-        stream.end(<string>data);
+        stream.end(data as string);
       }
     });
   }
@@ -258,12 +260,13 @@ module.exports = class FSDFile {
     if (!task.startsWith('task:')) throw new Error('Invalid task link');
     let stream: NodeJS.ReadableStream;
     if (isStream.readable(data)) {
-      stream = <NodeJS.ReadableStream>data;
+      // NodeJS.ReadableStream
+      stream = data;
     } else {
       if (typeof data === 'string') {
         data = Buffer.from(data);
       }
-      size = (<Buffer | string>data).length;
+      size = (data as Buffer | string).length;
       stream = new PassThrough();
       // @ts-ignore PassThrough 有end方法
       stream.end(data);

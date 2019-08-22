@@ -1,27 +1,27 @@
-import {
-  ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions
-} from 'fsd';
+import * as util from 'util';
+import * as URL from 'url';
+import * as Path from 'path';
+import * as OSS from 'ali-oss';
+import * as slash from 'slash';
+import * as minimatch from 'minimatch';
+import * as Debugger from 'debug';
+import * as _eachLimit from 'async/eachLimit';
+import { PassThrough } from 'stream';
+import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
 import { OSSAdapterOptions } from '..';
-import OSS = require('ali-oss');
-import util = require('util');
-import Path = require('path');
-import URL = require('url');
-import slash = require('slash');
-import Stream = require('stream');
-import minimatch = require('minimatch');
-import _eachLimit = require('async/eachLimit');
-import Debugger = require('debug');
 
 const eachLimit = util.promisify(_eachLimit);
 const debug = Debugger('fsd-oss');
 
 module.exports = class OSSAdapter {
+  instanceOfFSDAdapter: true;
   name: string;
   needEnsureDir: boolean;
   _options: OSSAdapterOptions;
   _oss: OSS;
 
   constructor(options: OSSAdapterOptions) {
+    this.instanceOfFSDAdapter = true;
     this.name = 'OSSAdapter';
     this.needEnsureDir = false;
     /* istanbul ignore if */
@@ -30,7 +30,7 @@ module.exports = class OSSAdapter {
     if (!options.accessKeySecret) throw new Error('option accessKeySecret is required for fsd-oss');
     options = Object.assign({}, options, { root: options.root || '/' });
     if (options.root[0] !== '/') {
-      options.root = '/' + options.root;
+      options.root = `/${options.root}`;
     }
     this._options = options;
     this._oss = new OSS({
@@ -71,12 +71,12 @@ module.exports = class OSSAdapter {
       let end = options.end || 0;
       let Range = '';
       if (start && !end) {
-        Range = start + '-';
+        Range = `${start}-`;
       } else if (end) {
-        Range = start + '-' + end;
+        Range = `${start}-${end}`;
       }
       if (Range) {
-        opts.headers = { Range: 'bytes=' + Range };
+        opts.headers = { Range: `bytes=${Range}` };
       }
     }
     let res = await this._oss.getStream(p, opts);
@@ -90,7 +90,7 @@ module.exports = class OSSAdapter {
     if (options && options.start) throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let stream = new Stream.PassThrough();
+    let stream = new PassThrough();
     this._oss.putStream(p, stream);
     return stream;
   }
@@ -136,7 +136,7 @@ module.exports = class OSSAdapter {
     debug('mkdir result: %O', res);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string, metadata: FileMetadata }>> {
+  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string; metadata: FileMetadata }>> {
     debug('readdir %s', path);
     let delimiter = recursion ? '' : '/';
     let pattern = '';
@@ -149,7 +149,7 @@ module.exports = class OSSAdapter {
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
 
-    let results: Array<{ name: string, metadata: FileMetadata }> = [];
+    let results: Array<{ name: string; metadata: FileMetadata }> = [];
     let nextMarker = '';
     do {
       let list = await this._oss.list({
@@ -315,7 +315,7 @@ module.exports = class OSSAdapter {
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push('task:' + uploadId + path + '?' + i);
+      files.push(`task:${uploadId}${path}?${i}`);
     }
     return files;
   }
@@ -333,7 +333,7 @@ module.exports = class OSSAdapter {
       size
     });
     let etag = res.etag.replace(/"/g, '');
-    return partTask.replace('task:', 'part:') + '#' + etag;
+    return `${partTask.replace('task:', 'part:')}#${etag}`;
   }
 
   async completeMultipartUpload(path: string, parts: Part[]): Promise<void> {

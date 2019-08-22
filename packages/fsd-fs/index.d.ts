@@ -10,6 +10,7 @@ declare namespace FSAdapter {
 
 }
 
+// eslint-disable-next-line no-redeclare
 declare class FSAdapter extends Adapter<FSAdapter.FSAdapterOptions> {
 }
 

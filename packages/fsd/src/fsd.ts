@@ -9,4 +9,4 @@ module.exports = function FSD(options: DriverOptions) {
 
   fsd.adapter = options.adapter;
   return fsd;
-}
+};
