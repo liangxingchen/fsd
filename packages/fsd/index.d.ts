@@ -78,8 +78,28 @@ declare namespace FSD {
     isDirectory(path: string): Promise<boolean>;
     size(path: string): Promise<number>;
     lastModified(path: string): Promise<Date>;
+    /**
+     * 初始化一个多Part上传任务
+     * @param {string} path 目标路径
+     * @param {number} partCount Part数量
+     */
     initMultipartUpload(path: string, partCount: number): Promise<Task[]>;
+    /**
+     * 上传Part
+     * 次方法调用时可不必先调用initMultipartUpload，能直接使用其他File对象initMultipartUpload方法返回的Task
+     * @param {string} path 目标路径
+     * @param {Task} partTask Part任务
+     * @param {Stream} data 数据流
+     * @param {number} size 数据块大小
+     */
     writePart(path: string, partTask: Task, data: NodeJS.ReadableStream, size: number): Promise<Part>;
+    /**
+     * 完成多Part上传
+     * 此方法调用时可不必先调用writePart，能直接使用其他File对象writePart方法返回的Part
+     * parts 参数顺序可以和initMultipartUpload返回的列表顺序不一样
+     * @param {string} path 目标路径
+     * @param {Part[]} parts 
+     */
     completeMultipartUpload(path: string, parts: Part[]): Promise<void>;
   }
 

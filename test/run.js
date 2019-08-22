@@ -43,7 +43,7 @@ glob('cases/*', {
       endpoint: process.env.FILE_OSS_ENDPOINT,
       urlPrefix: 'http://localhost',
       publicRead: true,
-      root: '/fsd'
+      root: '/fsd-test'
     });
 
     for (let file of files) {

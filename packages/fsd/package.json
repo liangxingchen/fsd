@@ -13,7 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "debug": "^4.1.1",
-    "is-stream": "^1.1.0",
-    "slash": "^2.0.0"
+    "is-stream": "^2.0.0",
+    "slash": "^3.0.0"
   }
 }
