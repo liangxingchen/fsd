@@ -1,6 +1,6 @@
 {
   "name": "fsd-fs",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "File system adapter for fsd",
   "main": "lib/index.js",
   "types": "index.d.ts",
