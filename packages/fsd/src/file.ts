@@ -75,7 +75,7 @@ module.exports = class FSDFile {
       options.end = (position + length) - 1;
     }
     let stream = await this._adapter.createReadStream(this.path, options);
-    let res: Promise<Buffer | string> = new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       let buffers: Buffer[] = [];
       stream.on('error', reject);
       stream.on('data', (data) => buffers.push(data));
@@ -88,8 +88,6 @@ module.exports = class FSDFile {
         }
       });
     });
-
-    return await res;
   }
 
   async write(data?: string | Buffer | NodeJS.ReadableStream): Promise<void> {
@@ -101,6 +99,16 @@ module.exports = class FSDFile {
     this._size = null;
     this._lastModified = null;
     let stream = await this._adapter.createWriteStream(this.path);
+    if (stream.promise) {
+      // with promise
+      if (isStream.readable(data)) {
+        (data as NodeJS.ReadableStream).pipe(stream);
+      } else {
+        stream.end(data as string);
+      }
+      await stream.promise;
+      return;
+    }
     await new Promise((resolve, reject) => {
       stream.on('error', reject);
       stream.on('finish', resolve);

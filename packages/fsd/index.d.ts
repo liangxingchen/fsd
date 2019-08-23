@@ -25,6 +25,10 @@ declare namespace FSD {
     };
   }
 
+  interface WithPromise {
+    promise?: Promise<any>;
+  }
+
   type Task = string;
   type Part = string;
 
@@ -68,7 +72,7 @@ declare namespace FSD {
     constructor(options: T);
     append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
     createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;
-    createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream>;
+    createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream & WithPromise>;
     unlink(path: string): Promise<void>;
     mkdir(path: string, prefix?: boolean): Promise<void>;
     readdir(path: string, recursion?: true | string | any): Promise<Array<{ name: string; metadata?: FileMetadata }>>;

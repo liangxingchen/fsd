@@ -7,7 +7,7 @@ import * as minimatch from 'minimatch';
 import * as Debugger from 'debug';
 import * as _eachLimit from 'async/eachLimit';
 import { PassThrough } from 'stream';
-import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
+import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions, WithPromise } from 'fsd';
 import { OSSAdapterOptions } from '..';
 
 const eachLimit = util.promisify(_eachLimit);
@@ -85,13 +85,13 @@ module.exports = class OSSAdapter {
     return res.stream;
   }
 
-  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream> {
+  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream & WithPromise> {
     debug('createWriteStream %s', path);
     if (options && options.start) throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
-    let stream = new PassThrough();
-    this._oss.putStream(p, stream);
+    let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
+    stream.promise = this._oss.putStream(p, stream);
     return stream;
   }
 
