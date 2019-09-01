@@ -1,12 +1,12 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > initMultipartUpload', (troot) => {
+  test(`${fsd.adapter.name} > initMultipartUpload`, (troot) => {
     let filePath = 'a.js';
 
-    troot.test(fsd.adapter.name + ' > before initMultipartUpload', async(t) => {
+    troot.test(`${fsd.adapter.name} > before initMultipartUpload`, async (t) => {
       let file = fsd(filePath);
       await file.write('test');
       await delay(100);
@@ -14,7 +14,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > initMultipartUpload a.js', async(t) => {
+    troot.test(`${fsd.adapter.name} > initMultipartUpload a.js`, async (t) => {
       let file = fsd(filePath);
       let part = 2;
       let parts = await file.initMultipartUpload(part);
@@ -22,7 +22,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear initMultipartUpload', async(t) => {
+    troot.test(`${fsd.adapter.name} > clear initMultipartUpload`, async (t) => {
       let file = fsd(filePath);
       await file.unlink();
       t.end();

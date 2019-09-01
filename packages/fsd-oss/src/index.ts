@@ -1,16 +1,14 @@
-import * as util from 'util';
-import * as URL from 'url';
 import * as Path from 'path';
 import * as OSS from 'ali-oss';
 import * as slash from 'slash';
 import * as minimatch from 'minimatch';
 import * as Debugger from 'debug';
-import * as _eachLimit from 'async/eachLimit';
+import * as eachLimit from 'async/eachLimit';
+import { URL } from 'url';
 import { PassThrough } from 'stream';
 import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions, WithPromise } from 'fsd';
 import { OSSAdapterOptions } from '..';
 
-const eachLimit = util.promisify(_eachLimit);
 const debug = Debugger('fsd-oss');
 
 module.exports = class OSSAdapter {
@@ -315,30 +313,30 @@ module.exports = class OSSAdapter {
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push(`task:${uploadId}${path}?${i}`);
+      files.push(`task://${uploadId}${path}?${i}`);
     }
     return files;
   }
 
-  async writePart(path: Task, partTask: string, data: NodeJS.ReadableStream, size: number): Promise<Part> {
+  async writePart(path: string, partTask: Task, data: NodeJS.ReadableStream, size: number): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
     let p = slash(Path.join(this._options.root, path)).substr(1);
-    let info = URL.parse(partTask);
+    let info = new URL(partTask);
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();
     // @ts-ignore _uploadPart
-    let res = await this._oss._uploadPart(p, uploadId, info.query, {
+    let res = await this._oss._uploadPart(p, uploadId, info.search.substr(1), {
       stream: data,
       size
     });
     let etag = res.etag.replace(/"/g, '');
-    return `${partTask.replace('task:', 'part:')}#${etag}`;
+    return `${partTask.replace('task://', 'part://')}#${etag}`;
   }
 
   async completeMultipartUpload(path: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', path);
-    let info = URL.parse(parts[0]);
+    let info = new URL(parts[0]);
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();

@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "outDir": "lib",
@@ -8,18 +11,18 @@
     "baseUrl": ".",
     "paths": {
       "*": [
-        "packages/*",
-        "typings/*"
+        "../../packages/*",
+        "../../typings/*"
       ]
     },
     "target": "ES2017",
     "lib": [
-      "es7"
+      "es7",
+      "dom"
     ]
   },
   "include": [
-    "src/**/*",
-    "test/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"

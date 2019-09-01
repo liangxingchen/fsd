@@ -1,16 +1,16 @@
-import test = require('tape');
+import * as test from 'tape';
 import delay from 'delay';
-import { fsd as fsdFn } from '../../packages/fsd'
+import { fsd as fsdFn } from '../../packages/fsd';
 
 export default function (fsd: fsdFn) {
 
-  test(fsd.adapter.name + ' > append', (troot) => {
+  test(`${fsd.adapter.name} > append`, (troot) => {
     const ROOT = fsd('/append/');
     const FILE = fsd(`/append/awesome.txt`);
     const TEST = fsd('/append/testAwesome.txt');
     const DATA = 'hello world';
 
-    troot.test(fsd.adapter.name + ' > append string', async (t) => {
+    troot.test(`${fsd.adapter.name} > append string`, async (t) => {
       await ROOT.mkdir();
       await FILE.unlink();
       await delay(200);
@@ -25,7 +25,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > append buffer', async (t) => {
+    troot.test(`${fsd.adapter.name} > append buffer`, async (t) => {
       await FILE.unlink();
       await delay(200);
       let buf = Buffer.from(DATA);
@@ -35,7 +35,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > append stream', async (t) => {
+    troot.test(`${fsd.adapter.name} > append stream`, async (t) => {
       await TEST.unlink();
       let stream = await FILE.createReadStream();
       await TEST.append(stream);
@@ -45,7 +45,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear append', async (t) => {
+    troot.test(`${fsd.adapter.name} > clear append`, async (t) => {
       await ROOT.unlink();
       t.end();
     });

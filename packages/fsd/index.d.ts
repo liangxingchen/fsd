@@ -65,10 +65,18 @@ declare namespace FSD {
     toJSON(): string;
   }
 
+  interface AllocOptions {
+    path?: string;
+    name?: string;
+    size?: number;
+    [key: string]: any;
+  }
+
   class Adapter<T> {
     instanceOfFSDAdapter: true;
     name: string;
     needEnsureDir: boolean;
+    alloc?: (options?: AllocOptions) => Promise<string>;
     constructor(options: T);
     append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
     createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;

@@ -1,16 +1,16 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > size', (troot) => {
+  test(`${fsd.adapter.name} > size`, (troot) => {
     let DIR = fsd('/size/');
     let EMPTY = fsd('/size/empty.txt');
     let FILE = fsd('/size/file.txt');
     let APPEND = fsd('/size/append.txt');
     let DATA = 'hello world';
 
-    troot.test(fsd.adapter.name + ' > dir size', async (t) => {
+    troot.test(`${fsd.adapter.name} > dir size`, async (t) => {
       await DIR.unlink();
       await DIR.mkdir();
       await delay(200);
@@ -18,7 +18,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > file size', async (t) => {
+    troot.test(`${fsd.adapter.name} > file size`, async (t) => {
       await EMPTY.append('');
       await delay(200);
       t.equal(await EMPTY.size(), 0, 'empty file');
@@ -33,7 +33,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear size', async (t) => {
+    troot.test(`${fsd.adapter.name} > clear size`, async (t) => {
       await DIR.unlink();
       t.end();
     });

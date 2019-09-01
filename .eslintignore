@@ -1,6 +1,6 @@
 node_modules/
 coverage/
-test/
 packages/fsd/lib
 packages/fsd-fs/lib
 packages/fsd-oss/lib
+*.js

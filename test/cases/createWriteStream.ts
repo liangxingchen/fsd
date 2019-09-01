@@ -1,20 +1,20 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > createWriteStream', (troot) => {
+  test(`${fsd.adapter.name} > createWriteStream`, (troot) => {
     let filePath = `awesome.txt`;
     let writePath = 'writeAwesome.txt';
     let str = 'hello world';
-    troot.test(fsd.adapter.name + ' > before createWriteStream', async(t) => {
+    troot.test(`${fsd.adapter.name} > before createWriteStream`, async (t) => {
       let file = fsd(filePath);
       await file.write(str);
       await delay(100);
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > createWriteStream awesome.txt writeAwesome.txt', async(t) => {
+    troot.test(`${fsd.adapter.name} > createWriteStream awesome.txt writeAwesome.txt`, async (t) => {
       let readFile = fsd(filePath);
       let writeFile = fsd(writePath);
       let readStream = await readFile.createReadStream();
@@ -27,7 +27,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear createWriteStream', async(t) => {
+    troot.test(`${fsd.adapter.name} > clear createWriteStream`, async (t) => {
       let file = fsd(filePath);
       await file.unlink();
       t.end();

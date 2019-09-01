@@ -3,6 +3,10 @@ module.exports = {
     'eslint-config-alloy/typescript'
   ],
   rules: {
+    // eslint 高版本中废弃
+    '@typescript-eslint/consistent-type-assertions': 'off',
+    '@typescript-eslint/typedef': 'off',
+    //
     'arrow-parens': 'error',
     complexity: 'off',
     indent: ['error', 2, {

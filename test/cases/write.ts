@@ -1,13 +1,13 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > write', (troot) => {
+  test(`${fsd.adapter.name} > write`, (troot) => {
     let filePath = `/awesome.txt`;
     let testPath = '/testAwesome.txt';
     let appendStr = 'hello world';
-    troot.test(fsd.adapter.name + ' > before write', async(t) => {
+    troot.test(`${fsd.adapter.name} > before write`, async (t) => {
       let file = fsd(filePath);
       if (!(await file.exists())) {
         await file.append(appendStr);
@@ -15,7 +15,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > write awesome.txt string', async(t) => {
+    troot.test(`${fsd.adapter.name} > write awesome.txt string`, async (t) => {
       let file = fsd(filePath);
       await file.write(appendStr);
       let readStr = await file.read('utf8');
@@ -23,7 +23,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > write awesome.txt buffer', async(t) => {
+    troot.test(`${fsd.adapter.name} > write awesome.txt buffer`, async (t) => {
       let file = fsd(filePath);
       await file.write(Buffer.from(appendStr));
       let readStr = await file.read('utf8');
@@ -31,7 +31,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > write awesome.txt stream', async(t) => {
+    troot.test(`${fsd.adapter.name} > write awesome.txt stream`, async (t) => {
       let file = fsd(filePath);
       let testFile = fsd(testPath);
       await testFile.unlink();
@@ -44,7 +44,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear write', async(t) => {
+    troot.test(`${fsd.adapter.name} > clear write`, async (t) => {
       let file = fsd(filePath);
       await file.unlink();
       t.end();

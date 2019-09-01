@@ -1,13 +1,13 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > isDirectory', (troot) => {
+  test(`${fsd.adapter.name} > isDirectory`, (troot) => {
     let dirPath = '/abc/';
     let filePath = '/abc/a.js';
 
-    troot.test(fsd.adapter.name + ' > before isDirectory', async (t) => {
+    troot.test(`${fsd.adapter.name} > before isDirectory`, async (t) => {
       let dir = fsd(dirPath);
       let file = fsd(filePath);
       await dir.unlink();
@@ -19,13 +19,13 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > isDirectory true', async (t) => {
+    troot.test(`${fsd.adapter.name} > isDirectory true`, async (t) => {
       let dir = fsd(dirPath);
       t.ok(await dir.isDirectory(), 'isDirectory true ok');
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > isDirectory false', async (t) => {
+    troot.test(`${fsd.adapter.name} > isDirectory false`, async (t) => {
       let file = fsd(filePath);
       try {
         await file.isDirectory();
@@ -36,7 +36,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear isDirectory', async (t) => {
+    troot.test(`${fsd.adapter.name} > clear isDirectory`, async (t) => {
       let dir = fsd(dirPath);
       await dir.unlink();
       t.end();

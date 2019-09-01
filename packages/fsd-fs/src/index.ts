@@ -1,12 +1,12 @@
 import * as util from 'util';
 import * as os from 'os';
-import * as URL from 'url';
 import * as Path from 'path';
 import * as fs from 'mz/fs';
 import * as isStream from 'is-stream';
 import * as _glob from 'glob';
 import * as _rimraf from 'rimraf';
 import * as Debugger from 'debug';
+import { URL } from 'url';
 import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
 import { FSAdapterOptions } from 'fsd-fs';
 
@@ -71,8 +71,8 @@ module.exports = class FSAdapter {
   async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream> {
     debug('createWriteStream %s', path);
     let p = Path.join(this._options.root, path);
-    if (path.startsWith('task:')) {
-      let info = URL.parse(path);
+    if (path.startsWith('task://')) {
+      let info = new URL(path);
       /* istanbul ignore if */
       if (!info.pathname) throw new Error('Invalid part pathname');
       p = Path.join(this._options.tmpdir, info.hostname || '');
@@ -192,21 +192,21 @@ module.exports = class FSAdapter {
     let taskId = `upload-${Math.random().toString().substr(2)}-`;
     let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
-      tasks.push(`task:${taskId}${i}${path}?${i}`);
+      tasks.push(`task://${taskId}${i}${path}?${i}`);
     }
     return tasks;
   }
 
   async writePart(path: string, partTask: Task, data: NodeJS.ReadableStream): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
-    let info = URL.parse(partTask);
+    let info = new URL(partTask);
     /* istanbul ignore if */
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let writeStream = await this.createWriteStream(partTask);
     await new Promise((resolve, reject) => {
       data.pipe(writeStream).on('close', resolve).on('error', reject);
     });
-    return partTask.replace('task:', 'part:');
+    return partTask.replace('task://', 'part://');
   }
 
   async completeMultipartUpload(path: string, parts: Part[]): Promise<void> {
@@ -214,8 +214,8 @@ module.exports = class FSAdapter {
     let files = [];
     for (let part of parts) {
       /* istanbul ignore if */
-      if (!part.startsWith('part:')) throw new Error(`${part} is not a part file`);
-      let info = URL.parse(part);
+      if (!part.startsWith('part://')) throw new Error(`${part} is not a part file`);
+      let info = new URL(part);
       /* istanbul ignore if */
       if (!info.hostname) throw new Error(`Invalid part link: ${part}`);
       /* istanbul ignore if */

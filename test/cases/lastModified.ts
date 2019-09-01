@@ -1,28 +1,28 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > lastModified', (troot) => {
+  test(`${fsd.adapter.name} > lastModified`, (troot) => {
     let DIR = fsd('/size/');
     let FILE = fsd('/size/file.txt');
     let APPEND = fsd('/size/append.txt');
     let DATA = 'hello world';
 
-    troot.test(fsd.adapter.name + ' > before lastModified', async (t) => {
+    troot.test(`${fsd.adapter.name} > before lastModified`, async (t) => {
       await DIR.unlink();
       await DIR.mkdir();
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > lastModified date', async (t) => {
+    troot.test(`${fsd.adapter.name} > lastModified date`, async (t) => {
       await FILE.write(DATA);
       await delay(200);
       t.ok((await FILE.lastModified()) instanceof Date, 'Date type');
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > lastModified after append', async (t) => {
+    troot.test(`${fsd.adapter.name} > lastModified after append`, async (t) => {
       await APPEND.append(DATA);
       let time1 = await APPEND.lastModified();
       t.ok(time1 instanceof Date, 'Date type');
@@ -37,7 +37,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear size', async (t) => {
+    troot.test(`${fsd.adapter.name} > clear size`, async (t) => {
       await DIR.unlink();
       t.end();
     });

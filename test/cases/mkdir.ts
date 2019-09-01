@@ -1,15 +1,15 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
+import * as test from 'tape';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > mkdir', (troot) => {
+  test(`${fsd.adapter.name} > mkdir`, (troot) => {
     const DIR = fsd('/mkdir/');
     const SUB1 = fsd('/mkdir/mk/sub/1/');
     const SUB2 = fsd('/mkdir/mk/sub/2/');
     const FILE = fsd('/mkdir/auto/make/parent/dir.txt');
 
-    troot.test(fsd.adapter.name + ' > mkdir', async (t) => {
+    troot.test(`${fsd.adapter.name} > mkdir`, async (t) => {
       await DIR.mkdir();
       await delay(200);
       t.ok(await DIR.exists(), 'mkdir');
@@ -17,7 +17,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > mkdir sub dir', async (t) => {
+    troot.test(`${fsd.adapter.name} > mkdir sub dir`, async (t) => {
       await SUB1.mkdir(true);
       t.ok(await SUB1.exists(), 'mkdir sub dir');
       await SUB2.mkdir(true);
@@ -25,7 +25,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > ensure parent dir', async (t) => {
+    troot.test(`${fsd.adapter.name} > ensure parent dir`, async (t) => {
       if (FILE.needEnsureDir) {
         let dir = fsd(FILE.dir);
         await dir.mkdir(true);
@@ -47,7 +47,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > mkdir clear', async (t) => {
+    troot.test(`${fsd.adapter.name} > mkdir clear`, async (t) => {
       await DIR.unlink();
       await delay(200);
       t.ok(!await SUB1.exists(), 'remove sub dir');

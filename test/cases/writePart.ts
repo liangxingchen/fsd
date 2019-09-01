@@ -1,16 +1,16 @@
-import test = require('tape');
-import { fsd as fsdFn } from '../../packages/fsd'
-import _ = require('lodash');
+import * as test from 'tape';
+import * as _ from 'lodash';
+import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: fsdFn) {
-  test(fsd.adapter.name + ' > writePart', (troot) => {
+  test(`${fsd.adapter.name} > writePart`, (troot) => {
     const DATA_STRING = _.repeat('上传，hello world', 10240);
     const FILE_PATH = '/data.txt';
     const UPLOAD_FILE_PATH = '/upload.txt';
     const TASK_COUNT = 3;
 
-    troot.test(fsd.adapter.name + ' > before writePart', async (t) => {
+    troot.test(`${fsd.adapter.name} > before writePart`, async (t) => {
       let file = fsd(FILE_PATH);
       await file.write(DATA_STRING);
       await delay(200);
@@ -20,7 +20,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > writePart awesome.txt string', async (t) => {
+    troot.test(`${fsd.adapter.name} > writePart awesome.txt string`, async (t) => {
       let uploadFile = fsd(UPLOAD_FILE_PATH);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
@@ -46,7 +46,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > writePart awesome.txt buffer', async (t) => {
+    troot.test(`${fsd.adapter.name} > writePart awesome.txt buffer`, async (t) => {
       let uploadFile = fsd(UPLOAD_FILE_PATH);
       if (await uploadFile.exists()) {
         await uploadFile.unlink();
@@ -72,7 +72,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > writePart awesome.txt stream', async (t) => {
+    troot.test(`${fsd.adapter.name} > writePart awesome.txt stream`, async (t) => {
       let file = fsd(FILE_PATH);
       let uploadFile = fsd(UPLOAD_FILE_PATH);
       if (await uploadFile.exists()) {
@@ -99,7 +99,7 @@ export default function (fsd: fsdFn) {
       t.end();
     });
 
-    troot.test(fsd.adapter.name + ' > clear writePart', async (t) => {
+    troot.test(`${fsd.adapter.name} > clear writePart`, async (t) => {
       let file = fsd(FILE_PATH);
       await file.unlink();
       let uploadFile = fsd(UPLOAD_FILE_PATH);
