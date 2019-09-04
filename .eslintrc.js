@@ -1,12 +1,9 @@
 module.exports = {
   extends: [
-    'eslint-config-alloy/typescript'
+    'alloy',
+    'alloy/typescript'
   ],
   rules: {
-    // eslint 高版本中废弃
-    '@typescript-eslint/consistent-type-assertions': 'off',
-    '@typescript-eslint/typedef': 'off',
-    //
     'arrow-parens': 'error',
     complexity: 'off',
     indent: ['error', 2, {
@@ -16,7 +13,7 @@ module.exports = {
     // 禁止不必要的布尔转换
     'no-extra-boolean-cast': 'error',
     // 禁止不必要的括号
-    'no-extra-parens': 'error',
+    'no-extra-parens': 'off',
     // 强制使用有效的 JSDoc 注释
     // 'valid-jsdoc': 'error',
     'no-param-reassign': 'off',

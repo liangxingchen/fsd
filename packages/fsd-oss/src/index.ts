@@ -6,7 +6,15 @@ import * as Debugger from 'debug';
 import * as eachLimit from 'async/eachLimit';
 import { URL } from 'url';
 import { PassThrough } from 'stream';
-import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions, WithPromise } from 'fsd';
+import {
+  ReadStreamOptions,
+  WriteStreamOptions,
+  Task,
+  Part,
+  FileMetadata,
+  CreateUrlOptions,
+  WithPromise
+} from 'fsd';
 import { OSSAdapterOptions } from '..';
 
 const debug = Debugger('fsd-oss');
@@ -55,11 +63,14 @@ module.exports = class OSSAdapter {
     try {
       // @ts-ignore number -> string
       options.position = await this.size(path);
-    } catch (e) { }
+    } catch (e) {}
     await this._oss.append(p, data, options);
   }
 
-  async createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
+  async createReadStream(
+    path: string,
+    options?: ReadStreamOptions
+  ): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', path, options);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
@@ -83,9 +94,13 @@ module.exports = class OSSAdapter {
     return res.stream;
   }
 
-  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream & WithPromise> {
+  async createWriteStream(
+    path: string,
+    options?: WriteStreamOptions
+  ): Promise<NodeJS.WritableStream & WithPromise> {
     debug('createWriteStream %s', path);
-    if (options && options.start) throw new Error('fsd-oss read stream does not support start options');
+    if (options && options.start)
+      throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
@@ -100,11 +115,14 @@ module.exports = class OSSAdapter {
     if (path.endsWith('/')) {
       let nextMarker = '';
       do {
-        let list = await this._oss.list({
-          prefix: p,
-          marker: nextMarker,
-          'max-keys': 1000
-        }, {});
+        let list = await this._oss.list(
+          {
+            prefix: p,
+            marker: nextMarker,
+            'max-keys': 1000
+          },
+          {}
+        );
         ({ nextMarker } = list);
         if (list.objects && list.objects.length) {
           let objects = list.objects.map((o) => o.name);
@@ -123,7 +141,7 @@ module.exports = class OSSAdapter {
     let parent = Path.dirname(path);
     if (prefix && parent !== '/') {
       parent += '/';
-      if (!await this.exists(parent)) {
+      if (!(await this.exists(parent))) {
         debug('mkdir prefix: %s', parent);
         this.mkdir(parent, true);
       }
@@ -134,7 +152,10 @@ module.exports = class OSSAdapter {
     debug('mkdir result: %O', res);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string; metadata: FileMetadata }>> {
+  async readdir(
+    path: string,
+    recursion?: true | string
+  ): Promise<Array<{ name: string; metadata: FileMetadata }>> {
     debug('readdir %s', path);
     let delimiter = recursion ? '' : '/';
     let pattern = '';
@@ -150,12 +171,15 @@ module.exports = class OSSAdapter {
     let results: Array<{ name: string; metadata: FileMetadata }> = [];
     let nextMarker = '';
     do {
-      let list = await this._oss.list({
-        prefix: p,
-        delimiter,
-        marker: nextMarker,
-        'max-keys': 1000
-      }, {});
+      let list = await this._oss.list(
+        {
+          prefix: p,
+          delimiter,
+          marker: nextMarker,
+          'max-keys': 1000
+        },
+        {}
+      );
       debug('list: %O', list);
       ({ nextMarker } = list);
       if (list.objects) {
@@ -195,7 +219,7 @@ module.exports = class OSSAdapter {
     debug('copy %s to %s', path, dest);
     // 检查源文件是否存在
     /* istanbul ignore if */
-    if (!await this.exists(path)) throw new Error('The source path is not exists!');
+    if (!(await this.exists(path))) throw new Error('The source path is not exists!');
     // 检查目标文件是否存在
     /* istanbul ignore if */
     if (await this.exists(dest)) throw new Error('The dest path is already exists!');
@@ -208,11 +232,14 @@ module.exports = class OSSAdapter {
       debug('copy directory %s -> %s', from, to);
       let nextMarker = '';
       do {
-        let list = await this._oss.list({
-          prefix: from,
-          marker: nextMarker,
-          'max-keys': 1000
-        }, {});
+        let list = await this._oss.list(
+          {
+            prefix: from,
+            marker: nextMarker,
+            'max-keys': 1000
+          },
+          {}
+        );
         debug('list result: %O', list);
         ({ nextMarker } = list);
         if (list.objects && list.objects.length) {
@@ -235,7 +262,7 @@ module.exports = class OSSAdapter {
   async rename(path: string, dest: string): Promise<void> {
     debug('rename %s to %s', path, dest);
     /* istanbul ignore if */
-    if (!await this.exists(path)) throw new Error('Source path not found');
+    if (!(await this.exists(path))) throw new Error('Source path not found');
     /* istanbul ignore if */
     if (await this.exists(dest)) throw new Error('Target path already exists');
     await this.copy(path, dest);
@@ -248,10 +275,13 @@ module.exports = class OSSAdapter {
     let p = slash(Path.join(root, path)).substr(1);
     // 检查目录是否存在
     if (path.endsWith('/')) {
-      let list = await this._oss.list({
-        prefix: p,
-        'max-keys': 1
-      }, {});
+      let list = await this._oss.list(
+        {
+          prefix: p,
+          'max-keys': 1
+        },
+        {}
+      );
       return list.objects && list.objects.length > 0;
     }
     // 检查文件是否存在
@@ -289,12 +319,16 @@ module.exports = class OSSAdapter {
   async size(path: string): Promise<number> {
     debug('get file size %s', path);
     let p = slash(Path.join(this._options.root, path)).substr(1);
-    let list = await this._oss.list({
-      prefix: p,
-      'max-keys': 1
-    }, {});
+    let list = await this._oss.list(
+      {
+        prefix: p,
+        'max-keys': 1
+      },
+      {}
+    );
 
-    if (!list.objects || !list.objects.length || list.objects[0].name !== p) throw new Error(`${path} is not exist!`);
+    if (!list.objects || !list.objects.length || list.objects[0].name !== p)
+      throw new Error(`${path} is not exist!`);
     return list.objects[0].size;
   }
 
@@ -318,7 +352,12 @@ module.exports = class OSSAdapter {
     return files;
   }
 
-  async writePart(path: string, partTask: Task, data: NodeJS.ReadableStream, size: number): Promise<Part> {
+  async writePart(
+    path: string,
+    partTask: Task,
+    data: NodeJS.ReadableStream,
+    size: number
+  ): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
     let p = slash(Path.join(this._options.root, path)).substr(1);
     let info = new URL(partTask);

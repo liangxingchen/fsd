@@ -18,7 +18,6 @@ declare namespace OSSAdpter {
 }
 
 // eslint-disable-next-line no-redeclare
-declare class OSSAdpter extends Adapter<OSSAdpter.OSSAdapterOptions> {
-}
+declare class OSSAdpter extends Adapter<OSSAdpter.OSSAdapterOptions> {}
 
 export = OSSAdpter;

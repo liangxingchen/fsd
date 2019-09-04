@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > writePart`, (troot) => {
     const DATA_STRING = _.repeat('上传，hello world', 10240);
     const FILE_PATH = '/data.txt';
@@ -28,9 +28,11 @@ export default function (fsd: fsdFn) {
       let tasks = await uploadFile.initMultipartUpload(TASK_COUNT);
       t.ok(_.isArray(tasks), 'upload tasks is array');
       t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
-      let parts = await Promise.all(tasks.map(async (task) => {
-        return await uploadFile.writePart(task, DATA_STRING);
-      }));
+      let parts = await Promise.all(
+        tasks.map(async (task) => {
+          return await uploadFile.writePart(task, DATA_STRING);
+        })
+      );
       t.ok(_.isArray(parts), 'upload parts is array');
       t.equal(parts.length, TASK_COUNT, 'upload parts count');
       await delay(200);
@@ -38,7 +40,11 @@ export default function (fsd: fsdFn) {
       await delay(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(str, _.repeat(DATA_STRING, TASK_COUNT), 'File content error after completeMultipartUpload');
+        t.equal(
+          str,
+          _.repeat(DATA_STRING, TASK_COUNT),
+          'File content error after completeMultipartUpload'
+        );
       } else {
         t.fail('File not exists after completeMultipartUpload');
       }
@@ -54,9 +60,11 @@ export default function (fsd: fsdFn) {
       let tasks = await uploadFile.initMultipartUpload(TASK_COUNT);
       t.ok(_.isArray(tasks), 'upload tasks is array');
       t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
-      let parts = await Promise.all(tasks.map(async (task) => {
-        return await uploadFile.writePart(task, Buffer.from(DATA_STRING));
-      }));
+      let parts = await Promise.all(
+        tasks.map(async (task) => {
+          return await uploadFile.writePart(task, Buffer.from(DATA_STRING));
+        })
+      );
       t.ok(_.isArray(parts), 'upload parts is array');
       t.equal(parts.length, TASK_COUNT, 'upload parts count');
       await delay(200);
@@ -64,7 +72,11 @@ export default function (fsd: fsdFn) {
       await delay(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(str, _.repeat(DATA_STRING, TASK_COUNT), 'File content error after completeMultipartUpload');
+        t.equal(
+          str,
+          _.repeat(DATA_STRING, TASK_COUNT),
+          'File content error after completeMultipartUpload'
+        );
       } else {
         t.fail('File not exists after completeMultipartUpload');
       }
@@ -81,9 +93,15 @@ export default function (fsd: fsdFn) {
       let tasks = await uploadFile.initMultipartUpload(TASK_COUNT);
       t.ok(_.isArray(tasks), 'upload tasks is array');
       t.equal(tasks.length, TASK_COUNT, 'upload tasks count');
-      let parts = await Promise.all(tasks.map(async (task) => {
-        return await uploadFile.writePart(task, await file.createReadStream(), Buffer.from(DATA_STRING).length);
-      }));
+      let parts = await Promise.all(
+        tasks.map(async (task) => {
+          return await uploadFile.writePart(
+            task,
+            await file.createReadStream(),
+            Buffer.from(DATA_STRING).length
+          );
+        })
+      );
       t.ok(_.isArray(parts), 'upload parts is array');
       t.equal(parts.length, TASK_COUNT, 'upload parts count');
       await delay(200);
@@ -91,7 +109,11 @@ export default function (fsd: fsdFn) {
       await delay(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(str, _.repeat(DATA_STRING, TASK_COUNT), 'File content error after completeMultipartUpload');
+        t.equal(
+          str,
+          _.repeat(DATA_STRING, TASK_COUNT),
+          'File content error after completeMultipartUpload'
+        );
       } else {
         t.fail('File not exists after completeMultipartUpload');
       }

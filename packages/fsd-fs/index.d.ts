@@ -7,11 +7,9 @@ declare namespace FSAdapter {
     urlPrefix?: string;
     tmpdir?: string;
   }
-
 }
 
 // eslint-disable-next-line no-redeclare
-declare class FSAdapter extends Adapter<FSAdapter.FSAdapterOptions> {
-}
+declare class FSAdapter extends Adapter<FSAdapter.FSAdapterOptions> {}
 
 export = FSAdapter;

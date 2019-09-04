@@ -2,7 +2,7 @@ import * as test from 'tape';
 import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > copy`, (troot) => {
     const DIR_PATH = '/copy/';
     const SOURCE_PATH = '/copy/source.txt';
@@ -14,7 +14,7 @@ export default function (fsd: fsdFn) {
     troot.test(`${fsd.adapter.name} > before copy`, async (t) => {
       let dir = fsd(DIR_PATH);
       let file = fsd(SOURCE_PATH);
-      if (!await dir.exists()) {
+      if (!(await dir.exists())) {
         await dir.mkdir();
       }
       await delay(200);

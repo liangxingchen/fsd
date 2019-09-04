@@ -1,7 +1,7 @@
 import * as test from 'tape';
 import { fsd as fsdFn } from '../../packages/fsd';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > rename`, (troot) => {
     let ROOT = '/rename/';
     let dirPath = '/rename/abc/bcd/';
@@ -20,7 +20,10 @@ export default function (fsd: fsdFn) {
       let renameDir = fsd(renameDirPath);
       let dirExists = await dir.exists();
       let renameExists = await renameDir.exists();
-      t.ok(!dirExists && renameExists && renameDir.path === renameDirPath, 'rename "/abc"->"/ab" OK');
+      t.ok(
+        !dirExists && renameExists && renameDir.path === renameDirPath,
+        'rename "/abc"->"/ab" OK'
+      );
       t.end();
     });
 

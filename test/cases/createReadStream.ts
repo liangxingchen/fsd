@@ -2,7 +2,7 @@ import * as test from 'tape';
 import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > createReadStream`, (troot) => {
     const ROOT = '/READ-STREAM/';
     const FILE = '/READ-STREAM/awesome.txt';

@@ -2,7 +2,7 @@ import * as test from 'tape';
 import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > mkdir`, (troot) => {
     const DIR = fsd('/mkdir/');
     const SUB1 = fsd('/mkdir/mk/sub/1/');
@@ -50,7 +50,7 @@ export default function (fsd: fsdFn) {
     troot.test(`${fsd.adapter.name} > mkdir clear`, async (t) => {
       await DIR.unlink();
       await delay(200);
-      t.ok(!await SUB1.exists(), 'remove sub dir');
+      t.ok(!(await SUB1.exists()), 'remove sub dir');
       t.end();
     });
 

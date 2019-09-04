@@ -59,7 +59,11 @@ declare namespace FSD {
     size(): Promise<number>;
     lastModified(): Promise<Date>;
     initMultipartUpload(partCount: number): Promise<Task[]>;
-    writePart(partTask: Task, data: string | Buffer | NodeJS.ReadableStream, size?: number): Promise<Part>;
+    writePart(
+      partTask: Task,
+      data: string | Buffer | NodeJS.ReadableStream,
+      size?: number
+    ): Promise<Part>;
     completeMultipartUpload(parts: Part[]): Promise<void>;
     toString(): string;
     toJSON(): string;
@@ -80,10 +84,16 @@ declare namespace FSD {
     constructor(options: T);
     append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
     createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;
-    createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream & WithPromise>;
+    createWriteStream(
+      path: string,
+      options?: WriteStreamOptions
+    ): Promise<NodeJS.WritableStream & WithPromise>;
     unlink(path: string): Promise<void>;
     mkdir(path: string, prefix?: boolean): Promise<void>;
-    readdir(path: string, recursion?: true | string | any): Promise<Array<{ name: string; metadata?: FileMetadata }>>;
+    readdir(
+      path: string,
+      recursion?: true | string | any
+    ): Promise<Array<{ name: string; metadata?: FileMetadata }>>;
     createUrl(path: string, options?: CreateUrlOptions): Promise<string>;
     copy(path: string, dest: string): Promise<void>;
     rename(path: string, dest: string): Promise<void>;
@@ -106,7 +116,12 @@ declare namespace FSD {
      * @param {Stream} data 数据流
      * @param {number} size 数据块大小
      */
-    writePart(path: string, partTask: Task, data: NodeJS.ReadableStream, size: number): Promise<Part>;
+    writePart(
+      path: string,
+      partTask: Task,
+      data: NodeJS.ReadableStream,
+      size: number
+    ): Promise<Part>;
     /**
      * 完成多Part上传
      * 此方法调用时可不必先调用writePart，能直接使用其他File对象writePart方法返回的Part

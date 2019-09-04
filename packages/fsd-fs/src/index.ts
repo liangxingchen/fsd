@@ -7,7 +7,14 @@ import * as _glob from 'glob';
 import * as _rimraf from 'rimraf';
 import * as Debugger from 'debug';
 import { URL } from 'url';
-import { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata, CreateUrlOptions } from 'fsd';
+import {
+  ReadStreamOptions,
+  WriteStreamOptions,
+  Task,
+  Part,
+  FileMetadata,
+  CreateUrlOptions
+} from 'fsd';
 import { FSAdapterOptions } from 'fsd-fs';
 
 const _cpr = require('cpr');
@@ -27,12 +34,15 @@ module.exports = class FSAdapter {
     this.instanceOfFSDAdapter = true;
     this.name = 'FSAdapter';
     this.needEnsureDir = true;
-    this._options = Object.assign({
-      urlPrefix: '',
-      root: '/',
-      mode: 0o666,
-      tmpdir: os.tmpdir()
-    }, options);
+    this._options = Object.assign(
+      {
+        urlPrefix: '',
+        root: '/',
+        mode: 0o666,
+        tmpdir: os.tmpdir()
+      },
+      options
+    );
     let { urlPrefix } = this._options;
     if (urlPrefix.endsWith('/')) {
       urlPrefix = urlPrefix.substr(0, urlPrefix.length - 1);
@@ -54,7 +64,10 @@ module.exports = class FSAdapter {
             mode,
             start
           });
-          stream.pipe(writeStream).on('close', resolve).on('error', reject);
+          stream
+            .pipe(writeStream)
+            .on('close', resolve)
+            .on('error', reject);
         });
       });
       return;
@@ -62,13 +75,19 @@ module.exports = class FSAdapter {
     await fs.appendFile(p, data as string | Buffer, { mode });
   }
 
-  async createReadStream(path: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
+  async createReadStream(
+    path: string,
+    options?: ReadStreamOptions
+  ): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', path, options);
     let p = Path.join(this._options.root, path);
     return fs.createReadStream(p, options);
   }
 
-  async createWriteStream(path: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream> {
+  async createWriteStream(
+    path: string,
+    options?: WriteStreamOptions
+  ): Promise<NodeJS.WritableStream> {
     debug('createWriteStream %s', path);
     let p = Path.join(this._options.root, path);
     if (path.startsWith('task://')) {
@@ -106,7 +125,10 @@ module.exports = class FSAdapter {
     await fs.mkdir(fsPath);
   }
 
-  async readdir(path: string, recursion?: true | string): Promise<Array<{ name: string; metadata?: FileMetadata }>> {
+  async readdir(
+    path: string,
+    recursion?: true | string
+  ): Promise<Array<{ name: string; metadata?: FileMetadata }>> {
     debug('readdir %s', path);
     if (recursion === true) {
       recursion = '**/*';
@@ -131,7 +153,7 @@ module.exports = class FSAdapter {
     let from = Path.join(root, path);
     let to = Path.join(root, dest);
     /* istanbul ignore if */
-    if (!await fs.exists(from)) throw new Error(`source file '${path}' is not exists!`);
+    if (!(await fs.exists(from))) throw new Error(`source file '${path}' is not exists!`);
     /* istanbul ignore if */
     if (await fs.exists(to)) throw new Error(`dest file '${dest}' is already exists!`);
     // @ts-ignore 第三和第四个参数可选
@@ -189,7 +211,9 @@ module.exports = class FSAdapter {
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let taskId = `upload-${Math.random().toString().substr(2)}-`;
+    let taskId = `upload-${Math.random()
+      .toString()
+      .substr(2)}-`;
     let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
       tasks.push(`task://${taskId}${i}${path}?${i}`);
@@ -204,7 +228,10 @@ module.exports = class FSAdapter {
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let writeStream = await this.createWriteStream(partTask);
     await new Promise((resolve, reject) => {
-      data.pipe(writeStream).on('close', resolve).on('error', reject);
+      data
+        .pipe(writeStream)
+        .on('close', resolve)
+        .on('error', reject);
     });
     return partTask.replace('task://', 'part://');
   }
@@ -222,7 +249,7 @@ module.exports = class FSAdapter {
       if (info.pathname !== path) throw new Error(`Invalid part link: ${part} for path: ${path}`);
       let file = Path.join(this._options.tmpdir, info.hostname);
       /* istanbul ignore if */
-      if (!await fs.exists(file)) throw new Error(`part file ${part} is not exists`);
+      if (!(await fs.exists(file))) throw new Error(`part file ${part} is not exists`);
       files.push(file);
     }
 

@@ -3,7 +3,15 @@ import * as slash from 'slash';
 import * as Debugger from 'debug';
 import * as isStream from 'is-stream';
 import { PassThrough } from 'stream';
-import { Adapter, FileMetadata, ReadStreamOptions, WriteStreamOptions, CreateUrlOptions, Task, Part } from '..';
+import {
+  Adapter,
+  FileMetadata,
+  ReadStreamOptions,
+  WriteStreamOptions,
+  CreateUrlOptions,
+  Task,
+  Part
+} from '..';
 
 const debug = Debugger('fsd');
 
@@ -72,7 +80,7 @@ module.exports = class FSDFile {
       options.start = position;
     }
     if (length) {
-      options.end = (position + length) - 1;
+      options.end = position + length - 1;
     }
     let stream = await this._adapter.createReadStream(this.path, options);
     return await new Promise((resolve, reject) => {
@@ -165,7 +173,10 @@ module.exports = class FSDFile {
       throw new Error('readdir failed, directory path should be ends with /');
     }
     let files = await this._adapter.readdir(this.path, recursion);
-    return files.map(({ name, metadata }) => new FSDFile(slash(Path.join(this.path, name)), this._adapter, metadata));
+    return files.map(
+      ({ name, metadata }) =>
+        new FSDFile(slash(Path.join(this.path, name)), this._adapter, metadata)
+    );
   }
 
   createUrl(options?: CreateUrlOptions): Promise<string> {
@@ -258,7 +269,11 @@ module.exports = class FSDFile {
     return this._adapter.initMultipartUpload(this.path, partCount);
   }
 
-  writePart(task: Task, data: string | Buffer | NodeJS.ReadableStream, size?: number): Promise<Part> {
+  writePart(
+    task: Task,
+    data: string | Buffer | NodeJS.ReadableStream,
+    size?: number
+  ): Promise<Part> {
     debug('writePart %s, task: %s', this.path, task);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {

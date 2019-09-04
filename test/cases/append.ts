@@ -2,8 +2,7 @@ import * as test from 'tape';
 import delay from 'delay';
 import { fsd as fsdFn } from '../../packages/fsd';
 
-export default function (fsd: fsdFn) {
-
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > append`, (troot) => {
     const ROOT = fsd('/append/');
     const FILE = fsd(`/append/awesome.txt`);

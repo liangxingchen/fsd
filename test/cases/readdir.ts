@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { fsd as fsdFn } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > readdir`, (troot) => {
     let dirPath = '/abc/';
     let filePaths = ['/abc/a.js', '/abc/b.js', '/abc/c.js'];
@@ -14,12 +14,14 @@ export default function (fsd: fsdFn) {
       await dir.unlink();
       await dir.mkdir(true);
       await delay(200);
-      await Promise.all(filePaths.map(async (item) => {
-        let file = fsd(item);
-        if (!(await file.exists())) {
-          await file.write(appendStr);
-        }
-      }));
+      await Promise.all(
+        filePaths.map(async (item) => {
+          let file = fsd(item);
+          if (!(await file.exists())) {
+            await file.write(appendStr);
+          }
+        })
+      );
       await delay(200);
       t.end();
     });

@@ -3,8 +3,7 @@ import * as test from 'tape';
 import delay from 'delay';
 import { fsd as fsdFn } from '../../packages/fsd';
 
-export default function (fsd: fsdFn) {
-
+export default function(fsd: fsdFn) {
   const buffer = fs.readFileSync('test/test.mp4');
 
   test(`${fsd.adapter.name} > append`, (troot) => {

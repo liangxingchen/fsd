@@ -135,35 +135,39 @@ module.exports = class VODAdapter {
         this._videoCache.set(videoId, result.Video);
         return result.Video;
       }
-    } catch (e) {
-    }
+    } catch (e) {}
     return null;
   }
 
   async getMezzanineInfo(videoId: string, options?: any): Promise<MezzanineInfo | null> {
     if (videoId[0] === '/') videoId = videoId.substr(1);
 
-    let params: any = Object.assign({
-      VideoId: videoId,
-      OutputType: 'cdn'
-    }, options || {});
+    let params: any = Object.assign(
+      {
+        VideoId: videoId,
+        OutputType: 'cdn'
+      },
+      options || {}
+    );
 
     try {
       let result: any = await this._vod.request('GetMezzanineInfo', params, { method: 'POST' });
       if (result.Mezzanine) {
         return result.Mezzanine;
       }
-    } catch (e) {
-    }
+    } catch (e) {}
     return null;
   }
 
   async getPlayInfo(videoId: string, options?: any): Promise<PlayInfoResult> {
     if (videoId[0] === '/') videoId = videoId.substr(1);
 
-    let params: any = Object.assign({
-      VideoId: videoId
-    }, options || {});
+    let params: any = Object.assign(
+      {
+        VideoId: videoId
+      },
+      options || {}
+    );
 
     return await this._vod.request('GetPlayInfo', params, { method: 'POST' });
   }
@@ -180,7 +184,10 @@ module.exports = class VODAdapter {
     await oss.put(cache.path.substr(1), data, options);
   }
 
-  async createReadStream(videoId: string, options?: ReadStreamOptions): Promise<NodeJS.ReadableStream> {
+  async createReadStream(
+    videoId: string,
+    options?: ReadStreamOptions
+  ): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', videoId, options);
     let url = await this.createUrl(videoId);
 
@@ -203,9 +210,13 @@ module.exports = class VODAdapter {
     return client.get(url, { headers }).stream() as NodeJS.ReadableStream;
   }
 
-  async createWriteStream(videoId: string, options?: WriteStreamOptions): Promise<NodeJS.WritableStream & WithPromise> {
+  async createWriteStream(
+    videoId: string,
+    options?: WriteStreamOptions
+  ): Promise<NodeJS.WritableStream & WithPromise> {
     debug('createWriteStream %s', videoId);
-    if (options && options.start) throw new Error('fsd-vod read stream does not support start options');
+    if (options && options.start)
+      throw new Error('fsd-vod read stream does not support start options');
 
     let cache = await this.getUploadAuth(videoId);
     let oss = new OSS(cache.auth);
@@ -229,7 +240,12 @@ module.exports = class VODAdapter {
     return files;
   }
 
-  async writePart(videoId: string, partTask: Task, data: NodeJS.ReadableStream, size: number): Promise<Part> {
+  async writePart(
+    videoId: string,
+    partTask: Task,
+    data: NodeJS.ReadableStream,
+    size: number
+  ): Promise<Part> {
     debug('writePart %s, task: %s', videoId, partTask);
     let cache = await this.getUploadAuth(videoId);
     let oss = new OSS(cache.auth);

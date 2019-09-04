@@ -1,7 +1,7 @@
 import * as test from 'tape';
 import { fsd as fsdFn } from '../../packages/fsd';
 
-export default function (fsd: fsdFn) {
+export default function(fsd: fsdFn) {
   test(`${fsd.adapter.name} > toString`, (troot) => {
     let dirPath = '/abc/';
 
