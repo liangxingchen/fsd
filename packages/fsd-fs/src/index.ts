@@ -5,6 +5,7 @@ import * as fs from 'mz/fs';
 import * as isStream from 'is-stream';
 import * as _glob from 'glob';
 import * as _rimraf from 'rimraf';
+import * as _cpr from 'cpr';
 import * as Debugger from 'debug';
 import { URL } from 'url';
 import {
@@ -17,14 +18,12 @@ import {
 } from 'fsd';
 import { FSAdapterOptions } from 'fsd-fs';
 
-const _cpr = require('cpr');
-
 const glob = util.promisify(_glob);
 const rimraf = util.promisify(_rimraf);
 const cpr = util.promisify(_cpr);
 const debug = Debugger('fsd-fs');
 
-module.exports = class FSAdapter {
+export default class FSAdapter {
   instanceOfFSDAdapter: true;
   name: string;
   needEnsureDir: boolean;
@@ -64,10 +63,7 @@ module.exports = class FSAdapter {
             mode,
             start
           });
-          stream
-            .pipe(writeStream)
-            .on('close', resolve)
-            .on('error', reject);
+          stream.pipe(writeStream).on('close', resolve).on('error', reject);
         });
       });
       return;
@@ -211,9 +207,7 @@ module.exports = class FSAdapter {
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let taskId = `upload-${Math.random()
-      .toString()
-      .substr(2)}-`;
+    let taskId = `upload-${Math.random().toString().substr(2)}-`;
     let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
       tasks.push(`task://${taskId}${i}${path}?${i}`);
@@ -228,10 +222,7 @@ module.exports = class FSAdapter {
     if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
     let writeStream = await this.createWriteStream(partTask);
     await new Promise((resolve, reject) => {
-      data
-        .pipe(writeStream)
-        .on('close', resolve)
-        .on('error', reject);
+      data.pipe(writeStream).on('close', resolve).on('error', reject);
     });
     return partTask.replace('task://', 'part://');
   }
@@ -260,4 +251,4 @@ module.exports = class FSAdapter {
 
     files.forEach((file) => fs.unlink(file));
   }
-};
+}

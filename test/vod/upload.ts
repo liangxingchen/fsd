@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as test from 'tape';
 import delay from 'delay';
-import { fsd as fsdFn } from '../../packages/fsd';
+import { FileGenerator } from '../../packages/fsd';
 
-export default function(fsd: fsdFn) {
+export default function (fsd: FileGenerator) {
   const buffer = fs.readFileSync('test/test.mp4');
 
   test(`${fsd.adapter.name} > append`, (troot) => {
@@ -21,7 +21,7 @@ export default function(fsd: fsdFn) {
       let playInfo = await fsd.adapter.getPlayInfo(videoId);
       t.ok(playInfo.PlayInfoList.PlayInfo, 'PlayInfo');
 
-      await file.unlink();
+      // await file.unlink();
       t.end();
     });
 
@@ -31,7 +31,7 @@ export default function(fsd: fsdFn) {
       await file.append(fs.createReadStream('test/test.mp4'));
       await delay(200);
       t.ok(await file.isFile(), 'isFile()');
-      await file.unlink();
+      // await file.unlink();
       t.end();
     });
 
@@ -47,7 +47,7 @@ export default function(fsd: fsdFn) {
       stream.pipe(fs.createWriteStream('/tmp/download.mp4')).on('close', async () => {
         let data = fs.readFileSync('/tmp/download.mp4');
         t.ok(data.equals(buffer), 'download');
-        await file.unlink();
+        // await file.unlink();
         t.end();
       });
     });
@@ -57,7 +57,7 @@ export default function(fsd: fsdFn) {
       let file = fsd(videoId);
       let index = 120 * 1024; // 120KB
       let part1 = buffer.slice(0, index - 1);
-      let part2 = buffer.slice(index);
+      let part2 = buffer.slice(index - 1);
 
       let tasks = await file.initMultipartUpload(2);
       t.equal(tasks.length, 2, 'part count');
@@ -78,7 +78,7 @@ export default function(fsd: fsdFn) {
       stream.pipe(fs.createWriteStream('/tmp/download.part1.mp4')).on('close', async () => {
         let data = fs.readFileSync('/tmp/download.part1.mp4');
         t.ok(data.equals(part1), 'download part');
-        await file.unlink();
+        // await file.unlink();
         t.end();
       });
     });

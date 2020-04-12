@@ -4,6 +4,7 @@ import * as slash from 'slash';
 import * as minimatch from 'minimatch';
 import * as Debugger from 'debug';
 import * as eachLimit from 'async/eachLimit';
+import * as RPC from '@alicloud/pop-core';
 import { URL } from 'url';
 import { PassThrough } from 'stream';
 import {
@@ -19,12 +20,14 @@ import { OSSAdapterOptions } from '..';
 
 const debug = Debugger('fsd-oss');
 
-module.exports = class OSSAdapter {
+export default class OSSAdapter {
   instanceOfFSDAdapter: true;
   name: string;
   needEnsureDir: boolean;
   _options: OSSAdapterOptions;
   _oss: OSS;
+  _rpc: RPC;
+  createUploadToken?: (path: string) => Promise<any>;
 
   constructor(options: OSSAdapterOptions) {
     this.instanceOfFSDAdapter = true;
@@ -38,18 +41,65 @@ module.exports = class OSSAdapter {
     if (options.root[0] !== '/') {
       options.root = `/${options.root}`;
     }
+    // @ts-ignore
+    if (options.endpoint) throw new Error('fsd-oss options "endpoint" has been deprecated!');
     this._options = options;
     this._oss = new OSS({
       accessKeyId: options.accessKeyId,
       accessKeySecret: options.accessKeySecret,
-      stsToken: options.stsToken,
       bucket: options.bucket,
-      endpoint: options.endpoint,
       region: options.region,
       internal: options.internal,
       secure: options.secure,
       timeout: options.timeout
     });
+    if (options.accountId && options.roleName) {
+      let stsEndpoint = 'https://sts.aliyuncs.com';
+      if (options.region) {
+        stsEndpoint = `https://sts.${options.region.replace('oss-', '')}.aliyuncs.com`;
+      }
+      this._rpc = new RPC({
+        accessKeyId: options.accessKeyId,
+        accessKeySecret: options.accessKeySecret,
+        endpoint: stsEndpoint,
+        apiVersion: '2015-04-01'
+      });
+    }
+
+    this.createUploadToken = async (path: string) => {
+      if (!options.accountId || !options.roleName)
+        throw new Error('Can not create sts token, missing options: accountId and roleName!');
+
+      let params = {
+        RoleArn: `acs:ram::${options.accountId}:role/${options.roleName}`,
+        RoleSessionName: 'fsd',
+        Policy: JSON.stringify({
+          Version: '1',
+          Statement: [
+            {
+              Effect: 'Allow',
+              Action: ['oss:PutObject'],
+              Resource: [`acs:oss:*:*:${options.bucket}${path}`]
+            }
+          ]
+        }),
+        DurationSeconds: 3600
+      };
+      let result: any = await this._rpc.request('AssumeRole', params, { method: 'POST' });
+      if (result.Message) throw new Error(result.Message);
+
+      return {
+        auth: {
+          accessKeyId: result.Credentials.AccessKeyId,
+          accessKeySecret: result.Credentials.AccessKeySecret,
+          stsToken: result.Credentials.SecurityToken,
+          bucket: options.bucket,
+          endpoint: `${options.secure ? 'https' : 'http'}://${options.region}.aliyuncs.com`
+        },
+        path: path,
+        expiration: result.Credentials.Expiration
+      };
+    };
   }
 
   async append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
@@ -99,8 +149,7 @@ module.exports = class OSSAdapter {
     options?: WriteStreamOptions
   ): Promise<NodeJS.WritableStream & WithPromise> {
     debug('createWriteStream %s', path);
-    if (options && options.start)
-      throw new Error('fsd-oss read stream does not support start options');
+    if (options?.start) throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substr(1);
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
@@ -387,4 +436,4 @@ module.exports = class OSSAdapter {
     }));
     await this._oss.completeMultipartUpload(p, uploadId, datas);
   }
-};
+}

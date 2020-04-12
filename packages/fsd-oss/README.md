@@ -30,8 +30,9 @@ FSD 文档： https://github.com/maichong/fsd
 | region          | string           |      |                              |
 | internal        | boolean          |      |                              |
 | secure          | boolean          |      |                              |
-| endpoint        | string           |      |                              |
 | timeout         | string \| number |      |                              |
+| accountId | string | | 阿里云账号，用于边缘上传生成STS角色扮演令牌 |
+| roleName | string | | 阿里云角色名，用于边缘上传生成STS角色扮演令牌 |
 
 OSS 相关参数设置参考 https://github.com/ali-sdk/ali-oss#ossoptions
 

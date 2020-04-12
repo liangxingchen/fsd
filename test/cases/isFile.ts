@@ -1,8 +1,8 @@
 import * as test from 'tape';
-import { fsd as fsdFn } from '../../packages/fsd';
+import { FileGenerator } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function(fsd: fsdFn) {
+export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > isFile`, (troot) => {
     let dirPath = '/abc/';
     let filePath = '/abc/a.js';

@@ -10,12 +10,13 @@ import {
   WriteStreamOptions,
   CreateUrlOptions,
   Task,
-  Part
+  Part,
+  FSDFile as FSDFileType
 } from '..';
 
 const debug = Debugger('fsd');
 
-module.exports = class FSDFile {
+export default class FSDFile {
   _adapter: Adapter<any>;
   _size: number | null;
   _lastModified: Date | null;
@@ -27,7 +28,7 @@ module.exports = class FSDFile {
   name: string;
   ext: string;
 
-  constructor(path: string | FSDFile, adapter: Adapter<any>, metadata?: FileMetadata) {
+  constructor(path: string | FSDFileType, adapter: Adapter<any>, metadata?: FileMetadata) {
     debug('initialize file %s', path);
     if (!path) throw new Error('FSD File must initialize with path');
     if (typeof path === 'object' && path.path) {
@@ -315,4 +316,4 @@ module.exports = class FSDFile {
   toJSON() {
     return this.path;
   }
-};
+}

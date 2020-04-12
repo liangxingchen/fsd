@@ -1,23 +1,20 @@
 import { Adapter } from 'fsd';
 
-declare namespace OSSAdpter {
-  interface OSSAdapterOptions {
-    root?: string;
-    urlPrefix?: string;
-    publicRead?: boolean;
-    accessKeyId: string;
-    accessKeySecret: string;
-    stsToken?: string;
-    bucket?: string;
-    region?: string;
-    internal?: boolean;
-    secure?: boolean;
-    endpoint?: string;
-    timeout?: string | number;
-  }
+export interface OSSAdapterOptions {
+  root?: string;
+  urlPrefix?: string;
+  publicRead?: boolean;
+  // 以下为OSS驱动配置
+  accessKeyId: string;
+  accessKeySecret: string;
+  bucket: string;
+  region: string;
+  internal?: boolean;
+  secure?: boolean;
+  timeout?: string | number;
+  // 角色扮演
+  accountId?: string;
+  roleName?: string;
 }
 
-// eslint-disable-next-line no-redeclare
-declare class OSSAdpter extends Adapter<OSSAdpter.OSSAdapterOptions> {}
-
-export = OSSAdpter;
+export default class OSSAdpter extends Adapter<OSSAdapterOptions> {}

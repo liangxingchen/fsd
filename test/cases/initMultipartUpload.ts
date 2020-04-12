@@ -1,8 +1,8 @@
 import * as test from 'tape';
-import { fsd as fsdFn } from '../../packages/fsd';
+import { FileGenerator } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function(fsd: fsdFn) {
+export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > initMultipartUpload`, (troot) => {
     let filePath = 'a.js';
 

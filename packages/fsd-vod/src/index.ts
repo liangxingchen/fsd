@@ -1,7 +1,7 @@
 import * as OSS from 'ali-oss';
 import * as LRUCache from 'lru-cache';
 import * as Debugger from 'debug';
-import * as Core from '@alicloud/pop-core';
+import * as RPC from '@alicloud/pop-core';
 import { URL } from 'url';
 import { PassThrough } from 'stream';
 import akita from 'akita';
@@ -40,15 +40,16 @@ function resultToCache(result: any): AuthCache {
   };
 }
 
-module.exports = class VODAdapter {
+export default class VODAdapter {
   instanceOfFSDAdapter: true;
   name: string;
   needEnsureDir: boolean;
   _options: VODAdapterOptions;
-  _vod: Core;
+  _rpc: RPC;
   _authCache: LRUCache<string, AuthCache>;
   _videoCache: LRUCache<string, VideoInfo>;
   alloc?: (options?: AllocOptions) => Promise<string>;
+  createUploadToken?: (videoId: string) => Promise<AuthCache>;
 
   constructor(options: VODAdapterOptions) {
     this.instanceOfFSDAdapter = true;
@@ -70,7 +71,7 @@ module.exports = class VODAdapter {
       maxAge: 60000
     });
 
-    this._vod = new Core({
+    this._rpc = new RPC({
       accessKeyId: options.accessKeyId,
       accessKeySecret: options.accessKeySecret,
       endpoint: `https://vod.${options.region || 'cn-shanghai'}.aliyuncs.com`,
@@ -92,32 +93,32 @@ module.exports = class VODAdapter {
       if (info.Tags) params.Tags = info.Tags;
       if (info.UserData) params.UserData = info.UserData;
 
-      let result: any = await this._vod.request('CreateUploadVideo', params, { method: 'POST' });
+      let result: any = await this._rpc.request('CreateUploadVideo', params, { method: 'POST' });
       if (result.Message) throw new Error(result.Message);
 
-      let cache = resultToCache(result);
-      this._authCache.set(result.VideoId, cache, cache.expiration);
+      let token = resultToCache(result);
+      this._authCache.set(result.VideoId, token, token.expiration);
 
       return result.VideoId;
     };
-  }
 
-  async getUploadAuth(videoId: string): Promise<AuthCache> {
-    if (videoId[0] === '/') videoId = videoId.substr(1);
-    let cache = this._authCache.get(videoId);
-    debug('getAuth', videoId, cache);
-    if (cache) return cache;
+    this.createUploadToken = async (videoId: string) => {
+      if (videoId[0] === '/') videoId = videoId.substr(1);
+      let token = this._authCache.get(videoId);
+      debug('getAuth', videoId, token);
+      if (token) return token;
 
-    let params = {
-      VideoId: videoId
+      let params = {
+        VideoId: videoId
+      };
+      let result: any = await this._rpc.request('RefreshUploadVideo', params, { method: 'POST' });
+      if (result.Message) throw new Error(result.Message);
+
+      token = resultToCache(result);
+      this._authCache.set(videoId, token, token.expiration);
+
+      return token;
     };
-    let result: any = await this._vod.request('RefreshUploadVideo', params, { method: 'POST' });
-    if (result.Message) throw new Error(result.Message);
-
-    cache = resultToCache(result);
-    this._authCache.set(videoId, cache, cache.expiration);
-
-    return cache;
   }
 
   async getVideoInfo(videoId: string): Promise<null | VideoInfo> {
@@ -130,7 +131,7 @@ module.exports = class VODAdapter {
     };
 
     try {
-      let result: any = await this._vod.request('GetVideoInfo', params, { method: 'POST' });
+      let result: any = await this._rpc.request('GetVideoInfo', params, { method: 'POST' });
       if (result.Video) {
         this._videoCache.set(videoId, result.Video);
         return result.Video;
@@ -151,7 +152,7 @@ module.exports = class VODAdapter {
     );
 
     try {
-      let result: any = await this._vod.request('GetMezzanineInfo', params, { method: 'POST' });
+      let result: any = await this._rpc.request('GetMezzanineInfo', params, { method: 'POST' });
       if (result.Mezzanine) {
         return result.Mezzanine;
       }
@@ -169,19 +170,20 @@ module.exports = class VODAdapter {
       options || {}
     );
 
-    return await this._vod.request('GetPlayInfo', params, { method: 'POST' });
+    return await this._rpc.request('GetPlayInfo', params, { method: 'POST' });
   }
 
   async append(videoId: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', videoId);
-    let cache = await this.getUploadAuth(videoId);
-    let oss = new OSS(cache.auth);
+    let token = await this.createUploadToken(videoId);
+    let oss = new OSS(token.auth);
 
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
     let options: OSS.PutObjectOptions = {};
-    await oss.put(cache.path.substr(1), data, options);
+    // 当前aliyun VOD+OSS不支持 AppendObject，只能调用PutObject接口
+    await oss.put(token.path.substr(1), data, options);
   }
 
   async createReadStream(
@@ -215,27 +217,26 @@ module.exports = class VODAdapter {
     options?: WriteStreamOptions
   ): Promise<NodeJS.WritableStream & WithPromise> {
     debug('createWriteStream %s', videoId);
-    if (options && options.start)
-      throw new Error('fsd-vod read stream does not support start options');
+    if (options?.start) throw new Error('fsd-vod read stream does not support start options');
 
-    let cache = await this.getUploadAuth(videoId);
-    let oss = new OSS(cache.auth);
+    let token = await this.createUploadToken(videoId);
+    let oss = new OSS(token.auth);
 
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
-    stream.promise = oss.putStream(cache.path.substr(1), stream);
+    stream.promise = oss.putStream(token.path.substr(1), stream);
     return stream;
   }
 
   async initMultipartUpload(videoId: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', videoId, partCount);
-    let cache = await this.getUploadAuth(videoId);
-    let oss = new OSS(cache.auth);
+    let token = await this.createUploadToken(videoId);
+    let oss = new OSS(token.auth);
 
-    let res = await oss.initMultipartUpload(cache.path.substr(1));
+    let res = await oss.initMultipartUpload(token.path.substr(1));
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push(`task://${uploadId}${cache.path}?${i}`);
+      files.push(`task://${uploadId}${token.path}?${i}`);
     }
     return files;
   }
@@ -247,15 +248,15 @@ module.exports = class VODAdapter {
     size: number
   ): Promise<Part> {
     debug('writePart %s, task: %s', videoId, partTask);
-    let cache = await this.getUploadAuth(videoId);
-    let oss = new OSS(cache.auth);
+    let token = await this.createUploadToken(videoId);
+    let oss = new OSS(token.auth);
 
     let info = new URL(partTask);
     /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== cache.path) throw new Error('Invalid part pathname');
+    if (!info.pathname || info.pathname !== token.path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();
     // @ts-ignore _uploadPart
-    let res = await oss._uploadPart(cache.path.substr(1), uploadId, info.search.substr(1), {
+    let res = await oss._uploadPart(token.path.substr(1), uploadId, info.search.substr(1), {
       stream: data,
       size
     });
@@ -265,19 +266,19 @@ module.exports = class VODAdapter {
 
   async completeMultipartUpload(videoId: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', videoId);
-    let cache = await this.getUploadAuth(videoId);
-    let oss = new OSS(cache.auth);
+    let token = await this.createUploadToken(videoId);
+    let oss = new OSS(token.auth);
 
     let info = new URL(parts[0]);
     /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== cache.path) throw new Error('Invalid part pathname');
+    if (!info.pathname || info.pathname !== token.path) throw new Error('Invalid part pathname');
     let uploadId = (info.hostname || '').toUpperCase();
-    debug('update id: %s, target: %s', uploadId, cache.path);
+    debug('update id: %s, target: %s', uploadId, token.path);
     let datas = parts.map((item, key) => ({
       etag: item.split('#')[1],
       number: key + 1
     }));
-    await oss.completeMultipartUpload(cache.path.substr(1), uploadId, datas);
+    await oss.completeMultipartUpload(token.path.substr(1), uploadId, datas);
   }
 
   async createUrl(videoId: string, options?: any): Promise<string> {
@@ -296,7 +297,7 @@ module.exports = class VODAdapter {
       VideoIds: videoId
     };
 
-    let result: any = await this._vod.request('DeleteVideo', params, { method: 'POST' });
+    let result: any = await this._rpc.request('DeleteVideo', params, { method: 'POST' });
     if (result.Message) throw new Error(result.Message);
   }
 
@@ -336,4 +337,4 @@ module.exports = class VODAdapter {
   rename() {
     throw new Error(`fsd-vod deos not support rename()`);
   }
-};
+}

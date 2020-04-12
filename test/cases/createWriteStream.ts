@@ -1,8 +1,8 @@
 import * as test from 'tape';
-import { fsd as fsdFn } from '../../packages/fsd';
+import { FileGenerator } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function(fsd: fsdFn) {
+export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > createWriteStream`, (troot) => {
     let filePath = `awesome.txt`;
     let writePath = 'writeAwesome.txt';
@@ -22,11 +22,7 @@ export default function(fsd: fsdFn) {
         let readStream = await readFile.createReadStream();
         let writeStream = await writeFile.createWriteStream();
         await new Promise((resolve, reject) =>
-          readStream
-            .pipe(writeStream)
-            .on('end', resolve)
-            .on('error', reject)
-            .on('close', resolve)
+          readStream.pipe(writeStream).on('end', resolve).on('error', reject).on('close', resolve)
         );
         await delay(200);
         let txt = await writeFile.read('utf8');

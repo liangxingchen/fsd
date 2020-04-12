@@ -1,7 +1,7 @@
 import * as test from 'tape';
-import { fsd as fsdFn } from '../../packages/fsd';
+import { FileGenerator } from '../../packages/fsd';
 
-export default function(fsd: fsdFn) {
+export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > createUrl`, (troot) => {
     troot.test(`${fsd.adapter.name} > before createUrl`, async (t) => {
       let dir = fsd('/abc/');

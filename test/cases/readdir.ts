@@ -1,9 +1,9 @@
 import * as test from 'tape';
 import * as _ from 'lodash';
-import { fsd as fsdFn } from '../../packages/fsd';
+import { FileGenerator } from '../../packages/fsd';
 import delay from 'delay';
 
-export default function(fsd: fsdFn) {
+export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > readdir`, (troot) => {
     let dirPath = '/abc/';
     let filePaths = ['/abc/a.js', '/abc/b.js', '/abc/c.js'];

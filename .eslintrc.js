@@ -9,6 +9,7 @@ module.exports = {
     indent: ['error', 2, {
       SwitchCase: 1
     }],
+    'max-params': ['error', 4],
     "max-nested-callbacks": ['error', 4],
     // 禁止不必要的布尔转换
     'no-extra-boolean-cast': 'error',
