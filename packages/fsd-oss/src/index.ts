@@ -70,6 +70,7 @@ export default class OSSAdapter {
       if (!options.accountId || !options.roleName)
         throw new Error('Can not create sts token, missing options: accountId and roleName!');
 
+      path = slash(Path.join(options.root, path)).substr(1);
       let params = {
         RoleArn: `acs:ram::${options.accountId}:role/${options.roleName}`,
         RoleSessionName: 'fsd',
@@ -79,7 +80,7 @@ export default class OSSAdapter {
             {
               Effect: 'Allow',
               Action: ['oss:PutObject'],
-              Resource: [`acs:oss:*:*:${options.bucket}${path}`]
+              Resource: [`acs:oss:*:*:${options.bucket}/${path}`]
             }
           ]
         }),
@@ -96,7 +97,7 @@ export default class OSSAdapter {
           bucket: options.bucket,
           endpoint: `${options.secure ? 'https' : 'http'}://${options.region}.aliyuncs.com`
         },
-        path: path,
+        path,
         expiration: result.Credentials.Expiration
       };
     };
