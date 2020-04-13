@@ -7,6 +7,7 @@ export interface VODAdapterOptions {
   region?: string;
   templateGroupId?: string;
   workflowId?: string;
+  callbackUrl?: string;
 }
 
 export interface VideoInfo {

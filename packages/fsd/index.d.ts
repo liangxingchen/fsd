@@ -91,7 +91,7 @@ export class Adapter<T> {
   /**
    * 创建上传凭证，如果支持边缘上传，否则不存在
    */
-  createUploadToken?: (path: string) => Promise<any>;
+  createUploadToken?: (path: string, meta?: any) => Promise<any>;
 
   constructor(options: T);
   append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void>;

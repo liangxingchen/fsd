@@ -10,6 +10,9 @@ import { VODAdapterOptions, VideoInfo, MezzanineInfo, PlayInfoResult } from '..'
 
 const debug = Debugger('fsd-vod');
 const client = akita.resolve('fsd-vod');
+const CALLBACK_BODY =
+  // eslint-disable-next-line no-template-curly-in-string
+  'bucket=${bucket}&path=${object}&etag=${etag}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}&format=${imageInfo.format}';
 
 interface AuthCache {
   auth: {
@@ -21,6 +24,7 @@ interface AuthCache {
   };
   path: string;
   expiration: number;
+  callback?: any;
 }
 
 function resultToCache(result: any): AuthCache {
@@ -49,7 +53,7 @@ export default class VODAdapter {
   _authCache: LRUCache<string, AuthCache>;
   _videoCache: LRUCache<string, VideoInfo>;
   alloc?: (options?: AllocOptions) => Promise<string>;
-  createUploadToken?: (videoId: string) => Promise<AuthCache>;
+  createUploadToken?: (videoId: string, meta?: any) => Promise<AuthCache>;
 
   constructor(options: VODAdapterOptions) {
     this.instanceOfFSDAdapter = true;
@@ -102,20 +106,34 @@ export default class VODAdapter {
       return result.VideoId;
     };
 
-    this.createUploadToken = async (videoId: string) => {
+    this.createUploadToken = async (videoId: string, meta?: any) => {
       if (videoId[0] === '/') videoId = videoId.substr(1);
       let token = this._authCache.get(videoId);
       debug('getAuth', videoId, token);
-      if (token) return token;
+      if (!token) {
+        let params = {
+          VideoId: videoId
+        };
+        let result: any = await this._rpc.request('RefreshUploadVideo', params, { method: 'POST' });
+        if (result.Message) throw new Error(result.Message);
 
-      let params = {
-        VideoId: videoId
-      };
-      let result: any = await this._rpc.request('RefreshUploadVideo', params, { method: 'POST' });
-      if (result.Message) throw new Error(result.Message);
+        token = resultToCache(result);
 
-      token = resultToCache(result);
-      this._authCache.set(videoId, token, token.expiration);
+        this._authCache.set(videoId, token, token.expiration);
+      }
+
+      if (options.callbackUrl && meta) {
+        token.callback = {
+          url: options.callbackUrl,
+          body:
+            CALLBACK_BODY +
+            Object.keys(meta || {})
+              .map((key) => `&${key}=\${x:${key}}`)
+              .join(''),
+          contentType: 'application/x-www-form-urlencoded',
+          customValue: meta
+        };
+      }
 
       return token;
     };

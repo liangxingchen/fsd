@@ -19,6 +19,9 @@ import {
 import { OSSAdapterOptions } from '..';
 
 const debug = Debugger('fsd-oss');
+const CALLBACK_BODY =
+  // eslint-disable-next-line no-template-curly-in-string
+  'bucket=${bucket}&path=${object}&etag=${etag}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}&format=${imageInfo.format}';
 
 export default class OSSAdapter {
   instanceOfFSDAdapter: true;
@@ -27,7 +30,7 @@ export default class OSSAdapter {
   _options: OSSAdapterOptions;
   _oss: OSS;
   _rpc: RPC;
-  createUploadToken?: (path: string) => Promise<any>;
+  createUploadToken?: (path: string, meta?: any) => Promise<any>;
 
   constructor(options: OSSAdapterOptions) {
     this.instanceOfFSDAdapter = true;
@@ -42,7 +45,10 @@ export default class OSSAdapter {
       options.root = `/${options.root}`;
     }
     // @ts-ignore
-    if (options.endpoint) throw new Error('fsd-oss options "endpoint" has been deprecated!');
+    if (options.endpoint)
+      throw new Error(
+        'fsd-oss options "endpoint" has been deprecated, please use region/[internal]/[secure] instead!'
+      );
     this._options = options;
     this._oss = new OSS({
       accessKeyId: options.accessKeyId,
@@ -66,7 +72,7 @@ export default class OSSAdapter {
       });
     }
 
-    this.createUploadToken = async (path: string) => {
+    this.createUploadToken = async (path: string, meta?: any) => {
       if (!options.accountId || !options.roleName)
         throw new Error('Can not create sts token, missing options: accountId and roleName!');
 
@@ -89,7 +95,7 @@ export default class OSSAdapter {
       let result: any = await this._rpc.request('AssumeRole', params, { method: 'POST' });
       if (result.Message) throw new Error(result.Message);
 
-      return {
+      let token: any = {
         auth: {
           accessKeyId: result.Credentials.AccessKeyId,
           accessKeySecret: result.Credentials.AccessKeySecret,
@@ -100,6 +106,21 @@ export default class OSSAdapter {
         path,
         expiration: result.Credentials.Expiration
       };
+
+      if (options.callbackUrl) {
+        token.callback = {
+          url: options.callbackUrl,
+          body:
+            CALLBACK_BODY +
+            Object.keys(meta || {})
+              .map((key) => `&${key}=\${x:${key}}`)
+              .join(''),
+          contentType: 'application/x-www-form-urlencoded',
+          customValue: meta
+        };
+      }
+
+      return token;
     };
   }
 

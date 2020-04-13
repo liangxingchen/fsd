@@ -15,6 +15,7 @@ export interface OSSAdapterOptions {
   // 角色扮演
   accountId?: string;
   roleName?: string;
+  callbackUrl?: string; // 边缘上传回调地址
 }
 
 export default class OSSAdpter extends Adapter<OSSAdapterOptions> {}

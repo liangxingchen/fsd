@@ -58,3 +58,4 @@ jspm_packages/
 
 lib
 package-lock.json
+test/sts.js

@@ -28,4 +28,5 @@ FSD 文档： https://github.com/maichong/fsd
 | region          | string           |      | 默认 cn-shanghai              |
 | templateGroupId | string           |      | 转码模板组ID                   |
 | workflowId      | string           |      | 工作流ID                      |
+| callbackUrl | string | | 边缘上传后的回调地址 |
 
