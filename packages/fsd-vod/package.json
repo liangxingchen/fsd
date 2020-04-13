@@ -1,6 +1,6 @@
 {
   "name": "fsd-vod",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Aliyun OSS adapter for fsd",
   "main": "lib/index.js",
   "types": "index.d.ts",
