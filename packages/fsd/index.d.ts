@@ -1,3 +1,5 @@
+/// <reference types="node"/>
+
 export interface DriverOptions {
   adapter: Adapter<any>;
 }
@@ -40,9 +42,9 @@ export interface FSDFile {
   readonly ext: string;
   readonly needEnsureDir: boolean;
   append(data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
-  read(encoding: string): Promise<string>;
+  read(encoding: BufferEncoding): Promise<string>;
   read(position?: number, length?: number): Promise<Buffer>;
-  read(position: number, length: number, encoding: string): Promise<string>;
+  read(position: number, length: number, encoding: BufferEncoding): Promise<string>;
   write(data?: string | Buffer | NodeJS.ReadableStream): Promise<void>;
   createReadStream(options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;
   createWriteStream(options?: WriteStreamOptions): Promise<NodeJS.WritableStream>;

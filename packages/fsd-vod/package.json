@@ -12,10 +12,10 @@
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
   "dependencies": {
-    "@alicloud/pop-core": "^1.7.9",
-    "akita": "^0.8.2",
-    "ali-oss": "^6.6.0",
-    "debug": "^4.1.1",
-    "lru-cache": "^5.1.1"
+    "@alicloud/pop-core": "^1.7.10",
+    "akita": "^0.10.3",
+    "ali-oss": "^6.11.2",
+    "debug": "^4.3.1",
+    "lru-cache": "^6.0.0"
   }
 }

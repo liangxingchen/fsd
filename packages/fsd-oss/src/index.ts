@@ -40,6 +40,8 @@ export default class OSSAdapter {
     if (!options.accessKeyId) throw new Error('option accessKeyId is required for fsd-oss');
     /* istanbul ignore if */
     if (!options.accessKeySecret) throw new Error('option accessKeySecret is required for fsd-oss');
+    /* istanbul ignore if */
+    if (!options.region) throw new Error('option region is required for fsd-oss');
     options = Object.assign({}, options, { root: options.root || '/' });
     if (options.root[0] !== '/') {
       options.root = `/${options.root}`;

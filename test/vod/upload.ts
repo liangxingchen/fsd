@@ -44,11 +44,14 @@ export default function (fsd: FileGenerator) {
       t.equal(await file.size(), buffer.length, 'Video size');
 
       let stream = await file.createReadStream();
-      stream.pipe(fs.createWriteStream('/tmp/download.mp4')).on('close', async () => {
-        let data = fs.readFileSync('/tmp/download.mp4');
-        t.ok(data.equals(buffer), 'download');
-        // await file.unlink();
-        t.end();
+      await new Promise((resolve) => {
+        stream.pipe(fs.createWriteStream('/tmp/download.mp4')).on('close', async () => {
+          let data = fs.readFileSync('/tmp/download.mp4');
+          t.ok(data.equals(buffer), 'download');
+          // await file.unlink();
+          t.end();
+          resolve(null);
+        });
       });
     });
 
@@ -75,11 +78,14 @@ export default function (fsd: FileGenerator) {
       t.ok(await file.exists(), 'multipart upload completed');
 
       let stream = await file.createReadStream({ start: 0, end: part1.length - 1 });
-      stream.pipe(fs.createWriteStream('/tmp/download.part1.mp4')).on('close', async () => {
-        let data = fs.readFileSync('/tmp/download.part1.mp4');
-        t.ok(data.equals(part1), 'download part');
-        // await file.unlink();
-        t.end();
+      await new Promise((resolve) => {
+        stream.pipe(fs.createWriteStream('/tmp/download.part1.mp4')).on('close', async () => {
+          let data = fs.readFileSync('/tmp/download.part1.mp4');
+          t.ok(data.equals(part1), 'download part');
+          // await file.unlink();
+          t.end();
+          resolve(null);
+        });
       });
     });
 

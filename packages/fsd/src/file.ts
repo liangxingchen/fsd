@@ -65,7 +65,7 @@ export default class FSDFile {
     return this._adapter.append(this.path, data);
   }
 
-  async read(position?: number, length?: number, encoding?: string): Promise<Buffer | string> {
+  async read(position?: number, length?: number, encoding?: BufferEncoding): Promise<Buffer | string> {
     debug('read %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {

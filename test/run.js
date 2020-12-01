@@ -24,6 +24,7 @@ glob('vod/*', {
       accessKeyId: process.env.VOD_KEYID,
       accessKeySecret: process.env.VOD_SECRET,
       templateGroupId: process.env.VOD_TEMPLATE_GROUP_ID,
+      region: 'cn-shanghai'
     });
 
     for (let file of files) {
