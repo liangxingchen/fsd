@@ -57,5 +57,4 @@ jspm_packages/
 .idea
 
 lib
-package-lock.json
 test/sts.js
