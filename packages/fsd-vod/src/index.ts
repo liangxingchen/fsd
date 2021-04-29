@@ -6,7 +6,14 @@ import { URL } from 'url';
 import { PassThrough } from 'stream';
 import akita from 'akita';
 import { ReadStreamOptions, WriteStreamOptions, Task, Part, AllocOptions, WithPromise } from 'fsd';
-import { VODAdapterOptions, VideoInfo, MezzanineInfo, PlayInfoResult } from '..';
+import {
+  VODAdapterOptions,
+  VideoInfo,
+  MezzanineInfo,
+  PlayInfoResult,
+  UploadToken,
+  UploadTokenWithAutoRefresh
+} from '..';
 
 const debug = Debugger('fsd-vod');
 const client = akita.resolve('fsd-vod');
@@ -14,20 +21,7 @@ const CALLBACK_BODY =
   // eslint-disable-next-line no-template-curly-in-string
   'bucket=${bucket}&path=${object}&etag=${etag}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}&format=${imageInfo.format}';
 
-interface AuthCache {
-  auth: {
-    accessKeyId: string;
-    accessKeySecret: string;
-    stsToken: string;
-    bucket: string;
-    endpoint: string;
-  };
-  path: string;
-  expiration: number;
-  callback?: any;
-}
-
-function resultToCache(result: any): AuthCache {
+function resultToCache(result: any): UploadToken {
   let UploadAddress = JSON.parse(Buffer.from(result.UploadAddress, 'base64').toString());
   let UploadAuth = JSON.parse(Buffer.from(result.UploadAuth, 'base64').toString());
 
@@ -50,10 +44,14 @@ export default class VODAdapter {
   needEnsureDir: boolean;
   _options: VODAdapterOptions;
   _rpc: RPC;
-  _authCache: LRUCache<string, AuthCache>;
+  _authCache: LRUCache<string, UploadToken>;
   _videoCache: LRUCache<string, VideoInfo>;
-  alloc?: (options?: AllocOptions) => Promise<string>;
-  createUploadToken?: (videoId: string, meta?: any) => Promise<AuthCache>;
+  alloc: (options?: AllocOptions) => Promise<string>;
+  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  createUploadTokenWithAutoRefresh: (
+    videoId: string,
+    meta?: any
+  ) => Promise<UploadTokenWithAutoRefresh>;
 
   constructor(options: VODAdapterOptions) {
     this.instanceOfFSDAdapter = true;
@@ -137,6 +135,18 @@ export default class VODAdapter {
 
       return token;
     };
+
+    this.createUploadTokenWithAutoRefresh = async (videoId: string, meta?: any) => {
+      let token = await this.createUploadToken(videoId, meta);
+      let auth = token.auth;
+      auth = Object.assign({}, auth, {
+        refreshSTSToken: async () => {
+          let t = await this.createUploadToken(videoId, meta);
+          return t.auth;
+        }
+      });
+      return Object.assign({}, token, { auth }) as any;
+    };
   }
 
   async getVideoInfo(videoId: string): Promise<null | VideoInfo> {
@@ -193,7 +203,7 @@ export default class VODAdapter {
 
   async append(videoId: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', videoId);
-    let token = await this.createUploadToken(videoId);
+    let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
     if (typeof data === 'string') {
@@ -237,7 +247,7 @@ export default class VODAdapter {
     debug('createWriteStream %s', videoId);
     if (options?.start) throw new Error('fsd-vod read stream does not support start options');
 
-    let token = await this.createUploadToken(videoId);
+    let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
@@ -247,7 +257,7 @@ export default class VODAdapter {
 
   async initMultipartUpload(videoId: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', videoId, partCount);
-    let token = await this.createUploadToken(videoId);
+    let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
     let res = await oss.initMultipartUpload(token.path.substr(1));
@@ -266,7 +276,7 @@ export default class VODAdapter {
     size: number
   ): Promise<Part> {
     debug('writePart %s, task: %s', videoId, partTask);
-    let token = await this.createUploadToken(videoId);
+    let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
     let info = new URL(partTask);
@@ -284,7 +294,7 @@ export default class VODAdapter {
 
   async completeMultipartUpload(videoId: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', videoId);
-    let token = await this.createUploadToken(videoId);
+    let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
     let info = new URL(parts[0]);

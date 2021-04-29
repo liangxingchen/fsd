@@ -3,6 +3,10 @@ module.exports = {
     'alloy',
     'alloy/typescript'
   ],
+  globals:{
+    NodeJS: true,
+    BufferEncoding: true,
+  },
   rules: {
     'arrow-parens': 'error',
     complexity: 'off',
@@ -10,7 +14,7 @@ module.exports = {
       SwitchCase: 1
     }],
     'max-params': ['error', 4],
-    "max-nested-callbacks": ['error', 4],
+    'max-nested-callbacks': ['error', 4],
     // 禁止不必要的布尔转换
     'no-extra-boolean-cast': 'error',
     // 禁止不必要的括号
@@ -18,7 +22,7 @@ module.exports = {
     // 强制使用有效的 JSDoc 注释
     // 'valid-jsdoc': 'error',
     'no-param-reassign': 'off',
-    "no-return-await": 'off',
+    'no-return-await': 'off',
     'no-unused-vars': 'off',
     'no-undefined': 'off',
     'no-shadow': 'error',
@@ -33,6 +37,7 @@ module.exports = {
       { SwitchCase: 1, flatTernaryExpressions: true }
     ],
     '@typescript-eslint/explicit-member-accessibility': 'off',
+    '@typescript-eslint/method-signature-style':'off',
     '@typescript-eslint/no-empty-interface': 'off',
     '@typescript-eslint/no-inferrable-types': 'off',
     '@typescript-eslint/no-var-requires': 'off',
@@ -42,41 +47,41 @@ module.exports = {
     '@typescript-eslint/unified-signatures': 'off',
     '@typescript-eslint/member-ordering': ['error', {
       default: [
-        "public-static-field",
-        "protected-static-field",
-        "private-static-field",
+        'public-static-field',
+        'protected-static-field',
+        'private-static-field',
 
-        "public-instance-field",
-        "protected-instance-field",
-        "private-instance-field",
+        'public-instance-field',
+        'protected-instance-field',
+        'private-instance-field',
 
-        "public-field",
-        "protected-field",
-        "private-field",
+        'public-field',
+        'protected-field',
+        'private-field',
 
-        "static-field",
-        "instance-field",
+        'static-field',
+        'instance-field',
 
-        "field",
+        'field',
 
-        "constructor",
+        'constructor',
 
-        "public-static-method",
-        "protected-static-method",
-        "private-static-method",
+        'public-static-method',
+        'protected-static-method',
+        'private-static-method',
 
-        "public-instance-method",
-        "protected-instance-method",
-        "private-instance-method",
+        'public-instance-method',
+        'protected-instance-method',
+        'private-instance-method',
 
-        "public-method",
-        "protected-method",
-        "private-method",
+        'public-method',
+        'protected-method',
+        'private-method',
 
-        "static-method",
-        "instance-method",
+        'static-method',
+        'instance-method',
 
-        "method"
+        'method'
       ]
     }]
   },

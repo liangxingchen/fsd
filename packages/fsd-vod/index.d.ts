@@ -88,7 +88,44 @@ export interface PlayInfoResult {
   };
 }
 
+export interface UploadToken {
+  auth: {
+    accessKeyId: string;
+    accessKeySecret: string;
+    stsToken: string;
+    bucket: string;
+    endpoint: string;
+  };
+  path: string;
+  expiration: number;
+  callback?: any;
+}
+
+export interface UploadTokenWithAutoRefresh {
+  auth: {
+    accessKeyId: string;
+    accessKeySecret: string;
+    stsToken: string;
+    bucket: string;
+    endpoint: string;
+    refreshSTSToken: () => Promise<{
+      accessKeyId: string;
+      accessKeySecret: string;
+      stsToken: string;
+    }>;
+  };
+  path: string;
+  expiration: number;
+  callback?: any;
+}
+
 export default class VODAdpter extends Adapter<VODAdapterOptions> {
+  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  createUploadTokenWithAutoRefresh: (
+    videoId: string,
+    meta?: any
+  ) => Promise<UploadTokenWithAutoRefresh>;
+
   getVideoInfo(videoId: string): Promise<null | VideoInfo>;
   getMezzanineInfo(videoId: string, options?: any): Promise<null | MezzanineInfo>;
   getPlayInfo(videoId: string, options?: any): Promise<null | PlayInfoResult>;

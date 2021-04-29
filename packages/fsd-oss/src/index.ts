@@ -16,7 +16,7 @@ import {
   CreateUrlOptions,
   WithPromise
 } from 'fsd';
-import { OSSAdapterOptions } from '..';
+import { OSSAdapterOptions, UploadToken, UploadTokenWithAutoRefresh } from '..';
 
 const debug = Debugger('fsd-oss');
 const CALLBACK_BODY =
@@ -30,7 +30,11 @@ export default class OSSAdapter {
   _options: OSSAdapterOptions;
   _oss: OSS;
   _rpc: RPC;
-  createUploadToken?: (path: string, meta?: any) => Promise<any>;
+  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  createUploadTokenWithAutoRefresh: (
+    videoId: string,
+    meta?: any
+  ) => Promise<UploadTokenWithAutoRefresh>;
 
   constructor(options: OSSAdapterOptions) {
     this.instanceOfFSDAdapter = true;
@@ -97,7 +101,7 @@ export default class OSSAdapter {
       let result: any = await this._rpc.request('AssumeRole', params, { method: 'POST' });
       if (result.Message) throw new Error(result.Message);
 
-      let token: any = {
+      let token: UploadToken = {
         auth: {
           accessKeyId: result.Credentials.AccessKeyId,
           accessKeySecret: result.Credentials.AccessKeySecret,
@@ -123,6 +127,18 @@ export default class OSSAdapter {
       }
 
       return token;
+    };
+
+    this.createUploadTokenWithAutoRefresh = async (videoId: string, meta?: any) => {
+      let token = await this.createUploadToken(videoId, meta);
+      let auth = token.auth;
+      auth = Object.assign({}, auth, {
+        refreshSTSToken: async () => {
+          let t = await this.createUploadToken(videoId, meta);
+          return t.auth;
+        }
+      });
+      return Object.assign({}, token, { auth }) as any;
     };
   }
 
@@ -197,10 +213,10 @@ export default class OSSAdapter {
           {}
         );
         ({ nextMarker } = list);
-        if (list.objects && list.objects.length) {
+        if (list.objects?.length) {
           let objects = list.objects.map((o) => o.name);
           await this._oss.deleteMulti(objects, {
-            quite: true
+            quiet: true
           });
         }
       } while (nextMarker);
@@ -315,7 +331,7 @@ export default class OSSAdapter {
         );
         debug('list result: %O', list);
         ({ nextMarker } = list);
-        if (list.objects && list.objects.length) {
+        if (list.objects?.length) {
           // @ts-ignore eachLimit 有三个参数
           await eachLimit(list.objects, 10, async (object) => {
             let { name } = object;
