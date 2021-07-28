@@ -34,6 +34,19 @@ export default function (fsd: FileGenerator) {
       t.end();
     });
 
+    troot.test(`${fsd.adapter.name} > readdir with subdir`, async (t) => {
+      let dir = fsd(dirPath);
+      let subdir = fsd(`${dirPath}/123/`);
+      await subdir.mkdir();
+      let files = await dir.readdir();
+      console.log('files', files);
+      t.ok(
+        files.find((f) => f.name === '123'),
+        'readdir with subdir'
+      );
+      t.end();
+    });
+
     troot.test(`${fsd.adapter.name} > clear readdir`, async (t) => {
       let dir = fsd(dirPath);
       await dir.unlink();

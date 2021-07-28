@@ -225,10 +225,10 @@ export default class OSSAdapter {
     }
   }
 
-  async mkdir(path: string, prefix?: boolean): Promise<void> {
+  async mkdir(path: string, recursive?: boolean): Promise<void> {
     debug('mkdir %s', path);
     let parent = Path.dirname(path);
-    if (prefix && parent !== '/') {
+    if (recursive && parent !== '/') {
       parent += '/';
       if (!(await this.exists(parent))) {
         debug('mkdir prefix: %s', parent);
@@ -249,7 +249,7 @@ export default class OSSAdapter {
     let delimiter = recursion ? '' : '/';
     let pattern = '';
     if (recursion === true) {
-      pattern = '**/**';
+      pattern = '**/*';
     } else if (recursion) {
       pattern = recursion;
     }
@@ -271,12 +271,25 @@ export default class OSSAdapter {
       );
       debug('list: %O', list);
       ({ nextMarker } = list);
+      if (list.prefixes) {
+        list.prefixes.forEach((name) => {
+          let relative = slash(Path.relative(p, name));
+          if (!relative) return;
+          results.push({
+            name: `${relative}/`,
+            metadata: {
+              size: 0,
+              lastModified: null
+            }
+          });
+        });
+      }
       if (list.objects) {
         list.objects.forEach((object) => {
           let { name } = object;
           let relative = slash(Path.relative(p, name));
           if (!relative) return;
-          if (pattern && !minimatch(relative, pattern)) return;
+          if (pattern && pattern !== '**/*' && !minimatch(relative, pattern)) return;
           results.push({
             name: relative,
             metadata: {

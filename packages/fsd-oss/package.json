@@ -13,9 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "@alicloud/pop-core": "^1.7.10",
-    "ali-oss": "^6.15.2",
-    "async": "^3.2.0",
-    "debug": "^4.3.1",
+    "ali-oss": "^6.16.0",
+    "debug": "^4.3.2",
     "minimatch": "^3.0.4",
     "slash": "^3.0.0"
   }

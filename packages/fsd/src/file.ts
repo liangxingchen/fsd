@@ -65,7 +65,11 @@ export default class FSDFile {
     return this._adapter.append(this.path, data);
   }
 
-  async read(position?: number, length?: number, encoding?: BufferEncoding): Promise<Buffer | string> {
+  async read(
+    position?: number,
+    length?: number,
+    encoding?: BufferEncoding
+  ): Promise<Buffer | string> {
     debug('read %s', this.path);
     /* istanbul ignore if */
     if (this.path.endsWith('/')) {
@@ -156,7 +160,7 @@ export default class FSDFile {
     return this._adapter.unlink(this.path);
   }
 
-  mkdir(prefix?: boolean): Promise<void> {
+  mkdir(recursive?: boolean): Promise<void> {
     debug('mkdir %s', this.path);
     /* istanbul ignore if */
     if (!this.path.endsWith('/')) {
@@ -164,7 +168,7 @@ export default class FSDFile {
     }
     this._size = null;
     this._lastModified = null;
-    return this._adapter.mkdir(this.path, prefix);
+    return this._adapter.mkdir(this.path, recursive);
   }
 
   async readdir(recursion?: true | string): Promise<FSDFile[]> {
@@ -174,10 +178,10 @@ export default class FSDFile {
       throw new Error('readdir failed, directory path should be ends with /');
     }
     let files = await this._adapter.readdir(this.path, recursion);
-    return files.map(
-      ({ name, metadata }) =>
-        new FSDFile(slash(Path.join(this.path, name)), this._adapter, metadata)
-    );
+    return files.map(({ name, metadata }) => {
+      let path = slash(Path.join(this.path, name));
+      return new FSDFile(path, this._adapter, metadata);
+    });
   }
 
   createUrl(options?: CreateUrlOptions): Promise<string> {

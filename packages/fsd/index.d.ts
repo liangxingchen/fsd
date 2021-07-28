@@ -49,7 +49,7 @@ export interface FSDFile {
   createReadStream(options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;
   createWriteStream(options?: WriteStreamOptions): Promise<NodeJS.WritableStream>;
   unlink(): Promise<void>;
-  mkdir(prefix?: boolean): Promise<void>;
+  mkdir(recursive?: boolean): Promise<void>;
   readdir(recursion?: true | string): Promise<FSDFile[]>;
   createUrl(options?: CreateUrlOptions): Promise<string>;
   copy(dest: string): Promise<FSDFile>;
@@ -103,7 +103,7 @@ export class Adapter<T> {
     options?: WriteStreamOptions
   ): Promise<NodeJS.WritableStream & WithPromise>;
   unlink(path: string): Promise<void>;
-  mkdir(path: string, prefix?: boolean): Promise<void>;
+  mkdir(path: string, recursive?: boolean): Promise<void>;
   readdir(
     path: string,
     recursion?: true | string | any

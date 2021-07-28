@@ -13,10 +13,9 @@
   "license": "MIT",
   "dependencies": {
     "cpr": "^3.0.1",
-    "debug": "^4.3.1",
-    "glob": "^7.1.6",
-    "is-stream": "^2.0.0",
-    "mz": "^2.7.0",
+    "debug": "^4.3.2",
+    "glob": "^7.1.7",
+    "is-stream": "^2.0.1",
     "rimraf": "^3.0.2"
   }
 }

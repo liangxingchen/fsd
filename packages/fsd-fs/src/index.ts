@@ -1,7 +1,7 @@
 import * as util from 'util';
 import * as os from 'os';
 import * as Path from 'path';
-import * as fs from 'mz/fs';
+import * as fs from 'fs';
 import * as isStream from 'is-stream';
 import * as _glob from 'glob';
 import * as _rimraf from 'rimraf';
@@ -22,6 +22,14 @@ const glob = util.promisify(_glob);
 const rimraf = util.promisify(_rimraf);
 const cpr = util.promisify(_cpr);
 const debug = Debugger('fsd-fs');
+
+async function getStat(path: string) {
+  try {
+    return await fs.promises.stat(path);
+  } catch (e) {
+    return null;
+  }
+}
 
 export default class FSAdapter {
   instanceOfFSDAdapter: true;
@@ -68,7 +76,7 @@ export default class FSAdapter {
       });
       return;
     }
-    await fs.appendFile(p, data as string | Buffer, { mode });
+    await fs.promises.appendFile(p, data as string | Buffer, { mode });
   }
 
   async createReadStream(
@@ -101,24 +109,10 @@ export default class FSAdapter {
     await rimraf(p);
   }
 
-  async mkdir(path: string, prefix?: boolean): Promise<void> {
+  async mkdir(path: string, recursive?: boolean): Promise<void> {
     debug('mkdir %s', path);
     let fsPath = Path.join(this._options.root, path);
-    let parent = Path.dirname(path);
-    if (prefix && parent !== '/') {
-      // 递归
-      try {
-        let parentFsPath = Path.join(this._options.root, parent);
-        let stat = await fs.stat(parentFsPath);
-        if (!stat.isDirectory()) {
-          await this.mkdir(parent, true);
-        }
-      } catch (e) {
-        // 目录不存在
-        await this.mkdir(parent, true);
-      }
-    }
-    await fs.mkdir(fsPath);
+    await fs.promises.mkdir(fsPath, { recursive });
   }
 
   async readdir(
@@ -134,7 +128,20 @@ export default class FSAdapter {
     let files = await glob(pattern, {
       cwd: p
     });
-    return files.map((name) => ({ name }));
+    let results: Array<{ name: string; metadata?: FileMetadata }> = [];
+    for (let name of files) {
+      let filePath = Path.join(p, name);
+      let stat = await getStat(filePath);
+      let isDir = stat.isDirectory();
+      results.push({
+        name: isDir ? `${name}/` : name,
+        metadata: {
+          size: isDir ? 0 : stat.size,
+          lastModified: stat.mtime
+        }
+      });
+    }
+    return results;
   }
 
   async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
@@ -149,9 +156,9 @@ export default class FSAdapter {
     let from = Path.join(root, path);
     let to = Path.join(root, dest);
     /* istanbul ignore if */
-    if (!(await fs.exists(from))) throw new Error(`source file '${path}' is not exists!`);
+    if (!(await getStat(from))) throw new Error(`source file '${path}' is not exists!`);
     /* istanbul ignore if */
-    if (await fs.exists(to)) throw new Error(`dest file '${dest}' is already exists!`);
+    if (await getStat(to)) throw new Error(`dest file '${dest}' is already exists!`);
     // @ts-ignore 第三和第四个参数可选
     await cpr(from, to);
   }
@@ -160,48 +167,40 @@ export default class FSAdapter {
     debug('rename %s to %s', path, dest);
     let from = Path.join(this._options.root, path);
     let to = Path.join(this._options.root, dest);
-    await fs.rename(from, to);
+    await fs.promises.rename(from, to);
   }
 
   async exists(path: string): Promise<boolean> {
     debug('check exists %s', path);
     let p = Path.join(this._options.root, path);
-    return await fs.exists(p);
+    return !!(await getStat(p));
   }
 
   async isFile(path: string): Promise<boolean> {
     debug('check is file %s', path);
     let p = Path.join(this._options.root, path);
-    try {
-      let stat = await fs.stat(p);
-      return stat.isFile();
-    } catch (e) {
-      return false;
-    }
+    let stat = await getStat(p);
+    return stat?.isFile();
   }
 
   async isDirectory(path: string): Promise<boolean> {
     debug('check is directory %s', path);
     let p = Path.join(this._options.root, path);
-    try {
-      let stat = await fs.stat(p);
-      return stat.isDirectory();
-    } catch (e) {
-      return false;
-    }
+    let stat = await getStat(p);
+    return stat?.isDirectory();
   }
 
   async size(path: string): Promise<number> {
     debug('get file size %s', path);
     let p = Path.join(this._options.root, path);
-    let stat = await fs.stat(p);
+    let stat = await getStat(p);
     return stat.size;
   }
 
   async lastModified(path: string): Promise<Date> {
     debug('get file lastModified %s', path);
     let p = Path.join(this._options.root, path);
-    let stat = await fs.stat(p);
+    let stat = await getStat(p);
     return stat.mtime;
   }
 
@@ -240,7 +239,7 @@ export default class FSAdapter {
       if (info.pathname !== path) throw new Error(`Invalid part link: ${part} for path: ${path}`);
       let file = Path.join(this._options.tmpdir, info.hostname);
       /* istanbul ignore if */
-      if (!(await fs.exists(file))) throw new Error(`part file ${part} is not exists`);
+      if (!(await getStat(file))) throw new Error(`part file ${part} is not exists`);
       files.push(file);
     }
 
@@ -249,6 +248,6 @@ export default class FSAdapter {
       await this.append(path, stream);
     }
 
-    files.forEach((file) => fs.unlink(file));
+    files.forEach((file) => fs.promises.unlink(file));
   }
 }
