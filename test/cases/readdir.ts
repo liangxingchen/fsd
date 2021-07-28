@@ -34,15 +34,18 @@ export default function (fsd: FileGenerator) {
       t.end();
     });
 
-    troot.test(`${fsd.adapter.name} > readdir with subdir`, async (t) => {
+    troot.test(`${fsd.adapter.name} > readdir recursion`, async (t) => {
       let dir = fsd(dirPath);
-      let subdir = fsd(`${dirPath}/123/`);
-      await subdir.mkdir();
-      let files = await dir.readdir();
-      console.log('files', files);
+      await fsd(`${dirPath}123/`).mkdir();
+      await fsd(`${dirPath}123/sub.txt`).append('test');
+      let files = await dir.readdir(true);
       t.ok(
-        files.find((f) => f.name === '123'),
+        files.find((f) => f.path === `${dirPath}123/`),
         'readdir with subdir'
+      );
+      t.ok(
+        files.find((f) => f.path === `${dirPath}123/sub.txt`),
+        'readdir recursion'
       );
       t.end();
     });

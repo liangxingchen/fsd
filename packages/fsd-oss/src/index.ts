@@ -289,6 +289,7 @@ export default class OSSAdapter {
           let { name } = object;
           let relative = slash(Path.relative(p, name));
           if (!relative) return;
+          if (name.endsWith('/')) relative += '/';
           if (pattern && pattern !== '**/*' && !minimatch(relative, pattern)) return;
           results.push({
             name: relative,

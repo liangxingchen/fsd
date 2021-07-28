@@ -6,6 +6,7 @@ import * as isStream from 'is-stream';
 import * as _glob from 'glob';
 import * as _rimraf from 'rimraf';
 import * as _cpr from 'cpr';
+import * as mapLimit from 'async/mapLimit';
 import * as Debugger from 'debug';
 import { URL } from 'url';
 import {
@@ -128,20 +129,22 @@ export default class FSAdapter {
     let files = await glob(pattern, {
       cwd: p
     });
-    let results: Array<{ name: string; metadata?: FileMetadata }> = [];
-    for (let name of files) {
-      let filePath = Path.join(p, name);
-      let stat = await getStat(filePath);
-      let isDir = stat.isDirectory();
-      results.push({
-        name: isDir ? `${name}/` : name,
-        metadata: {
-          size: isDir ? 0 : stat.size,
-          lastModified: stat.mtime
-        }
-      });
-    }
-    return results;
+    return await mapLimit<string, { name: string; metadata?: FileMetadata }>(
+      files,
+      20,
+      async (name) => {
+        let filePath = Path.join(p, name);
+        let stat = await getStat(filePath);
+        let isDir = stat.isDirectory();
+        return {
+          name: isDir ? `${name}/` : name,
+          metadata: {
+            size: isDir ? 0 : stat.size,
+            lastModified: stat.mtime
+          }
+        };
+      }
+    );
   }
 
   async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
