@@ -6,7 +6,6 @@ import * as isStream from 'is-stream';
 import * as _glob from 'glob';
 import * as mapLimit from 'async/mapLimit';
 import * as Debugger from 'debug';
-import { URL } from 'url';
 import {
   ReadStreamOptions,
   WriteStreamOptions,
@@ -90,12 +89,11 @@ export default class FSAdapter {
     options?: WriteStreamOptions
   ): Promise<NodeJS.WritableStream> {
     debug('createWriteStream %s', path);
-    let p = Path.join(this._options.root, path);
+    let p: string;
     if (path.startsWith('task://')) {
-      let info = new URL(path);
-      /* istanbul ignore if */
-      if (!info.pathname) throw new Error('Invalid part pathname');
-      p = Path.join(this._options.tmpdir, info.hostname || '');
+      p = Path.join(this._options.tmpdir, path.replace('task://', ''));
+    } else {
+      p = Path.join(this._options.root, path);
     }
     return fs.createWriteStream(p, options);
   }
@@ -156,10 +154,7 @@ export default class FSAdapter {
     let to = Path.join(root, dest);
     /* istanbul ignore if */
     if (!(await getStat(from))) throw new Error(`source file '${path}' is not exists!`);
-    /* istanbul ignore if */
-    if (await getStat(to)) throw new Error(`dest file '${dest}' is already exists!`);
-    // @ts-ignore 第三和第四个参数可选
-    await fs.promises.cp(from, to, { recursive: true });
+    await fs.promises.cp(from, to, { recursive: true, force: true });
   }
 
   async rename(path: string, dest: string): Promise<void> {
@@ -205,19 +200,17 @@ export default class FSAdapter {
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let taskId = `upload-${Math.random().toString().substr(2)}-`;
+    let taskId = `upload-${Math.random().toString().substring(2)}-`;
     let tasks = [];
     for (let i = 1; i <= partCount; i += 1) {
-      tasks.push(`task://${taskId}${i}${path}?${i}`);
+      tasks.push(`task://${taskId}${i}`);
     }
     return tasks;
   }
 
   async writePart(path: string, partTask: Task, data: NodeJS.ReadableStream): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
-    let info = new URL(partTask);
-    /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
+    if (!partTask.startsWith('task://')) throw new Error('Invalid part task id');
     let writeStream = await this.createWriteStream(partTask);
     await new Promise((resolve, reject) => {
       data.pipe(writeStream).on('close', resolve).on('error', reject);
@@ -227,26 +220,33 @@ export default class FSAdapter {
 
   async completeMultipartUpload(path: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', path);
-    let files = [];
+    let partPaths = [];
     for (let part of parts) {
       /* istanbul ignore if */
       if (!part.startsWith('part://')) throw new Error(`${part} is not a part file`);
-      let info = new URL(part);
+      let partPath = Path.join(this._options.tmpdir, part.replace('part://', ''));
       /* istanbul ignore if */
-      if (!info.hostname) throw new Error(`Invalid part link: ${part}`);
-      /* istanbul ignore if */
-      if (info.pathname !== path) throw new Error(`Invalid part link: ${part} for path: ${path}`);
-      let file = Path.join(this._options.tmpdir, info.hostname);
-      /* istanbul ignore if */
-      if (!(await getStat(file))) throw new Error(`part file ${part} is not exists`);
-      files.push(file);
+      let stat = await getStat(partPath);
+      if (!stat) throw new Error(`part file ${part} is not exists`);
+      partPaths.push({ file: partPath, size: stat.size });
     }
 
-    for (let file of files) {
-      let stream = fs.createReadStream(file);
-      await this.append(path, stream);
+    let p = Path.join(this._options.root, path);
+
+    let start = 0;
+    for (let info of partPaths) {
+      let writeStream = fs.createWriteStream(p, {
+        flags: 'a',
+        start
+      });
+      let stream = fs.createReadStream(info.file);
+      await new Promise((resolve, reject) => {
+        stream.pipe(writeStream).on('close', resolve).on('error', reject);
+      });
+      start += info.size;
+      writeStream.close();
     }
 
-    files.forEach((file) => fs.promises.rm(file, { force: true }));
+    partPaths.forEach((info) => fs.promises.rm(info.file, { force: true }));
   }
 }

@@ -8,16 +8,17 @@ Node.js通用文件存储驱动。
 
 **注意**，我们需要解决的储存介质的差异并非是NTFS和EXT4这个层次的差异。
 
-我们要实现各种云服务商云存储的读写，而这些云存储服务并没有、或不需要像本地文件系统EXT4拥有的权限组控制，所以我们只专注于文件的简单读写实现，不提供诸如权限控制、文件模式之类的接口。
+我们要实现各种云服务商云存储的读写，而这些云存储服务并没有、或不需要像本地文件系统EXT4拥有的权限组控制，所以我们只专注于文件的简单读写实现，不提供诸如权限控制、文件模式之类的接口。
 
-fsd 由两个方面的库组成，fsd主库和各种其他的存储读写适配器库，以插件的机制不断兼容各种云存储服务。
+fsd 由两个方面的库组成，fsd主库和各种其他的存储读写适配器库，以插件的机制不断兼容各种云存储服务。
 
 当前的适配器库有：
 
 | 适配器库    | 说明                                       |
 | ------- | ---------------------------------------- |
-| fsd-fs  | 本地文件系统适配器，读写本地磁盘的文件。  [详细设置](https://github.com/maichong/fsd/tree/master/packages/fsd-fs) |
-| fsd-oss | 阿里云OSS适配器，读写OSS云存储的文件。[详细设置](https://github.com/maichong/fsd/tree/master/packages/fsd-oss) |
+| fsd-fs  | 本地文件系统适配器，读写本地磁盘的文件。  [详细设置](https://github.com/liangxingchen/fsd/tree/master/packages/fsd-fs) |
+| fsd-oss | 阿里云OSS适配器，读写OSS云存储的文件。[详细设置](https://github.com/liangxingchen/fsd/tree/master/packages/fsd-oss) |
+| fsd-vod | 阿里云VOD适配器，视频点播服务上传视频。[详细设置](https://github.com/liangxingchen/fsd/tree/master/packages/fsd-vod) |
 
 
 
@@ -41,8 +42,8 @@ npm i --save fsd fsd-oss
 首先，我们需要在代码中配置fsd，以得到一个`fsd()`函数。
 
 ```js
-const FSD = require('fsd');
-const OSSAdapter = require('fsd-oss');
+import FSD from 'fsd';
+import OSSAdapter from 'fsd-oss';
 
 // 根据需要实例化不同的适配器
 const adapter = new OSSAdapter(ossConfig);
@@ -65,7 +66,7 @@ let content = await file.read('utf8');
 
 使用 `fsd()` 函数创建一个文件对象，fsd没有提供类似于 `new File()`方式实例化文件对象，必须调用 `fsd()` 函数创建对象。
 
- 使用文件对象的 `file.read()` 方法获取文件内容，如果你`read()`方法没有传入任何编码参数，我们将直接获取到文件的Buffer数据。
+使用文件对象的 `file.read()` 方法获取文件内容，如果你`read()`方法没有传入任何编码参数，我们将直接获取到文件的Buffer数据。
 
 **注意：**文件对象所提供的所有接口都为Promise风格异步接口，请不要忘记使用 `await` 关键字。
 
@@ -111,37 +112,37 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #path :string
+### path :string
 
 文件完整路径属性。例如 `/abc/123.txt`
 
 
 
-### #dir :string
+### dir :string
 
 文件所属文件夹路径属性。例如 `/abc/`
 
 
 
-### #base :string
+### base :string
 
 文件名称。例如：`123.txt`
 
 
 
-### #name :string
+### name :string
 
 不带后缀的文件名。例如 `123`
 
 
 
-### #ext :string
+### ext :string
 
 文件后缀。例如`.txt`
 
 
 
-### #read([position], [length],  [encoding])
+### read([position], [length],  [encoding])
 
 读取文件内容。
 
@@ -159,7 +160,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #write(data)
+### write(data)
 
 向文件写入数据。
 
@@ -173,7 +174,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #append(data)
+### append(data)
 
 向文件追加数据。
 
@@ -187,7 +188,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #createReadStream([options])
+### createReadStream([options])
 
 创建可读数据流。
 
@@ -211,7 +212,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #createWriteStream([options])
+### createWriteStream([options])
 
 创建可写数据流。
 
@@ -231,7 +232,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #unlink()
+### unlink()
 
 删除当前文件或文件夹，如果是文件夹，则会递归删除文件夹下的所有内容。
 
@@ -243,7 +244,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #mkdir([prefix])
+### mkdir([prefix])
 
 创建文件夹。
 
@@ -259,7 +260,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #readdir([recursion])
+### readdir([recursion])
 
 读取文件夹（列目录），返回文件列表。
 
@@ -277,7 +278,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #createUrl()
+### createUrl()
 
 创建可访问URL链接，可用于文件下载等场合。
 
@@ -287,7 +288,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #copy([dest])
+### copy([dest])
 
 拷贝文件、文件夹。
 
@@ -302,7 +303,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #rename([dest])
+### rename([dest])
 
 重命名/移动文件、文件夹。
 
@@ -317,7 +318,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #exists()
+### exists()
 
 判断当前文件、文件夹是否存在。
 
@@ -329,7 +330,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #isFile()
+### isFile()
 
 判断当前文件是否存在并是普通文件。
 
@@ -339,7 +340,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #isDirectory()
+### isDirectory()
 
 判断当前文件是否存在并是一个文件夹。
 
@@ -349,7 +350,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #size()
+### size()
 
 获取文件大小，文件夹始终返回0。
 
@@ -359,7 +360,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #lastModified()
+### lastModified()
 
 获取文件的最后修改时间。
 
@@ -369,7 +370,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #initMultipartUpload(partCount)
+### initMultipartUpload(partCount)
 
 初始化一个多段上传任务，返回**任务ID**数组。
 
@@ -385,7 +386,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #writePart(partTask, data, size)
+### writePart(partTask, data, size)
 
 上传一个数据段。返回分段信息。
 
@@ -405,7 +406,7 @@ fsd 中文件夹也使用文件对象进行操作，但是要注意，fsd强制�
 
 
 
-### #completeMultipartUpload(parts)
+### completeMultipartUpload(parts)
 
 完成分段上传。
 

@@ -109,9 +109,8 @@ export default function (fsd: FileGenerator) {
       await delay(200);
       if (await uploadFile.exists()) {
         let str = await uploadFile.read('utf8');
-        t.equal(
-          str,
-          _.repeat(DATA_STRING, TASK_COUNT),
+        t.ok(
+          str === _.repeat(DATA_STRING, TASK_COUNT),
           'File content error after completeMultipartUpload'
         );
       } else {

@@ -260,11 +260,11 @@ export default class VODAdapter {
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
-    let res = await oss.initMultipartUpload(token.path.substr(1));
+    let res = await oss.initMultipartUpload(token.path.substring(1));
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push(`task://${uploadId}${token.path}?${i}`);
+      files.push(`task://${uploadId}?${i}`);
     }
     return files;
   }
@@ -276,15 +276,15 @@ export default class VODAdapter {
     size: number
   ): Promise<Part> {
     debug('writePart %s, task: %s', videoId, partTask);
+    if (!partTask.startsWith('task://')) throw new Error('Invalid part task id');
+
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
-    let info = new URL(partTask);
-    /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== token.path) throw new Error('Invalid part pathname');
-    let uploadId = (info.hostname || '').toUpperCase();
+    let [uploadId, no] = partTask.replace('task://', '').split('?');
+
     // @ts-ignore _uploadPart
-    let res = await oss._uploadPart(token.path.substr(1), uploadId, info.search.substr(1), {
+    let res = await oss._uploadPart(token.path.substring(1), uploadId, parseInt(no), {
       stream: data,
       size
     });
@@ -297,16 +297,13 @@ export default class VODAdapter {
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
     let oss = new OSS(token.auth);
 
-    let info = new URL(parts[0]);
-    /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== token.path) throw new Error('Invalid part pathname');
-    let uploadId = (info.hostname || '').toUpperCase();
+    let uploadId = parts[0].replace('part://', '').split('?')[0];
     debug('update id: %s, target: %s', uploadId, token.path);
     let datas = parts.map((item, key) => ({
       etag: item.split('#')[1],
       number: key + 1
     }));
-    await oss.completeMultipartUpload(token.path.substr(1), uploadId, datas);
+    await oss.completeMultipartUpload(token.path.substring(1), uploadId, datas);
   }
 
   async createUrl(videoId: string, options?: any): Promise<string> {

@@ -18,14 +18,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maichong/fsd.git"
+    "url": "git+https://github.com/liangxingchen/fsd.git"
   },
-  "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
+  "author": "Liang <liang@miaomo.cc> (https://github.com/liangxingchen)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/maichong/fsd/issues"
+    "url": "https://github.com/liangxingchen/fsd/issues"
   },
-  "homepage": "https://github.com/maichong/fsd#readme",
+  "homepage": "https://github.com/liangxingchen/fsd#readme",
   "nyc": {
     "extension": [
       ".ts",

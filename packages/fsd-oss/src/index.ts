@@ -323,9 +323,6 @@ export default class OSSAdapter {
     // 检查源文件是否存在
     /* istanbul ignore if */
     if (!(await this.exists(path))) throw new Error('The source path is not exists!');
-    // 检查目标文件是否存在
-    /* istanbul ignore if */
-    if (await this.exists(dest)) throw new Error('The dest path is already exists!');
 
     const { root } = this._options;
     let from = slash(Path.join(root, path)).substr(1);
@@ -450,7 +447,7 @@ export default class OSSAdapter {
     let { uploadId } = res;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push(`task://${uploadId}${path}?${i}`);
+      files.push(`task://${uploadId}?${i}`);
     }
     return files;
   }
@@ -462,13 +459,13 @@ export default class OSSAdapter {
     size: number
   ): Promise<Part> {
     debug('writePart %s, task: %s', path, partTask);
-    let p = slash(Path.join(this._options.root, path)).substr(1);
-    let info = new URL(partTask);
-    /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
-    let uploadId = (info.hostname || '').toUpperCase();
+    let p = slash(Path.join(this._options.root, path)).substring(1);
+
+    if (!partTask.startsWith('task://')) throw new Error('Invalid part task id');
+
+    let [uploadId, no] = partTask.replace('task://', '').split('?');
     // @ts-ignore _uploadPart
-    let res = await this._oss._uploadPart(p, uploadId, info.search.substr(1), {
+    let res = await this._oss._uploadPart(p, uploadId, parseInt(no), {
       stream: data,
       size
     });
@@ -478,11 +475,8 @@ export default class OSSAdapter {
 
   async completeMultipartUpload(path: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', path);
-    let info = new URL(parts[0]);
-    /* istanbul ignore if */
-    if (!info.pathname || info.pathname !== path) throw new Error('Invalid part pathname');
-    let uploadId = (info.hostname || '').toUpperCase();
-    let p = slash(Path.join(this._options.root, path)).substr(1);
+    let uploadId = parts[0].replace('part://', '').split('?')[0];
+    let p = slash(Path.join(this._options.root, path)).substring(1);
     debug('update id: %s, target: %s', uploadId, p);
     let datas = parts.map((item, key) => ({
       etag: item.split('#')[1],

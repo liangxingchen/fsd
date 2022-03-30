@@ -16,7 +16,7 @@ await fsd.write(data);
 
 ```
 
-FSD 文档： https://github.com/maichong/fsd
+FSD 文档： https://github.com/liangxingchen/fsd
 
 适配器初始化选项：
 
