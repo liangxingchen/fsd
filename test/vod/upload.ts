@@ -11,12 +11,13 @@ export default function (fsd: FileGenerator) {
       let videoId = await fsd.adapter.alloc({ name: 'test append.mp4' });
       let file = fsd(videoId);
       await file.append(buffer);
-      await delay(2000);
+      await delay(5000);
       t.ok(await file.exists(), 'Video exists');
       t.equal(await file.size(), buffer.length, 'Video size');
       let url = await file.createUrl();
       t.ok(url.startsWith('http'), 'createUrl');
 
+      await delay(5000);
       // @ts-ignore
       let playInfo = await fsd.adapter.getPlayInfo(videoId);
       t.ok(playInfo.PlayInfoList.PlayInfo, 'PlayInfo');
@@ -29,7 +30,7 @@ export default function (fsd: FileGenerator) {
       let videoId = await fsd.adapter.alloc({ name: 'test append stream.mp4' });
       let file = fsd(videoId);
       await file.append(fs.createReadStream('test/test.mp4'));
-      await delay(200);
+      await delay(5000);
       t.ok(await file.isFile(), 'isFile()');
       // await file.unlink();
       t.end();
@@ -39,7 +40,7 @@ export default function (fsd: FileGenerator) {
       let videoId = await fsd.adapter.alloc({ name: 'test write buffer.mp4' });
       let file = fsd(videoId);
       await file.write(buffer);
-      await delay(200);
+      await delay(5000);
       t.ok(await file.exists(), 'Video exists');
       t.equal(await file.size(), buffer.length, 'Video size');
 
@@ -74,7 +75,7 @@ export default function (fsd: FileGenerator) {
       parts.push(await file.writePart(tasks[1], part2));
 
       await file.completeMultipartUpload(parts);
-      await delay(200);
+      await delay(5000);
       t.ok(await file.exists(), 'multipart upload completed');
 
       let stream = await file.createReadStream({ start: 0, end: part1.length - 1 });

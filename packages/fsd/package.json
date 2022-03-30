@@ -12,7 +12,7 @@
   "author": "Liang <liang@maichong.it> (https://github.com/liangxingchen)",
   "license": "MIT",
   "dependencies": {
-    "debug": "^4.3.2",
+    "debug": "^4.3.4",
     "is-stream": "^2.0.1",
     "slash": "^3.0.0"
   }

@@ -4,8 +4,6 @@ import * as Path from 'path';
 import * as fs from 'fs';
 import * as isStream from 'is-stream';
 import * as _glob from 'glob';
-import * as _rimraf from 'rimraf';
-import * as _cpr from 'cpr';
 import * as mapLimit from 'async/mapLimit';
 import * as Debugger from 'debug';
 import { URL } from 'url';
@@ -20,8 +18,6 @@ import {
 import { FSAdapterOptions } from 'fsd-fs';
 
 const glob = util.promisify(_glob);
-const rimraf = util.promisify(_rimraf);
-const cpr = util.promisify(_cpr);
 const debug = Debugger('fsd-fs');
 
 async function getStat(path: string) {
@@ -107,7 +103,7 @@ export default class FSAdapter {
   async unlink(path: string): Promise<void> {
     debug('unlink %s', path);
     let p = Path.join(this._options.root, path);
-    await rimraf(p);
+    await fs.promises.rm(p, { recursive: true, force: true });
   }
 
   async mkdir(path: string, recursive?: boolean): Promise<void> {
@@ -132,7 +128,7 @@ export default class FSAdapter {
     return await mapLimit<string, { name: string; metadata?: FileMetadata }>(
       files,
       20,
-      async (name) => {
+      async (name: string) => {
         let filePath = Path.join(p, name);
         let stat = await getStat(filePath);
         let isDir = stat.isDirectory();
@@ -163,7 +159,7 @@ export default class FSAdapter {
     /* istanbul ignore if */
     if (await getStat(to)) throw new Error(`dest file '${dest}' is already exists!`);
     // @ts-ignore 第三和第四个参数可选
-    await cpr(from, to);
+    await fs.promises.cp(from, to, { recursive: true });
   }
 
   async rename(path: string, dest: string): Promise<void> {
@@ -251,6 +247,6 @@ export default class FSAdapter {
       await this.append(path, stream);
     }
 
-    files.forEach((file) => fs.promises.unlink(file));
+    files.forEach((file) => fs.promises.rm(file, { force: true }));
   }
 }
