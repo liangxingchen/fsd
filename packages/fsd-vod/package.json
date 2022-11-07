@@ -12,8 +12,8 @@
   "author": "Liang <liang@miaomo.cc> (https://github.com/liangxingchen)",
   "license": "MIT",
   "dependencies": {
-    "@alicloud/pop-core": "^1.7.10",
-    "akita": "^0.12.1",
+    "@alicloud/pop-core": "^1.7.12",
+    "akita": "^1.0.0",
     "ali-oss": "^6.17.1",
     "debug": "^4.3.4",
     "lru-cache": "^6.0.0"

@@ -12,11 +12,11 @@
   "author": "Liang <liang@miaomo.cc> (https://github.com/liangxingchen)",
   "license": "MIT",
   "dependencies": {
-    "@alicloud/pop-core": "^1.7.10",
+    "@alicloud/pop-core": "^1.7.12",
     "ali-oss": "^6.17.1",
     "async": "*",
     "debug": "^4.3.4",
-    "minimatch": "^3.0.5",
+    "minimatch": "^3.1.2",
     "slash": "^3.0.0"
   }
 }
