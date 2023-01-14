@@ -1,11 +1,10 @@
-import * as OSS from 'ali-oss';
 import * as LRUCache from 'lru-cache';
 import * as Debugger from 'debug';
 import * as RPC from '@alicloud/pop-core';
-import { URL } from 'url';
 import { PassThrough } from 'stream';
 import akita from 'akita';
 import { ReadStreamOptions, WriteStreamOptions, Task, Part, AllocOptions, WithPromise } from 'fsd';
+import SimpleOSSClient from 'fsd-oss/simple-oss-client';
 import {
   VODAdapterOptions,
   VideoInfo,
@@ -105,7 +104,7 @@ export default class VODAdapter {
     };
 
     this.createUploadToken = async (videoId: string, meta?: any) => {
-      if (videoId[0] === '/') videoId = videoId.substr(1);
+      if (videoId[0] === '/') videoId = videoId.substring(1);
       let token = this._authCache.get(videoId);
       debug('getAuth', videoId, token);
       if (!token) {
@@ -150,7 +149,7 @@ export default class VODAdapter {
   }
 
   async getVideoInfo(videoId: string): Promise<null | VideoInfo> {
-    if (videoId[0] === '/') videoId = videoId.substr(1);
+    if (videoId[0] === '/') videoId = videoId.substring(1);
     let cache = this._videoCache.get(videoId);
     if (cache) return cache;
 
@@ -169,7 +168,7 @@ export default class VODAdapter {
   }
 
   async getMezzanineInfo(videoId: string, options?: any): Promise<MezzanineInfo | null> {
-    if (videoId[0] === '/') videoId = videoId.substr(1);
+    if (videoId[0] === '/') videoId = videoId.substring(1);
 
     let params: any = Object.assign(
       {
@@ -189,7 +188,7 @@ export default class VODAdapter {
   }
 
   async getPlayInfo(videoId: string, options?: any): Promise<PlayInfoResult> {
-    if (videoId[0] === '/') videoId = videoId.substr(1);
+    if (videoId[0] === '/') videoId = videoId.substring(1);
 
     let params: any = Object.assign(
       {
@@ -204,14 +203,13 @@ export default class VODAdapter {
   async append(videoId: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', videoId);
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
-    let oss = new OSS(token.auth);
+    let oss = new SimpleOSSClient(token.auth);
 
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
-    let options: OSS.PutObjectOptions = {};
     // 当前aliyun VOD+OSS不支持 AppendObject，只能调用PutObject接口
-    await oss.put(token.path.substr(1), data, options);
+    await oss.put(token.path.substring(1), data);
   }
 
   async createReadStream(
@@ -248,23 +246,22 @@ export default class VODAdapter {
     if (options?.start) throw new Error('fsd-vod read stream does not support start options');
 
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
-    let oss = new OSS(token.auth);
+    let oss = new SimpleOSSClient(token.auth);
 
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
-    stream.promise = oss.putStream(token.path.substr(1), stream);
+    oss.put(token.path.substring(1), stream);
     return stream;
   }
 
   async initMultipartUpload(videoId: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', videoId, partCount);
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
-    let oss = new OSS(token.auth);
+    let oss = new SimpleOSSClient(token.auth);
 
-    let res = await oss.initMultipartUpload(token.path.substring(1));
-    let { uploadId } = res;
+    let { UploadId } = await oss.initMultipartUpload(token.path.substring(1));
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push(`task://${uploadId}?${i}`);
+      files.push(`task://${UploadId}?${i}`);
     }
     return files;
   }
@@ -279,23 +276,23 @@ export default class VODAdapter {
     if (!partTask.startsWith('task://')) throw new Error('Invalid part task id');
 
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
-    let oss = new OSS(token.auth);
+    let oss = new SimpleOSSClient(token.auth);
 
     let [uploadId, no] = partTask.replace('task://', '').split('?');
 
-    // @ts-ignore _uploadPart
-    let res = await oss._uploadPart(token.path.substring(1), uploadId, parseInt(no), {
-      stream: data,
-      size
+    let res = await oss.uploadPart(token.path.substring(1), uploadId, parseInt(no), data, {
+      headers: {
+        'Content-Length': String(size)
+      }
     });
-    let etag = res.etag.replace(/"/g, '');
+    let etag = res.headers.get('ETag').replace(/"/g, '');
     return `${partTask.replace('task://', 'part://')}#${etag}`;
   }
 
   async completeMultipartUpload(videoId: string, parts: Part[]): Promise<void> {
     debug('completeMultipartUpload %s', videoId);
     let token = await this.createUploadTokenWithAutoRefresh(videoId);
-    let oss = new OSS(token.auth);
+    let oss = new SimpleOSSClient(token.auth);
 
     let uploadId = parts[0].replace('part://', '').split('?')[0];
     debug('update id: %s, target: %s', uploadId, token.path);
@@ -316,7 +313,7 @@ export default class VODAdapter {
 
   async unlink(videoId: string): Promise<void> {
     debug('unlink %s', videoId);
-    if (videoId[0] === '/') videoId = videoId.substr(1);
+    if (videoId[0] === '/') videoId = videoId.substring(1);
 
     let params: any = {
       VideoIds: videoId

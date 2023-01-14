@@ -13,10 +13,13 @@
   "license": "MIT",
   "dependencies": {
     "@alicloud/pop-core": "^1.7.12",
-    "ali-oss": "^6.17.1",
+    "akita": "1.0.3",
     "async": "*",
+    "crypto-js": "4.1.1",
     "debug": "^4.3.4",
+    "mime-types": "^2.1.35",
     "minimatch": "^3.1.2",
-    "slash": "^3.0.0"
+    "slash": "^3.0.0",
+    "xml-js": "1.6.11"
   }
 }

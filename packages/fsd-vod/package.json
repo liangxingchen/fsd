@@ -13,9 +13,9 @@
   "license": "MIT",
   "dependencies": {
     "@alicloud/pop-core": "^1.7.12",
-    "akita": "^1.0.0",
-    "ali-oss": "^6.17.1",
+    "akita": "^1.0.3",
     "debug": "^4.3.4",
+    "fsd-oss": "^0.10.1",
     "lru-cache": "^6.0.0"
   }
 }

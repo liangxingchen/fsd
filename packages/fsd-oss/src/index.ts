@@ -1,11 +1,10 @@
 import * as Path from 'path';
-import * as OSS from 'ali-oss';
 import * as slash from 'slash';
 import * as minimatch from 'minimatch';
 import * as Debugger from 'debug';
 import * as eachLimit from 'async/eachLimit';
 import * as RPC from '@alicloud/pop-core';
-import { URL } from 'url';
+import SimpleOSSClient from './simple-oss-client';
 import { PassThrough } from 'stream';
 import {
   ReadStreamOptions,
@@ -17,6 +16,7 @@ import {
   WithPromise
 } from 'fsd';
 import { OSSAdapterOptions, UploadToken, UploadTokenWithAutoRefresh } from '..';
+import { RequestOptions } from '../simple-oss-client';
 
 const debug = Debugger('fsd-oss');
 const CALLBACK_BODY =
@@ -28,7 +28,7 @@ export default class OSSAdapter {
   name: string;
   needEnsureDir: boolean;
   _options: OSSAdapterOptions;
-  _oss: OSS;
+  _oss: SimpleOSSClient;
   _rpc: RPC;
   createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
   createUploadTokenWithAutoRefresh: (
@@ -56,14 +56,15 @@ export default class OSSAdapter {
         'fsd-oss options "endpoint" has been deprecated, please use region/[internal]/[secure] instead!'
       );
     this._options = options;
-    this._oss = new OSS({
+    this._oss = new SimpleOSSClient({
       accessKeyId: options.accessKeyId,
       accessKeySecret: options.accessKeySecret,
       bucket: options.bucket,
-      region: options.region,
-      internal: options.internal,
-      secure: options.secure,
-      timeout: options.timeout
+      endpoint: `https://${options.region}${options.internal ? '-internal' : ''}.aliyuncs.com`,
+      // region: options.region,
+      // internal: options.internal,
+      // secure: options.secure,
+      timeout: parseInt(options.timeout as any) || 0
     });
     if (options.accountId && options.roleName) {
       let stsEndpoint = 'https://sts.aliyuncs.com';
@@ -82,7 +83,7 @@ export default class OSSAdapter {
       if (!options.accountId || !options.roleName)
         throw new Error('Can not create sts token, missing options: accountId and roleName!');
 
-      path = slash(Path.join(options.root, path)).substr(1);
+      path = slash(Path.join(options.root, path)).substring(1);
       let params = {
         RoleArn: `acs:ram::${options.accountId}:role/${options.roleName}`,
         RoleSessionName: 'fsd',
@@ -145,16 +146,15 @@ export default class OSSAdapter {
   async append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void> {
     debug('append %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
     if (typeof data === 'string') {
       data = Buffer.from(data);
     }
-    let options: OSS.AppendObjectOptions = {};
+    let position = 0;
     try {
-      // @ts-ignore number -> string
-      options.position = await this.size(path);
+      position = await this.size(path);
     } catch (e) {}
-    await this._oss.append(p, data, options);
+    await this._oss.append(p, data, { position });
   }
 
   async createReadStream(
@@ -163,8 +163,8 @@ export default class OSSAdapter {
   ): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', path, options);
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
-    let opts: OSS.GetStreamOptions = {};
+    let p = slash(Path.join(root, path)).substring(1);
+    let opts: RequestOptions = {};
     if (options) {
       let start = options.start || 0;
       let end = options.end || 0;
@@ -178,10 +178,7 @@ export default class OSSAdapter {
         opts.headers = { Range: `bytes=${Range}` };
       }
     }
-    let res = await this._oss.getStream(p, opts);
-    /* istanbul ignore if */
-    if (!res || !res.stream) throw new Error('no stream');
-    return res.stream;
+    return (await this._oss.get(p, opts).stream()) as NodeJS.ReadableStream;
   }
 
   async createWriteStream(
@@ -191,37 +188,34 @@ export default class OSSAdapter {
     debug('createWriteStream %s', path);
     if (options?.start) throw new Error('fsd-oss read stream does not support start options');
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
-    stream.promise = this._oss.putStream(p, stream);
+    stream.promise = this._oss.put(p, stream);
     return stream;
   }
 
   async unlink(path: string): Promise<void> {
     debug('unlink %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
     if (path.endsWith('/')) {
-      let nextMarker = '';
+      let continuationToken = '';
       do {
-        let list = await this._oss.list(
-          {
-            prefix: p,
-            marker: nextMarker,
-            'max-keys': 1000
-          },
-          {}
-        );
-        ({ nextMarker } = list);
-        if (list.objects?.length) {
-          let objects = list.objects.map((o) => o.name);
+        let list = await this._oss.list({
+          prefix: p,
+          continuationToken,
+          maxKeys: 1000
+        });
+        continuationToken = list.NextContinuationToken;
+        if (list.Contents?.length) {
+          let objects = list.Contents.map((o) => o.Key);
           await this._oss.deleteMulti(objects, {
             quiet: true
           });
         }
-      } while (nextMarker);
+      } while (continuationToken);
     } else {
-      await this._oss.delete(p);
+      await this._oss.del(p);
     }
   }
 
@@ -236,7 +230,7 @@ export default class OSSAdapter {
       }
     }
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
     let res = await this._oss.put(p, Buffer.from(''));
     debug('mkdir result: %O', res);
   }
@@ -255,52 +249,35 @@ export default class OSSAdapter {
     }
 
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
 
     let results: Array<{ name: string; metadata: FileMetadata }> = [];
-    let nextMarker = '';
+    let continuationToken = '';
     do {
-      let list = await this._oss.list(
-        {
-          prefix: p,
-          delimiter,
-          marker: nextMarker,
-          'max-keys': 1000
-        },
-        {}
-      );
+      let list = await this._oss.list({
+        prefix: p,
+        delimiter,
+        continuationToken,
+        maxKeys: 1000
+      });
       debug('list: %O', list);
-      ({ nextMarker } = list);
-      if (list.prefixes) {
-        list.prefixes.forEach((name) => {
-          let relative = slash(Path.relative(p, name));
+      continuationToken = list.NextContinuationToken;
+      if (list.Contents) {
+        list.Contents.forEach((object) => {
+          let relative = slash(Path.relative(p, object.Key));
           if (!relative) return;
-          results.push({
-            name: `${relative}/`,
-            metadata: {
-              size: 0,
-              lastModified: null
-            }
-          });
-        });
-      }
-      if (list.objects) {
-        list.objects.forEach((object) => {
-          let { name } = object;
-          let relative = slash(Path.relative(p, name));
-          if (!relative) return;
-          if (name.endsWith('/')) relative += '/';
+          if (object.Key.endsWith('/')) relative += '/';
           if (pattern && pattern !== '**/*' && !minimatch(relative, pattern)) return;
           results.push({
             name: relative,
             metadata: {
-              size: object.size,
-              lastModified: new Date(object.lastModified)
+              size: object.Size,
+              lastModified: new Date(object.LastModified)
             }
           });
         });
       }
-    } while (nextMarker);
+    } while (continuationToken);
     return results;
   }
 
@@ -311,7 +288,7 @@ export default class OSSAdapter {
     if (urlPrefix && publicRead) {
       return urlPrefix + p;
     }
-    let url = this._oss.signatureUrl(p.substr(1), options);
+    let url = this._oss.signatureUrl(p.substring(1), options);
     if (urlPrefix) {
       url = url.replace(/https?\:\/\/[^/]+/, urlPrefix);
     }
@@ -325,34 +302,30 @@ export default class OSSAdapter {
     if (!(await this.exists(path))) throw new Error('The source path is not exists!');
 
     const { root } = this._options;
-    let from = slash(Path.join(root, path)).substr(1);
-    let to = slash(Path.join(root, dest)).substr(1);
+    let from = slash(Path.join(root, path)).substring(1);
+    let to = slash(Path.join(root, dest)).substring(1);
 
     if (path.endsWith('/')) {
       debug('copy directory %s -> %s', from, to);
-      let nextMarker = '';
+      let continuationToken = '';
       do {
-        let list = await this._oss.list(
-          {
-            prefix: from,
-            marker: nextMarker,
-            'max-keys': 1000
-          },
-          {}
-        );
+        let list = await this._oss.list({
+          prefix: from,
+          continuationToken,
+          maxKeys: 1000
+        });
         debug('list result: %O', list);
-        ({ nextMarker } = list);
-        if (list.objects?.length) {
+        continuationToken = list.NextContinuationToken;
+        if (list.Contents?.length) {
           // @ts-ignore eachLimit 有三个参数
-          await eachLimit(list.objects, 10, async (object) => {
-            let { name } = object;
-            debug(' -> copy %s', name);
-            let relative = slash(Path.relative(from, name));
+          await eachLimit(list.Contents, 10, async (object) => {
+            debug(' -> copy %s', object.Key);
+            let relative = slash(Path.relative(from, object.Key));
             let target = slash(Path.join(to, relative));
-            await this._oss.copy(target, name);
+            await this._oss.copy(target, object.Key);
           });
         }
-      } while (nextMarker);
+      } while (continuationToken);
     } else {
       debug('copy file %s -> %s', from, to);
       await this._oss.copy(to, from);
@@ -372,17 +345,14 @@ export default class OSSAdapter {
   async exists(path: string): Promise<boolean> {
     debug('check exists %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
     // 检查目录是否存在
     if (path.endsWith('/')) {
-      let list = await this._oss.list(
-        {
-          prefix: p,
-          'max-keys': 1
-        },
-        {}
-      );
-      return list.objects && list.objects.length > 0;
+      let list = await this._oss.list({
+        prefix: p,
+        maxKeys: 1
+      });
+      return list.Contents && list.Contents.length > 0;
     }
     // 检查文件是否存在
     try {
@@ -396,7 +366,7 @@ export default class OSSAdapter {
   async isFile(path: string): Promise<boolean> {
     debug('check is file %s', path);
     const { root } = this._options;
-    let p = slash(Path.join(root, path)).substr(1);
+    let p = slash(Path.join(root, path)).substring(1);
     try {
       await this._oss.head(p);
       return true;
@@ -407,7 +377,7 @@ export default class OSSAdapter {
 
   async isDirectory(path: string): Promise<boolean> {
     debug('check is directory %s', path);
-    let p = slash(Path.join(this._options.root, path)).substr(1);
+    let p = slash(Path.join(this._options.root, path)).substring(1);
     try {
       await this._oss.head(p);
       return true;
@@ -418,36 +388,28 @@ export default class OSSAdapter {
 
   async size(path: string): Promise<number> {
     debug('get file size %s', path);
-    let p = slash(Path.join(this._options.root, path)).substr(1);
-    let list = await this._oss.list(
-      {
-        prefix: p,
-        'max-keys': 1
-      },
-      {}
-    );
+    let p = slash(Path.join(this._options.root, path)).substring(1);
 
-    if (!list.objects || !list.objects.length || list.objects[0].name !== p)
-      throw new Error(`${path} is not exist!`);
-    return list.objects[0].size;
+    let res = await this._oss.head(p);
+
+    return parseInt(res.headers.get('Content-Length')) || 0;
   }
 
   async lastModified(path: string): Promise<Date> {
     debug('get file lastModified %s', path);
-    let p = slash(Path.join(this._options.root, path)).substr(1);
+    let p = slash(Path.join(this._options.root, path)).substring(1);
     let res = await this._oss.head(p);
-    let headers: any = res.res.headers;
-    return new Date(headers['last-modified'] || headers.date);
+    let headers = res.headers;
+    return new Date(headers.get('Last-Modified'));
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
-    let p = slash(Path.join(this._options.root, path)).substr(1);
-    let res = await this._oss.initMultipartUpload(p);
-    let { uploadId } = res;
+    let p = slash(Path.join(this._options.root, path)).substring(1);
+    let { UploadId } = await this._oss.initMultipartUpload(p);
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
-      files.push(`task://${uploadId}?${i}`);
+      files.push(`task://${UploadId}?${i}`);
     }
     return files;
   }
@@ -464,12 +426,12 @@ export default class OSSAdapter {
     if (!partTask.startsWith('task://')) throw new Error('Invalid part task id');
 
     let [uploadId, no] = partTask.replace('task://', '').split('?');
-    // @ts-ignore _uploadPart
-    let res = await this._oss._uploadPart(p, uploadId, parseInt(no), {
-      stream: data,
-      size
+    let res = await this._oss.uploadPart(p, uploadId, parseInt(no), data, {
+      headers: {
+        'Content-Length': String(size)
+      }
     });
-    let etag = res.etag.replace(/"/g, '');
+    let etag = res.headers.get('ETag').replace(/"/g, '');
     return `${partTask.replace('task://', 'part://')}#${etag}`;
   }
 

@@ -21,9 +21,9 @@ export default function (fsd: FileGenerator) {
         let writeFile = fsd(writePath);
         let readStream = await readFile.createReadStream();
         let writeStream = await writeFile.createWriteStream();
-        await new Promise((resolve, reject) =>
-          readStream.pipe(writeStream).on('end', resolve).on('error', reject).on('close', resolve)
-        );
+        await new Promise((resolve, reject) => {
+          readStream.pipe(writeStream).on('end', resolve).on('error', reject).on('close', resolve);
+        });
         await delay(200);
         let txt = await writeFile.read('utf8');
         t.equal(txt, str, 'createWriteStream equal');

@@ -1,4 +1,5 @@
 import * as test from 'tape';
+import delay from 'delay';
 import { FileGenerator } from '../../packages/fsd';
 
 export default function (fsd: FileGenerator) {
@@ -12,6 +13,14 @@ export default function (fsd: FileGenerator) {
       let isExists = await dir.exists();
       t.ok(isExists, 'exists true OK');
       await dir.unlink();
+      await delay(200);
+
+      isExists = await dir.exists();
+      t.ok(!isExists, 'exists false OK');
+
+      let root = fsd(ROOT);
+      isExists = await root.exists();
+      t.ok(isExists, 'exists true OK');
       t.end();
     });
 
