@@ -1,6 +1,6 @@
 {
   "name": "fsd",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "General file system driver for Node.js",
   "main": "lib/fsd.js",
   "types": "index.d.ts",
