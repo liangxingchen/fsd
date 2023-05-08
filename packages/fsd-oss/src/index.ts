@@ -30,10 +30,15 @@ export default class OSSAdapter {
   _options: OSSAdapterOptions;
   _oss: SimpleOSSClient;
   _rpc: RPC;
-  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  createUploadToken: (
+    videoId: string,
+    meta?: any,
+    durationSeconds?: number
+  ) => Promise<UploadToken>;
   createUploadTokenWithAutoRefresh: (
     videoId: string,
-    meta?: any
+    meta?: any,
+    durationSeconds?: number
   ) => Promise<UploadTokenWithAutoRefresh>;
 
   constructor(options: OSSAdapterOptions) {
@@ -79,7 +84,7 @@ export default class OSSAdapter {
       });
     }
 
-    this.createUploadToken = async (path: string, meta?: any) => {
+    this.createUploadToken = async (path: string, meta?: any, durationSeconds?: number) => {
       if (!options.accountId || !options.roleName)
         throw new Error('Can not create sts token, missing options: accountId and roleName!');
 
@@ -97,7 +102,7 @@ export default class OSSAdapter {
             }
           ]
         }),
-        DurationSeconds: 3600
+        DurationSeconds: durationSeconds || 3600
       };
       let result: any = await this._rpc.request('AssumeRole', params, { method: 'POST' });
       if (result.Message) throw new Error(result.Message);
@@ -130,12 +135,16 @@ export default class OSSAdapter {
       return token;
     };
 
-    this.createUploadTokenWithAutoRefresh = async (videoId: string, meta?: any) => {
-      let token = await this.createUploadToken(videoId, meta);
+    this.createUploadTokenWithAutoRefresh = async (
+      path: string,
+      meta?: any,
+      durationSeconds?: number
+    ) => {
+      let token = await this.createUploadToken(path, meta, durationSeconds);
       let auth = token.auth;
       auth = Object.assign({}, auth, {
         refreshSTSToken: async () => {
-          let t = await this.createUploadToken(videoId, meta);
+          let t = await this.createUploadToken(path, meta, durationSeconds);
           return t.auth;
         }
       });

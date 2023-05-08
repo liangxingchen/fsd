@@ -120,13 +120,47 @@ export interface UploadTokenWithAutoRefresh {
 }
 
 export default class VODAdpter extends Adapter<VODAdapterOptions> {
-  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  /**
+   * 创建上传凭证
+   * @param {string} videoId 视频ID
+   * @param {any} [meta] 文件元信息
+   * @param {number} [durationSeconds] 上传凭证有效期，单位秒, 默认 3600
+   */
+  createUploadToken: (
+    videoId: string,
+    meta?: any,
+    durationSeconds?: number
+  ) => Promise<UploadToken>;
+
+  /**
+   * 创建带自动刷新的上传凭证
+   * @param {string} videoId 视频ID
+   * @param {any} [meta] 文件元信息
+   * @param {number} [durationSeconds] 上传凭证有效期，单位秒, 默认 3600
+   */
   createUploadTokenWithAutoRefresh: (
     videoId: string,
-    meta?: any
+    meta?: any,
+    durationSeconds?: number
   ) => Promise<UploadTokenWithAutoRefresh>;
 
+  /**
+   * 获取视频信息
+   * @param {string} videoId 视频ID
+   */
   getVideoInfo(videoId: string): Promise<null | VideoInfo>;
+
+  /**
+   * 获取视频播放信息
+   * @param {string} videoId 视频ID
+   * @param {any} [options] 参数选项
+   */
   getMezzanineInfo(videoId: string, options?: any): Promise<null | MezzanineInfo>;
+
+  /**
+   * 获取视频播放信息
+   * @param {string} videoId 视频ID
+   * @param {any} [options] 参数选项
+   */
   getPlayInfo(videoId: string, options?: any): Promise<null | PlayInfoResult>;
 }

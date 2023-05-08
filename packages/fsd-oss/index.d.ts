@@ -50,9 +50,23 @@ export interface UploadTokenWithAutoRefresh {
 }
 
 export default class OSSAdpter extends Adapter<OSSAdapterOptions> {
-  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  /**
+   * 创建上传凭证
+   * @param {string} path 文件路径
+   * @param {any} [meta] 文件元信息
+   * @param {number} [durationSeconds] 上传凭证有效期，单位秒, 默认 3600
+   */
+  createUploadToken: (path: string, meta?: any, durationSeconds?: number) => Promise<UploadToken>;
+
+  /**
+   * 创建带自动刷新的上传凭证
+   * @param {string} path 文件路径
+   * @param {any} [meta] 文件元信息
+   * @param {number} [durationSeconds] 上传凭证有效期，单位秒, 默认 3600
+   */
   createUploadTokenWithAutoRefresh: (
-    videoId: string,
-    meta?: any
+    path: string,
+    meta?: any,
+    durationSeconds?: number
   ) => Promise<UploadTokenWithAutoRefresh>;
 }

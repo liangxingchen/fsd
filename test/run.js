@@ -6,8 +6,8 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 const Path = require('path');
+const fs = require('fs');
 const glob = require('glob');
-const del = require('del');
 const mkdirp = require('mkdirp');
 
 const FSD = require('../packages/fsd/src/fsd').default;
@@ -41,7 +41,7 @@ glob('cases/*', {
   // files=['cases/readdir.ts']
   {
     // FS
-    del.sync('/tmp/fsd', { force: true });
+    fs.rmSync('/tmp/fsd', { recursive: true, force: true });
     mkdirp.sync('/tmp/fsd');
     mkdirp.sync('/tmp/fsd-tmp');
     let adapter = new FSAdapter({

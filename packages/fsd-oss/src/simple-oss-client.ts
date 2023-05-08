@@ -1,5 +1,5 @@
 import * as qs from 'qs';
-import * as xmljs from 'xml-js';
+import * as xml2js from 'xml2js';
 import * as sha1 from 'crypto-js/hmac-sha1';
 import * as md5 from 'crypto-js/md5';
 import * as Base64Encoder from 'crypto-js/enc-base64';
@@ -59,7 +59,7 @@ export default class SimpleOSSClient {
     options.headers['x-oss-copy-source'] = `/${this.config.bucket}/${from}`;
     let res = await this.requestData('PUT', to, null, options);
 
-    res = Object.assign({ headers: res.headers }, res.CopyObjectResult);
+    // res = Object.assign({ headers: res.headers }, res.CopyObjectResult);
     return res;
   }
 
@@ -88,7 +88,7 @@ export default class SimpleOSSClient {
 
     options.query = query;
     let res = await this.requestData('GET', '', null, options);
-    res = Object.assign({ headers: res.headers }, res.ListBucketResult);
+    // res = Object.assign({ headers: res.headers }, res.ListBucketResult);
 
     res.KeyCount = parseInt(res.KeyCount);
     res.MaxKeys = parseInt(res.MaxKeys);
@@ -122,7 +122,7 @@ export default class SimpleOSSClient {
     options.headers['Content-MD5'] = md5(body).toString(Base64Encoder);
 
     let res = await this.requestData('POST', '?delete', body, options);
-    res = Object.assign({ headers: res.headers }, res.DeleteResult);
+    // res = Object.assign({ headers: res.headers }, res.DeleteResult);
 
     if (res.Deleted) {
       if (!Array.isArray(res.Deleted)) res.Deleted = [res.Deleted];
@@ -139,8 +139,7 @@ export default class SimpleOSSClient {
   ): Promise<InitiateMultipartUploadResult> {
     options = options || {};
     if (!options.mime) options.mime = mime.lookup(name) || 'application/octet-stream';
-    let res = await this.requestData('POST', `${name}?uploads`, '', options);
-    return Object.assign({ headers: res.headers }, res.InitiateMultipartUploadResult);
+    return await this.requestData('POST', `${name}?uploads`, '', options);
   }
 
   uploadPart(
@@ -174,7 +173,8 @@ export default class SimpleOSSClient {
       )
       .join('')}</CompleteMultipartUpload>`;
     let res = await this.requestData('POST', `${name}?uploadId=${uploadId}`, body, options);
-    return Object.assign({ headers: res.headers }, res.CompleteMultipartUploadResult);
+    // res = Object.assign({ headers: res.headers }, res.CompleteMultipartUploadResult);
+    return res;
   }
 
   request(method: string, resource: string, body?: any, options?: RequestOptions): Request<any> {
@@ -213,19 +213,21 @@ export default class SimpleOSSClient {
 
     let xml = await response.text();
 
-    if (!xml && response.status === 200) {
+    if (!xml && (response.status === 200 || response.status === 204)) {
       return {
         headers: response.headers
       };
     }
 
-    let data: any = xmljs.xml2js(xml, { compact: true });
-    if (data.Error) {
-      throw new Error(data.Error.Message._text);
+    let data: any = await xml2data(xml);
+    // console.log('xml', xml);
+    // console.log('data', data);
+    if (data.Code) {
+      throw new Error(data.Message);
     }
 
-    let res = Object.assign({ headers: response.headers }, conventXmlObject(data));
-    delete res._declaration;
+    let res = Object.assign({ headers: response.headers }, data);
+    // delete res._declaration;
     return res;
   }
 
@@ -274,16 +276,14 @@ export default class SimpleOSSClient {
   }
 }
 
-function conventXmlObject(object: any): any {
-  if (Array.isArray(object)) return object.map(conventXmlObject);
-  if (object && typeof object === 'object') {
-    let keys = Object.keys(object);
-    if (keys.length === 1 && keys[0] === '_text') return object._text;
-    let res: any = {};
-    for (let key of keys) {
-      res[key] = conventXmlObject(object[key]);
-    }
-    return res;
-  }
-  return object;
+function xml2data(xml: string | Buffer): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const opt = { trim: true, explicitArray: false, explicitRoot: false };
+    xml2js.parseString(xml, opt, (error: Error, result: any) => {
+      if (error) {
+        return reject(new Error('XMLDataError'));
+      }
+      resolve(result);
+    });
+  });
 }

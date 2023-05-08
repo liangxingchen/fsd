@@ -92,8 +92,11 @@ export class Adapter<T> {
   alloc?: (options?: AllocOptions) => Promise<string>;
   /**
    * 创建上传凭证，如果支持边缘上传，否则不存在
+   * @param path 文件路径
+   * @param {any} [meta] 文件元数据
+   * @param {number} [durationSeconds] 令牌有效时长，单位秒
    */
-  createUploadToken?: (path: string, meta?: any) => Promise<any>;
+  createUploadToken?: (path: string, meta?: any, durationSeconds?: number) => Promise<any>;
 
   constructor(options: T);
   append(path: string, data: string | Buffer | NodeJS.ReadableStream): Promise<void>;

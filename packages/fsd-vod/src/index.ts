@@ -1,4 +1,4 @@
-import * as LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import * as Debugger from 'debug';
 import * as RPC from '@alicloud/pop-core';
 import { PassThrough } from 'stream';
@@ -46,10 +46,15 @@ export default class VODAdapter {
   _authCache: LRUCache<string, UploadToken>;
   _videoCache: LRUCache<string, VideoInfo>;
   alloc: (options?: AllocOptions) => Promise<string>;
-  createUploadToken: (videoId: string, meta?: any) => Promise<UploadToken>;
+  createUploadToken: (
+    videoId: string,
+    meta?: any,
+    durationSeconds?: number
+  ) => Promise<UploadToken>;
   createUploadTokenWithAutoRefresh: (
     videoId: string,
-    meta?: any
+    meta?: any,
+    durationSeconds?: number
   ) => Promise<UploadTokenWithAutoRefresh>;
 
   constructor(options: VODAdapterOptions) {
@@ -65,11 +70,11 @@ export default class VODAdapter {
 
     this._authCache = new LRUCache({
       max: 1000,
-      maxAge: 1800000
+      ttl: 1800000
     });
     this._videoCache = new LRUCache({
       max: 1000,
-      maxAge: 60000
+      ttl: 60000
     });
 
     this._rpc = new RPC({
@@ -98,12 +103,12 @@ export default class VODAdapter {
       if (result.Message) throw new Error(result.Message);
 
       let token = resultToCache(result);
-      this._authCache.set(result.VideoId, token, token.expiration);
+      this._authCache.set(result.VideoId, token, { ttl: token.expiration });
 
       return result.VideoId;
     };
 
-    this.createUploadToken = async (videoId: string, meta?: any) => {
+    this.createUploadToken = async (videoId: string, meta?: any, durationSeconds?: number) => {
       if (videoId[0] === '/') videoId = videoId.substring(1);
       let token = this._authCache.get(videoId);
       debug('getAuth', videoId, token);
@@ -116,7 +121,7 @@ export default class VODAdapter {
 
         token = resultToCache(result);
 
-        this._authCache.set(videoId, token, token.expiration);
+        this._authCache.set(videoId, token, { ttl: token.expiration });
       }
 
       if (options.callbackUrl && meta) {

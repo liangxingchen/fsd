@@ -64,7 +64,7 @@ export default function (fsd: FileGenerator) {
       let part2 = buffer.slice(index - 1);
 
       let tasks = await file.initMultipartUpload(2);
-      t.equal(tasks.length, 2, 'part count');
+      t.equal(tasks.length, 2, 'part count == 2');
 
       let parts = [];
       parts.push(await file.writePart(tasks[0], part1));
