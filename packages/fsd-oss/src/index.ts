@@ -1,4 +1,5 @@
 import * as Path from 'path';
+import * as qs from 'qs';
 import * as slash from 'slash';
 import * as minimatch from 'minimatch';
 import * as Debugger from 'debug';
@@ -292,10 +293,23 @@ export default class OSSAdapter {
 
   async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
     debug('createUrl %s', path);
+    options = Object.assign({}, options);
     const { root, urlPrefix, publicRead } = this._options;
     let p = slash(Path.join(root, path));
+    let suffix = '';
+    if (options.thumb) {
+      if (options.thumb in this._options.thumbs) {
+        suffix = this._options.thumbs[options.thumb];
+      } else {
+        throw new Error(`Unkown thumb name ${options.thumb}`);
+      }
+    }
     if (urlPrefix && publicRead) {
-      return urlPrefix + p;
+      return urlPrefix + p + suffix;
+    }
+    if (suffix) {
+      if (suffix[0] === '?') suffix = suffix.substring(1);
+      (options as any).query = qs.parse(suffix);
     }
     let url = this._oss.signatureUrl(p.substring(1), options);
     if (urlPrefix) {

@@ -15,7 +15,7 @@ export default function (fsd: FileGenerator) {
       t.ok(await file.exists(), 'Video exists');
       t.equal(await file.size(), buffer.length, 'Video size');
       let url = await file.createUrl();
-      t.ok(url.startsWith('http'), 'createUrl');
+      t.ok(url.startsWith('http'), `createUrl ${url}`);
 
       await delay(5000);
       // @ts-ignore
@@ -48,7 +48,7 @@ export default function (fsd: FileGenerator) {
       await new Promise((resolve) => {
         stream.pipe(fs.createWriteStream('/tmp/download.mp4')).on('close', async () => {
           let data = fs.readFileSync('/tmp/download.mp4');
-          t.ok(data.equals(buffer), 'download');
+          t.ok(data.equals(buffer), `download ${videoId}`);
           // await file.unlink();
           t.end();
           resolve(null);

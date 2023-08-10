@@ -2,6 +2,14 @@ import { Adapter } from 'fsd';
 
 export interface VODAdapterOptions {
   urlPrefix?: string;
+  /**
+   * 是否公开读，默认为false
+   */
+  publicRead?: boolean;
+  /**
+   * 非公开读时，生成URL时的鉴权秘钥
+   */
+  privateKey?: string;
   accessKeyId: string;
   accessKeySecret: string;
   region?: string;

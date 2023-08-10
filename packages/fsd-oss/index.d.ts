@@ -3,6 +3,9 @@ import { Adapter } from 'fsd';
 export interface OSSAdapterOptions {
   root?: string;
   urlPrefix?: string;
+  /**
+   * 是否公开读，默认为false
+   */
   publicRead?: boolean;
   // 以下为OSS驱动配置
   accessKeyId: string;
@@ -16,6 +19,13 @@ export interface OSSAdapterOptions {
   accountId?: string;
   roleName?: string;
   callbackUrl?: string; // 边缘上传回调地址
+  /**
+   * 缩略图配置
+   */
+  thumbs?: {
+    // name -> ?x-oss-process=style/stylename
+    [name: string]: string;
+  };
 }
 
 export interface UploadToken {

@@ -236,7 +236,7 @@ export default class SimpleOSSClient {
     let expires = parseInt((Date.now() / 1000 + (options.expires || 3600)) as any);
     let response = options.response || {};
     let url = `https://${this.config.bucket}.${this.endpoint}/${name}`;
-    let query: any = {};
+    let query: any = Object.assign({}, options.query);
     if (options.trafficLimit) {
       query['x-oss-traffic-limit'] = options.trafficLimit;
     }

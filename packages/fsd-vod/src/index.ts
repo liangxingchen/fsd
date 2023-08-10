@@ -1,9 +1,18 @@
+import * as crypto from 'crypto';
+import { PassThrough } from 'stream';
 import { LRUCache } from 'lru-cache';
 import * as Debugger from 'debug';
 import * as RPC from '@alicloud/pop-core';
-import { PassThrough } from 'stream';
 import akita from 'akita';
-import { ReadStreamOptions, WriteStreamOptions, Task, Part, AllocOptions, WithPromise } from 'fsd';
+import {
+  ReadStreamOptions,
+  WriteStreamOptions,
+  Task,
+  Part,
+  AllocOptions,
+  WithPromise,
+  CreateUrlOptions
+} from 'fsd';
 import SimpleOSSClient from 'fsd-oss/simple-oss-client';
 import {
   VODAdapterOptions,
@@ -20,7 +29,7 @@ const CALLBACK_BODY =
   // eslint-disable-next-line no-template-curly-in-string
   'bucket=${bucket}&path=${object}&etag=${etag}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}&format=${imageInfo.format}';
 
-function resultToCache(result: any): UploadToken {
+function parseToken(result: any): UploadToken {
   let UploadAddress = JSON.parse(Buffer.from(result.UploadAddress, 'base64').toString());
   let UploadAuth = JSON.parse(Buffer.from(result.UploadAuth, 'base64').toString());
 
@@ -35,6 +44,19 @@ function resultToCache(result: any): UploadToken {
     path: `/${UploadAddress.FileName}`,
     expiration: UploadAuth.Expiration * 950
   };
+}
+
+function parseVideoId(id: string) {
+  if (id[0] === '/') id = id.substring(1);
+  let path = '';
+  if (id.includes('#')) {
+    [id, path] = id.split('#');
+  }
+  return { id, path };
+}
+
+function md5(str: string) {
+  return crypto.createHash('md5').update(str).digest('hex');
 }
 
 export default class VODAdapter {
@@ -65,6 +87,8 @@ export default class VODAdapter {
     if (!options.accessKeyId) throw new Error('option accessKeyId is required for fsd-vod');
     /* istanbul ignore if */
     if (!options.accessKeySecret) throw new Error('option accessKeySecret is required for fsd-vod');
+    if (!options.publicRead && !options.privateKey)
+      throw new Error('option privateKey is required when publicRead is false');
 
     this._options = options;
 
@@ -102,26 +126,26 @@ export default class VODAdapter {
       let result: any = await this._rpc.request('CreateUploadVideo', params, { method: 'POST' });
       if (result.Message) throw new Error(result.Message);
 
-      let token = resultToCache(result);
+      let token = parseToken(result);
       this._authCache.set(result.VideoId, token, { ttl: token.expiration });
 
-      return result.VideoId;
+      return `/${result.VideoId}#${token.path}`;
     };
 
     this.createUploadToken = async (videoId: string, meta?: any, durationSeconds?: number) => {
-      if (videoId[0] === '/') videoId = videoId.substring(1);
-      let token = this._authCache.get(videoId);
+      let vid = parseVideoId(videoId);
+      let token = this._authCache.get(vid.id);
       debug('getAuth', videoId, token);
       if (!token) {
         let params = {
-          VideoId: videoId
+          VideoId: vid.id
         };
         let result: any = await this._rpc.request('RefreshUploadVideo', params, { method: 'POST' });
         if (result.Message) throw new Error(result.Message);
 
-        token = resultToCache(result);
+        token = parseToken(result);
 
-        this._authCache.set(videoId, token, { ttl: token.expiration });
+        this._authCache.set(vid.id, token, { ttl: token.expiration });
       }
 
       if (options.callbackUrl && meta) {
@@ -154,18 +178,18 @@ export default class VODAdapter {
   }
 
   async getVideoInfo(videoId: string): Promise<null | VideoInfo> {
-    if (videoId[0] === '/') videoId = videoId.substring(1);
-    let cache = this._videoCache.get(videoId);
+    let vid = parseVideoId(videoId);
+    let cache = this._videoCache.get(vid.id);
     if (cache) return cache;
 
     let params: any = {
-      VideoId: videoId
+      VideoId: vid.id
     };
 
     try {
       let result: any = await this._rpc.request('GetVideoInfo', params, { method: 'POST' });
       if (result.Video) {
-        this._videoCache.set(videoId, result.Video);
+        this._videoCache.set(vid.id, result.Video);
         return result.Video;
       }
     } catch (e) {}
@@ -173,11 +197,11 @@ export default class VODAdapter {
   }
 
   async getMezzanineInfo(videoId: string, options?: any): Promise<MezzanineInfo | null> {
-    if (videoId[0] === '/') videoId = videoId.substring(1);
+    let vid = parseVideoId(videoId);
 
     let params: any = Object.assign(
       {
-        VideoId: videoId,
+        VideoId: vid.id,
         OutputType: 'cdn'
       },
       options || {}
@@ -193,11 +217,11 @@ export default class VODAdapter {
   }
 
   async getPlayInfo(videoId: string, options?: any): Promise<PlayInfoResult> {
-    if (videoId[0] === '/') videoId = videoId.substring(1);
+    let vid = parseVideoId(videoId);
 
     let params: any = Object.assign(
       {
-        VideoId: videoId
+        VideoId: vid.id
       },
       options || {}
     );
@@ -223,6 +247,8 @@ export default class VODAdapter {
   ): Promise<NodeJS.ReadableStream> {
     debug('createReadStream %s options: %o', videoId, options);
     let url = await this.createUrl(videoId);
+
+    console.log('url', url);
 
     let headers: any = {};
     if (options) {
@@ -308,8 +334,29 @@ export default class VODAdapter {
     await oss.completeMultipartUpload(token.path.substring(1), uploadId, datas);
   }
 
-  async createUrl(videoId: string, options?: any): Promise<string> {
+  async createUrl(videoId: string, options?: CreateUrlOptions): Promise<string> {
     debug('createUrl %s', videoId);
+    options = options || {};
+    let vid = parseVideoId(videoId);
+    let path = options.path || vid.path;
+    if (path && this._options.publicRead) {
+      if (/^https?\:\/\//.test(path)) return path;
+      return `${this._options.urlPrefix || ''}${path}`;
+    }
+
+    if (path) {
+      let urlPrefix = this._options.urlPrefix || '';
+      if (/^https?\:\/\//.test(path)) {
+        let url = new URL(path);
+        path = url.pathname;
+        urlPrefix = url.origin;
+      }
+      let timestamp = parseInt((Date.now() / 1000) as any);
+      let string = `${path}-${timestamp}-0-0-${this._options.privateKey}`;
+      let hash = md5(string);
+      return `${urlPrefix}${path}?auth_key=${timestamp}-0-0-${hash}`;
+    }
+
     let info = await this.getMezzanineInfo(videoId, options);
 
     if (info) return info.FileURL;
@@ -318,14 +365,16 @@ export default class VODAdapter {
 
   async unlink(videoId: string): Promise<void> {
     debug('unlink %s', videoId);
-    if (videoId[0] === '/') videoId = videoId.substring(1);
+    let vid = parseVideoId(videoId);
 
     let params: any = {
-      VideoIds: videoId
+      VideoIds: vid.id
     };
 
     let result: any = await this._rpc.request('DeleteVideo', params, { method: 'POST' });
     if (result.Message) throw new Error(result.Message);
+    this._videoCache.delete(vid.id);
+    this._authCache.delete(vid.id);
   }
 
   async exists(videoId: string): Promise<boolean> {

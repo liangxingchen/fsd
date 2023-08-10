@@ -141,7 +141,7 @@ export default class FSAdapter {
     );
   }
 
-  async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {
+  async createUrl(path: string): Promise<string> {
     debug('createUrl %s', path);
     let { urlPrefix } = this._options;
     return urlPrefix + path;

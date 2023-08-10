@@ -18,8 +18,25 @@ export interface FileMetadata {
   lastModified?: Date;
 }
 
+/**
+ * 创建URL选项
+ */
 export interface CreateUrlOptions {
+  /**
+   * 文件路径，可选，适用于VOD驱动获取不同清晰度的视频播放地址
+   */
+  path?: string;
+  /**
+   * 缩略图规格名
+   */
+  thumb?: string;
+  /**
+   * 链接过期时间，单位秒，默认值 3600
+   */
   expires?: number;
+  /**
+   * 链接响应头，可选
+   */
   response?: {
     'content-type'?: string;
     'content-disposition'?: string;
@@ -33,43 +50,170 @@ export interface WithPromise {
 export type Task = string;
 export type Part = string;
 
+/**
+ * 文件对象
+ */
 export interface FSDFile {
+  /**
+   * 是否为FSDFile实例
+   */
   readonly instanceOfFSDFile: true;
+  /**
+   * 文件路径，例如 /path/to/file.txt
+   */
   readonly path: string;
+  /**
+   * 文件所在目录，例如 /path/to
+   */
   readonly dir: string;
+  /**
+   * 文件名，包含扩展名，例如 file.txt
+   */
   readonly base: string;
+  /**
+   * 文件名，不包含扩展名，例如 file
+   */
   readonly name: string;
+  /**
+   * 文件扩展名，例如 .txt
+   */
   readonly ext: string;
+  /**
+   * 是否需要确保目录存在
+   */
   readonly needEnsureDir: boolean;
+
+  /**
+   * 给文件追加内容
+   * @param {string|Buffer|NodeJS.ReadableStream} data 追加内容
+   */
   append(data: string | Buffer | NodeJS.ReadableStream): Promise<void>;
+
+  /**
+   * 读取文件内容
+   * @param {string} [encoding] 编码
+   */
   read(encoding: BufferEncoding): Promise<string>;
+
+  /**
+   * 读取文件内容
+   * @param {number} [position] 读取起始位置
+   * @param {number} [length] 读取长度
+   */
   read(position?: number, length?: number): Promise<Buffer>;
+
+  /**
+   * 读取文件内容
+   * @param {number} position 读取起始位置
+   * @param {number} length 读取长度
+   * @param {string} encoding 编码
+   */
   read(position: number, length: number, encoding: BufferEncoding): Promise<string>;
+
+  /**
+   * 写入文件内容
+   * @param {string|Buffer|NodeJS.ReadableStream} [data] 写入内容
+   */
   write(data?: string | Buffer | NodeJS.ReadableStream): Promise<void>;
+
+  /**
+   * 创建读取流
+   * @param {object} options 读取流选项
+   */
   createReadStream(options?: ReadStreamOptions): Promise<NodeJS.ReadableStream>;
+
+  /**
+   * 创建写入流
+   * @param {object} options 写入流选项
+   */
   createWriteStream(options?: WriteStreamOptions): Promise<NodeJS.WritableStream>;
+
+  /**
+   * 删除文件
+   */
   unlink(): Promise<void>;
+
+  /**
+   * 新建目录
+   * @param {boolean} [recursive] 是否递归创建
+   */
   mkdir(recursive?: boolean): Promise<void>;
+
+  /**
+   * 读取目录
+   * @param {boolean|string} [recursion] 是否递归读取，或者指定子目录glob规则
+   */
   readdir(recursion?: true | string): Promise<FSDFile[]>;
+
+  /**
+   * 创建访问URL
+   * @param {object} options 创建URL选项
+   */
   createUrl(options?: CreateUrlOptions): Promise<string>;
+
+  /**
+   * 拷贝文件到目标路径
+   * @param {string} dest 目标路径
+   */
   copy(dest: string): Promise<FSDFile>;
+
+  /**
+   * 重命名文件到目标路径
+   * @param {string} dest 目标路径
+   */
   rename(dest: string): Promise<void>;
+
+  /**
+   * 判断文件是否存在
+   */
   exists(): Promise<boolean>;
+
+  /**
+   * 判断文件是否为文件
+   */
   isFile(): Promise<boolean>;
+
+  /**
+   * 判断文件是否为目录
+   */
   isDirectory(): Promise<boolean>;
+
+  /**
+   * 获取文件大小
+   */
   size(): Promise<number>;
+
+  /**
+   * 获取文件最后修改时间
+   */
   lastModified(): Promise<Date>;
+
+  /**
+   * 创建分片上传任务
+   * @param {number} partCount 分片数量
+   */
   initMultipartUpload(partCount: number): Promise<Task[]>;
+
+  /**
+   * 上传分片数据
+   * @param {string} partTask 分片任务ID
+   * @param {any} data 分片数据
+   * @param {number} [size] 分片大小
+   */
   writePart(
     partTask: Task,
     data: string | Buffer | NodeJS.ReadableStream,
     size?: number
   ): Promise<Part>;
   completeMultipartUpload(parts: Part[]): Promise<void>;
+
   toString(): string;
   toJSON(): string;
 }
 
+/**
+ * 文件分片选项
+ */
 export interface AllocOptions {
   path?: string;
   name?: string;

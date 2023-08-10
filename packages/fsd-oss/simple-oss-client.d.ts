@@ -163,5 +163,13 @@ export interface SignatureUrlOptions {
   /**
    * 返回头信息
    */
-  response?: Record<string, string>;
+  response?: {
+    [key: string]: string;
+  };
+  /**
+   * 其他查询参数
+   */
+  query?: {
+    [key: string]: string;
+  };
 }
