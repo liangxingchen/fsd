@@ -3,7 +3,7 @@ import * as slash from 'slash';
 import * as Debugger from 'debug';
 import * as isStream from 'is-stream';
 import { PassThrough } from 'stream';
-import {
+import type {
   Adapter,
   FileMetadata,
   ReadStreamOptions,

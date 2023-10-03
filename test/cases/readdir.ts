@@ -1,6 +1,6 @@
 import * as test from 'tape';
 import * as _ from 'lodash';
-import { FileGenerator } from '../../packages/fsd';
+import type { FileGenerator } from '../../packages/fsd';
 import delay from 'delay';
 
 export default function (fsd: FileGenerator) {

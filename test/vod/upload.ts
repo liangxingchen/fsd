@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as test from 'tape';
 import delay from 'delay';
-import { FileGenerator } from '../../packages/fsd';
+import type { FileGenerator } from '../../packages/fsd';
 
 export default function (fsd: FileGenerator) {
   const buffer = fs.readFileSync('test/test.mp4');

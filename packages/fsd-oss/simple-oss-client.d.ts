@@ -1,4 +1,4 @@
-import { Request } from 'akita';
+import type { Request } from 'akita';
 
 export default class SimpleOSSClient {
   config: SimpleOSSClientConfig;

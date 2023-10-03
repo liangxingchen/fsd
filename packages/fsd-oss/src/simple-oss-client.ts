@@ -4,8 +4,9 @@ import * as sha1 from 'crypto-js/hmac-sha1';
 import * as md5 from 'crypto-js/md5';
 import * as Base64Encoder from 'crypto-js/enc-base64';
 import * as mime from 'mime-types';
-import akita, { Request } from 'akita';
-import {
+import akita from 'akita';
+import type { Request } from 'akita';
+import type {
   SimpleOSSClientConfig,
   RequestOptions,
   Result,
@@ -219,7 +220,11 @@ export default class SimpleOSSClient {
       };
     }
 
-    let data: any = await xml2data(xml);
+    let data: any = await xml2js.parseStringPromise(xml, {
+      trim: true,
+      explicitArray: false,
+      explicitRoot: false
+    });
     // console.log('xml', xml);
     // console.log('data', data);
     if (data.Code) {
@@ -227,7 +232,6 @@ export default class SimpleOSSClient {
     }
 
     let res = Object.assign({ headers: response.headers }, data);
-    // delete res._declaration;
     return res;
   }
 
@@ -274,16 +278,4 @@ export default class SimpleOSSClient {
     let sign = sha1(parts.join('\n'), this.config.accessKeySecret).toString(Base64Encoder);
     return `OSS ${this.config.accessKeyId}:${sign}`;
   }
-}
-
-function xml2data(xml: string | Buffer): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const opt = { trim: true, explicitArray: false, explicitRoot: false };
-    xml2js.parseString(xml, opt, (error: Error, result: any) => {
-      if (error) {
-        return reject(new Error('XMLDataError'));
-      }
-      resolve(result);
-    });
-  });
 }

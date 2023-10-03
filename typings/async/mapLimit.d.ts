@@ -1,4 +1,4 @@
-import { mapLimit } from 'async';
+import type { mapLimit } from 'async';
 
 declare const el: typeof mapLimit;
 

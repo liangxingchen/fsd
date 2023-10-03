@@ -1,4 +1,4 @@
-import { eachLimit } from 'async';
+import type { eachLimit } from 'async';
 
 declare const el: typeof eachLimit;
 

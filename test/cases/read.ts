@@ -1,5 +1,5 @@
 import * as test from 'tape';
-import { FileGenerator } from '../../packages/fsd';
+import type { FileGenerator } from '../../packages/fsd';
 
 export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > read`, (troot) => {

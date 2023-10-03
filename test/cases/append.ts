@@ -1,6 +1,6 @@
 import * as test from 'tape';
 import delay from 'delay';
-import { FileGenerator } from '../../packages/fsd';
+import type { FileGenerator } from '../../packages/fsd';
 
 export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > append`, (troot) => {

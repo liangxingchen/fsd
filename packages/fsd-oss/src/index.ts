@@ -7,7 +7,7 @@ import * as eachLimit from 'async/eachLimit';
 import * as RPC from '@alicloud/pop-core';
 import SimpleOSSClient from './simple-oss-client';
 import { PassThrough } from 'stream';
-import {
+import type {
   ReadStreamOptions,
   WriteStreamOptions,
   Task,
@@ -16,8 +16,8 @@ import {
   CreateUrlOptions,
   WithPromise
 } from 'fsd';
-import { OSSAdapterOptions, UploadToken, UploadTokenWithAutoRefresh } from '..';
-import { RequestOptions } from '../simple-oss-client';
+import type { OSSAdapterOptions, UploadToken, UploadTokenWithAutoRefresh } from '..';
+import type { RequestOptions } from '../simple-oss-client';
 
 const debug = Debugger('fsd-oss');
 const CALLBACK_BODY =

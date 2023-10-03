@@ -1,5 +1,5 @@
 import File from './file';
-import { DriverOptions, FSDFile } from '..';
+import type { DriverOptions, FSDFile } from '..';
 
 export default function FSD(options: DriverOptions) {
   function fsd(path: string | FSDFile) {

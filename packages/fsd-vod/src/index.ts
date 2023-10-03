@@ -4,7 +4,7 @@ import { LRUCache } from 'lru-cache';
 import * as Debugger from 'debug';
 import * as RPC from '@alicloud/pop-core';
 import akita from 'akita';
-import {
+import type {
   ReadStreamOptions,
   WriteStreamOptions,
   Task,
@@ -14,7 +14,7 @@ import {
   CreateUrlOptions
 } from 'fsd';
 import SimpleOSSClient from 'fsd-oss/simple-oss-client';
-import {
+import type {
   VODAdapterOptions,
   VideoInfo,
   MezzanineInfo,
@@ -132,6 +132,7 @@ export default class VODAdapter {
       return `/${result.VideoId}#${token.path}`;
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.createUploadToken = async (videoId: string, meta?: any, durationSeconds?: number) => {
       let vid = parseVideoId(videoId);
       let token = this._authCache.get(vid.id);

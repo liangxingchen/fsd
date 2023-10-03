@@ -6,15 +6,8 @@ import * as isStream from 'is-stream';
 import * as _glob from 'glob';
 import * as mapLimit from 'async/mapLimit';
 import * as Debugger from 'debug';
-import {
-  ReadStreamOptions,
-  WriteStreamOptions,
-  Task,
-  Part,
-  FileMetadata,
-  CreateUrlOptions
-} from 'fsd';
-import { FSAdapterOptions } from 'fsd-fs';
+import type { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata } from 'fsd';
+import type { FSAdapterOptions } from 'fsd-fs';
 
 const glob = util.promisify(_glob);
 const debug = Debugger('fsd-fs');
