@@ -76,18 +76,20 @@ export default class SimpleOSSClient {
   }
 
   async list(options: ListOptions): Promise<ListResult> {
-    let query: any = {
+    let query: Record<string, string> = {
       'list-type': '2'
     };
+    let subres: Record<string, string> = {};
     if (options.prefix) query.prefix = options.prefix;
     if (options.delimiter) query.delimiter = options.delimiter;
     if (options.startAfter) query['start-after'] = options.startAfter;
-    if (options.continuationToken) query['continuation-token'] = options.continuationToken;
-    if (options.maxKeys) query['max-keys'] = options.maxKeys;
+    if (options.continuationToken) subres['continuation-token'] = options.continuationToken;
+    if (options.maxKeys) query['max-keys'] = String(options.maxKeys);
     if (options.encodingType) query['encoding-type'] = options.encodingType;
-    if (options.fetchOwner) query['fetch-owner'] = options.fetchOwner;
+    if (options.fetchOwner) query['fetch-owner'] = String(options.fetchOwner);
 
     options.query = query;
+    options.subres = subres;
     let res = await this.requestData('GET', '', null, options);
     // res = Object.assign({ headers: res.headers }, res.ListBucketResult);
 
@@ -193,12 +195,17 @@ export default class SimpleOSSClient {
     if (this.config.stsToken) {
       headers['x-oss-security-token'] = this.config.stsToken;
     }
-    headers.authorization = this.getSign(method, `/${this.config.bucket}/${resource}`, headers);
+    let canonicalizedResource = this.createCanonicalizedResource(
+      `/${this.config.bucket}/${resource}`,
+      options.subres
+    );
+    headers.authorization = this.getSign(method, canonicalizedResource, headers);
     let url = `https://${this.config.bucket}.${this.endpoint}/${resource}`;
+    let query = Object.assign({}, options.query, options.subres);
     return client.request(url, {
       method,
       headers,
-      query: options.query,
+      query,
       body,
       timeout: options.timeout || this.config.timeout || 60000
     });
@@ -259,6 +266,16 @@ export default class SimpleOSSClient {
     query.OSSAccessKeyId = this.config.accessKeyId;
     query.Expires = expires;
     return `${url}?${qs.stringify(query)}`;
+  }
+
+  createCanonicalizedResource(resource: string, subres: Record<string, string>) {
+    if (!subres) return resource;
+    let string = Object.keys(subres)
+      .sort()
+      .map((key) => `${key}=${subres[key]}`)
+      .join('&');
+    if (string) return `${resource}?${string}`;
+    return resource;
   }
 
   getSign(method: string, canonicalizedResource: string, headers?: any) {

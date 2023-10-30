@@ -64,6 +64,7 @@ export interface RequestOptions {
   meta?: UserMeta;
   headers?: Record<string, string>;
   query?: Record<string, string>;
+  subres?: Record<string, string>;
 }
 
 export interface Result {
