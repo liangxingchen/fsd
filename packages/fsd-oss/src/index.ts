@@ -248,7 +248,7 @@ export default class OSSAdapter {
   async readdir(
     path: string,
     recursion?: true | string
-  ): Promise<Array<{ name: string; metadata: FileMetadata }>> {
+  ): Promise<Array<{ name: string; metadata?: FileMetadata }>> {
     debug('readdir %s', path);
     let delimiter = recursion ? '' : '/';
     let pattern = '';
@@ -261,8 +261,10 @@ export default class OSSAdapter {
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substring(1);
 
-    let results: Array<{ name: string; metadata: FileMetadata }> = [];
+    let results: Record<string, { name: string; metadata?: FileMetadata }> = Object.create(null);
     let continuationToken = '';
+    let hasContents = false;
+    let hasCommonPrefixes = false;
     do {
       let list = await this._oss.list({
         prefix: p,
@@ -273,22 +275,39 @@ export default class OSSAdapter {
       debug('list: %O', list);
       continuationToken = list.NextContinuationToken;
       if (list.Contents) {
+        hasContents = true;
         list.Contents.forEach((object) => {
           let relative = slash(Path.relative(p, object.Key));
           if (!relative) return;
           if (object.Key.endsWith('/')) relative += '/';
           if (pattern && pattern !== '**/*' && !minimatch(relative, pattern)) return;
-          results.push({
+          results[relative] = {
             name: relative,
             metadata: {
               size: object.Size,
               lastModified: new Date(object.LastModified)
             }
-          });
+          };
+        });
+      }
+      if (list.CommonPrefixes) {
+        hasCommonPrefixes = true;
+        list.CommonPrefixes.forEach((prefix) => {
+          let relative = slash(Path.relative(p, prefix.Prefix));
+          if (!relative) return;
+          relative += '/';
+          results[relative] = {
+            name: relative
+          };
         });
       }
     } while (continuationToken);
-    return results;
+    if (hasContents && hasCommonPrefixes) {
+      return Object.keys(results)
+        .sort()
+        .map((key) => results[key]);
+    }
+    return Object.values(results);
   }
 
   async createUrl(path: string, options?: CreateUrlOptions): Promise<string> {

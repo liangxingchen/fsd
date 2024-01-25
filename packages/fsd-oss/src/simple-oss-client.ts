@@ -103,6 +103,9 @@ export default class SimpleOSSClient {
         content.Size = parseInt(content.Size);
       });
     }
+    if (res.CommonPrefixes) {
+      if (!Array.isArray(res.CommonPrefixes)) res.CommonPrefixes = [res.CommonPrefixes];
+    }
 
     return res;
   }

@@ -105,6 +105,7 @@ export interface ListResult extends Result {
   KeyCount: number;
   NextContinuationToken?: string;
   Contents: ListResultContent[];
+  CommonPrefixes: ListResultCommonPrefixes[];
 }
 
 export interface ListResultContent {
@@ -117,6 +118,10 @@ export interface ListResultContent {
     ID: string;
     DisplayName: string;
   };
+}
+
+export interface ListResultCommonPrefixes {
+  Prefix: string;
 }
 
 export interface DeleteMultiOptions extends RequestOptions {

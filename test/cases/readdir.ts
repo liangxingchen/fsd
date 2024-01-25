@@ -6,7 +6,7 @@ import delay from 'delay';
 export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > readdir`, (troot) => {
     let dirPath = '/abc/';
-    let filePaths = ['/abc/a.js', '/abc/b.js', '/abc/c.js'];
+    let filePaths = ['/abc/a.js', '/abc/b.js', '/abc/c.js', '/abc/sub/', '/abc/z.js'];
     let appendStr = 'hello world';
 
     troot.test(`${fsd.adapter.name} > before readdir`, async (t) => {
@@ -18,7 +18,11 @@ export default function (fsd: FileGenerator) {
         filePaths.map(async (item) => {
           let file = fsd(item);
           if (!(await file.exists())) {
-            await file.write(appendStr);
+            if (item.endsWith('/')) {
+              await file.mkdir(true);
+            } else {
+              await file.write(appendStr);
+            }
           }
         })
       );
