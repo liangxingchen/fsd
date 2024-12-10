@@ -1,21 +1,19 @@
-import * as util from 'util';
 import * as os from 'os';
 import * as Path from 'path';
 import * as fs from 'fs';
 import * as isStream from 'is-stream';
-import * as _glob from 'glob';
+import { glob } from 'glob';
 import * as mapLimit from 'async/mapLimit';
 import * as Debugger from 'debug';
 import type { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata } from 'fsd';
 import type { FSAdapterOptions } from 'fsd-fs';
 
-const glob = util.promisify(_glob);
 const debug = Debugger('fsd-fs');
 
 async function getStat(path: string) {
   try {
     return await fs.promises.stat(path);
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }
@@ -116,6 +114,7 @@ export default class FSAdapter {
     let files = await glob(pattern, {
       cwd: p
     });
+    files.reverse();
     return await mapLimit<string, { name: string; metadata?: FileMetadata }>(
       files,
       20,

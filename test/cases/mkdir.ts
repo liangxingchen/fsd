@@ -39,7 +39,7 @@ export default function (fsd: FileGenerator) {
         try {
           await FILE.write('test');
           t.fail('should throw error if needEnsureDir');
-        } catch (e) {
+        } catch (_e) {
           // should throw error
           t.pass('throw error if needEnsureDir');
         }

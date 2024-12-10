@@ -1,13 +1,19 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "allowSyntheticDefaultImports": true,
+    // "strict": true,
     "noImplicitAny": true,
-    "noImplicitAny": true,
+    // "strictNullChecks": true,
+    // "strictFunctionTypes": true,
+    // "strictBindCallApply": true,
+    // "strictPropertyInitialization": true,
+    // "noImplicitThis": true,
+    "alwaysStrict": true,
+    "newLine": "lf",
+    "moduleResolution": "node",
+    "module": "CommonJS",
     "removeComments": true,
     "preserveConstEnums": true,
     "outDir": "lib",
-    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "*": [
@@ -15,9 +21,10 @@
         "../../typings/*"
       ]
     },
-    "target": "ES2017",
+    "useDefineForClassFields": false,
+    "target": "ES2022",
     "lib": [
-      "ES2017"
+      "ES2022"
     ]
   },
   "include": [

@@ -132,8 +132,7 @@ export default class VODAdapter {
       return `/${result.VideoId}#${token.path}`;
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.createUploadToken = async (videoId: string, meta?: any, durationSeconds?: number) => {
+    this.createUploadToken = async (videoId: string, meta?: any, _durationSeconds?: number) => {
       let vid = parseVideoId(videoId);
       let token = this._authCache.get(vid.id);
       debug('getAuth', videoId, token);
@@ -193,7 +192,7 @@ export default class VODAdapter {
         this._videoCache.set(vid.id, result.Video);
         return result.Video;
       }
-    } catch (e) {}
+    } catch (_e) {}
     return null;
   }
 
@@ -213,7 +212,7 @@ export default class VODAdapter {
       if (result.Mezzanine) {
         return result.Mezzanine;
       }
-    } catch (e) {}
+    } catch (_e) {}
     return null;
   }
 

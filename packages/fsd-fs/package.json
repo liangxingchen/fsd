@@ -13,8 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "async": "*",
-    "debug": "^4.3.4",
-    "glob": "^7.2.3",
+    "debug": "^4.4.0",
+    "glob": "^10.4.5",
     "is-stream": "^2.0.1"
   }
 }

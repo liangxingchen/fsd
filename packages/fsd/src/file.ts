@@ -28,12 +28,10 @@ export default class FSDFile {
   name: string;
   ext: string;
 
-  constructor(path: string | FSDFileType, adapter: Adapter<any>, metadata?: FileMetadata) {
-    debug('initialize file %s', path);
-    if (!path) throw new Error('FSD File must initialize with path');
-    if (typeof path === 'object' && path.path) {
-      ({ path } = path);
-    }
+  constructor(pathOrFile: string | FSDFileType, adapter: Adapter<any>, metadata?: FileMetadata) {
+    if (!pathOrFile) throw new Error('FSD File must initialize with path');
+    debug('initialize file %s', pathOrFile);
+    let path = typeof pathOrFile === 'object' ? pathOrFile.path : pathOrFile;
     if (path[0] !== '/') {
       path = `/${path}`;
     }

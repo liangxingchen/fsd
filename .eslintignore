@@ -1,6 +1,0 @@
-node_modules/
-coverage/
-packages/fsd/lib
-packages/fsd-fs/lib
-packages/fsd-oss/lib
-*.js

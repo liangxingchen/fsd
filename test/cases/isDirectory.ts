@@ -30,7 +30,7 @@ export default function (fsd: FileGenerator) {
       try {
         await file.isDirectory();
         t.fail('isDirectory throw error when target is a file');
-      } catch (err) {
+      } catch (_e) {
         t.pass('isDirectory throw error when target is a file');
       }
       t.end();

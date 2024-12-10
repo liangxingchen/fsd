@@ -34,7 +34,7 @@ export default function (fsd: FileGenerator) {
       try {
         await dir.isFile();
         t.fail('isFile fail, when path ends with /');
-      } catch (err) {
+      } catch (_e) {
         t.pass('isFile throw error, when path ends with /');
       }
       t.end();

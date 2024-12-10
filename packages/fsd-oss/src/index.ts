@@ -163,7 +163,7 @@ export default class OSSAdapter {
     let position = 0;
     try {
       position = await this.size(path);
-    } catch (e) {}
+    } catch (_e) {}
     await this._oss.append(p, data, { position });
   }
 
@@ -400,7 +400,7 @@ export default class OSSAdapter {
     try {
       await this._oss.head(p);
       return true;
-    } catch (e) {
+    } catch (_e) {
       return false;
     }
   }
@@ -412,7 +412,7 @@ export default class OSSAdapter {
     try {
       await this._oss.head(p);
       return true;
-    } catch (e) {
+    } catch (_e) {
       return false;
     }
   }
@@ -423,7 +423,7 @@ export default class OSSAdapter {
     try {
       await this._oss.head(p);
       return true;
-    } catch (e) {
+    } catch (_e) {
       return false;
     }
   }

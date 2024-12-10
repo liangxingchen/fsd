@@ -69,7 +69,6 @@ export default function (fsd: FileGenerator) {
       let parts = [];
       parts.push(await file.writePart(tasks[0], part1));
 
-      // eslint-disable-next-line
       file = fsd(videoId);
 
       parts.push(await file.writePart(tasks[1], part2));
