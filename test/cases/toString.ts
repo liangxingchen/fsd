@@ -1,4 +1,4 @@
-import * as test from 'tape';
+import test from 'tape';
 import type { FileGenerator } from '../../packages/fsd';
 
 export default function (fsd: FileGenerator) {

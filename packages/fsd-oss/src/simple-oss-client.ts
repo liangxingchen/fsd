@@ -1,9 +1,9 @@
-import * as qs from 'qs';
-import * as xml2js from 'xml2js';
-import * as sha1 from 'crypto-js/hmac-sha1';
-import * as md5 from 'crypto-js/md5';
-import * as Base64Encoder from 'crypto-js/enc-base64';
-import * as mime from 'mime-types';
+import qs from 'qs';
+import xml2js from 'xml2js';
+import sha1 from 'crypto-js/hmac-sha1';
+import md5 from 'crypto-js/md5';
+import Base64Encoder from 'crypto-js/enc-base64';
+import mime from 'mime-types';
 import akita from 'akita';
 import type { Request } from 'akita';
 import type {

@@ -1,10 +1,10 @@
-import * as os from 'os';
-import * as Path from 'path';
-import * as fs from 'fs';
-import * as isStream from 'is-stream';
+import os from 'os';
+import Path from 'path';
+import fs from 'fs';
+import isStream from 'is-stream';
 import { glob } from 'glob';
-import * as mapLimit from 'async/mapLimit';
-import * as Debugger from 'debug';
+import mapLimit from 'async/mapLimit';
+import Debugger from 'debug';
 import type { ReadStreamOptions, WriteStreamOptions, Task, Part, FileMetadata } from 'fsd';
 import type { FSAdapterOptions } from 'fsd-fs';
 

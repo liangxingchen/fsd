@@ -1,7 +1,7 @@
-import * as Path from 'path';
-import * as slash from 'slash';
-import * as Debugger from 'debug';
-import * as isStream from 'is-stream';
+import Path from 'path';
+import slash from 'slash';
+import Debugger from 'debug';
+import isStream from 'is-stream';
 import { PassThrough } from 'stream';
 import type {
   Adapter,

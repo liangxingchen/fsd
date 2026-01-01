@@ -28,7 +28,7 @@ module.exports = [
         allowImportExportEverywhere: false
       },
       globals: {
-        ...globals.es2022,
+        ...globals.es2023,
         ...globals.node,
         ...globals.browser
       }
@@ -1330,9 +1330,8 @@ module.exports = [
       'prefer-numeric-literals': 'off',
       /**
        * 使用 Object.hasOwn() 而不是 Object.prototype.hasOwnProperty.call()
-       * @reason ES2022 的新接口，兼容性不太好
        */
-      'prefer-object-has-own': 'off',
+      'prefer-object-has-own': 'on',
       /**
        * 必须使用 ... 而不是 Object.assign，除非 Object.assign 的第一个参数是一个变量
        */

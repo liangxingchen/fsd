@@ -1,5 +1,5 @@
-import * as test from 'tape';
-import * as _ from 'lodash';
+import test from 'tape';
+import _ from 'lodash';
 import type { FileGenerator } from '../../packages/fsd';
 import delay from 'delay';
 

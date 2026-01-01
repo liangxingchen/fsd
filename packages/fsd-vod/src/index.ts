@@ -1,8 +1,8 @@
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 import { PassThrough } from 'stream';
 import { LRUCache } from 'lru-cache';
-import * as Debugger from 'debug';
-import * as RPC from '@alicloud/pop-core';
+import Debugger from 'debug';
+import RPC from '@alicloud/pop-core';
 import akita from 'akita';
 import type {
   ReadStreamOptions,

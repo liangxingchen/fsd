@@ -11,6 +11,9 @@
     "newLine": "lf",
     "moduleResolution": "node",
     "module": "CommonJS",
+    "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "outDir": "lib",
@@ -22,9 +25,9 @@
       ]
     },
     "useDefineForClassFields": false,
-    "target": "ES2022",
+    "target": "ES2023",
     "lib": [
-      "ES2022"
+      "ES2023"
     ]
   },
   "include": [

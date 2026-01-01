@@ -1,10 +1,10 @@
-import * as Path from 'path';
-import * as qs from 'qs';
-import * as slash from 'slash';
-import * as minimatch from 'minimatch';
-import * as Debugger from 'debug';
-import * as eachLimit from 'async/eachLimit';
-import * as RPC from '@alicloud/pop-core';
+import Path from 'path';
+import qs from 'qs';
+import slash from 'slash';
+import { minimatch } from 'minimatch';
+import Debugger from 'debug';
+import eachLimit from 'async/eachLimit';
+import RPC from '@alicloud/pop-core';
 import SimpleOSSClient from './simple-oss-client';
 import { PassThrough } from 'stream';
 import type {

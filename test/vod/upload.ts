@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as test from 'tape';
+import fs from 'fs';
+import test from 'tape';
 import delay from 'delay';
 import type { FileGenerator } from '../../packages/fsd';
 
