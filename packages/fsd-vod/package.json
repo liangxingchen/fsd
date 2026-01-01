@@ -1,6 +1,6 @@
 {
   "name": "fsd-vod",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "Aliyun OSS adapter for fsd",
   "main": "lib/index.js",
   "types": "index.d.ts",
@@ -15,7 +15,7 @@
     "@alicloud/pop-core": "^1.8.0",
     "akita": "^1.1.0",
     "debug": "^4.4.3",
-    "fsd-oss": "^0.14.0",
+    "fsd-oss": "^0.14.1",
     "lru-cache": "^11.2.4"
   }
 }
