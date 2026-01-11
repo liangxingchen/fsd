@@ -3,3 +3,4 @@ test
 node_modules
 package-lock.json
 tsconfig.json
+AGENTS.md

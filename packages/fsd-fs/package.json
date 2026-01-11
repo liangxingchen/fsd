@@ -9,7 +9,11 @@
     "prepublish": "npm run build"
   },
   "repository": "https://github.com/liangxingchen/fsd/tree/master/packages/fsd-fs",
-  "author": "Liang <liang@miaomo.cc> (https://github.com/liangxingchen)",
+  "author": {
+    "name": "Liang",
+    "email": "liang@miaomo.cn",
+    "url": "https://github.com/liangxingchen"
+  },
   "license": "MIT",
   "dependencies": {
     "async": "*",

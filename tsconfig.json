@@ -16,7 +16,6 @@
     "esModuleInterop": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "outDir": "lib",
     "baseUrl": ".",
     "paths": {
       "*": [
@@ -31,7 +30,7 @@
     ]
   },
   "include": [
-    "src/**/*",
+    "packages/*/src/**/*",
     "test/**/*"
   ],
   "exclude": [

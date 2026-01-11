@@ -21,7 +21,11 @@
     "type": "git",
     "url": "git+https://github.com/liangxingchen/fsd.git"
   },
-  "author": "Liang <liang@miaomo.cn> (https://github.com/liangxingchen)",
+  "author": {
+    "name": "Liang",
+    "email": "liang@miaomo.cn",
+    "url": "https://github.com/liangxingchen"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/liangxingchen/fsd/issues"
@@ -58,14 +62,14 @@
     "@types/debug": "0.0.31",
     "@types/delay": "^3.1.3",
     "@types/is-stream": "^2.0.0",
-    "@types/lodash": "^4.17.21",
+    "@types/lodash": "^4.17.23",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^22.10.1",
     "@types/qs": "^6.14.0",
     "@types/tape": "^5.8.1",
     "@types/xml2js": "^0.4.14",
-    "@typescript-eslint/eslint-plugin": "^8.51.0",
-    "@typescript-eslint/parser": "^8.51.0",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
     "babel-eslint": "^10.1.0",
     "cross-env": "^10.1.0",
     "delay": "^5.0.0",

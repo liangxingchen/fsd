@@ -32,7 +32,7 @@ export default class FSAdapter {
       {
         urlPrefix: '',
         root: '/',
-        mode: 0o666,
+        mode: 0o644,
         tmpdir: os.tmpdir()
       },
       options

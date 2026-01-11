@@ -9,11 +9,15 @@
     "prepublish": "npm run build"
   },
   "repository": "https://github.com/liangxingchen/fsd/tree/master/packages/fsd-oss",
-  "author": "Liang <liang@miaomo.cc> (https://github.com/liangxingchen)",
+  "author": {
+    "name": "Liang",
+    "email": "liang@miaomo.cn",
+    "url": "https://github.com/liangxingchen"
+  },
   "license": "MIT",
   "dependencies": {
     "@alicloud/pop-core": "^1.8.0",
-    "akita": "^1.1.0",
+    "akita": "^1.2.0",
     "async": "*",
     "crypto-js": "^4.2.0",
     "debug": "^4.4.3",
