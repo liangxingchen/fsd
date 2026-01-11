@@ -1331,7 +1331,7 @@ module.exports = [
       /**
        * 使用 Object.hasOwn() 而不是 Object.prototype.hasOwnProperty.call()
        */
-      'prefer-object-has-own': 'on',
+      'prefer-object-has-own': 'error',
       /**
        * 必须使用 ... 而不是 Object.assign，除非 Object.assign 的第一个参数是一个变量
        */
