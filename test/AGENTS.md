@@ -6,7 +6,9 @@
 
 ## 概述
 
-自定义测试运行器，动态加载测试用例并应用于所有适配器（FS、OSS、VOD）。
+自定义测试运行器，动态加载测试用例并应用于所有适配器（FS、OSS、VOD、TOS）。
+
+支持通过 `--adapter=` 参数选择运行的适配器。
 
 ## 结构
 
@@ -88,6 +90,10 @@ VOD_SECRET=***
 VOD_PRIVATE_KEY=***
 VOD_TEMPLATE_GROUP_ID=***
 VOD_URL_PREFIX=***
+TOS_KEYID=***
+TOS_SECRET=***
+TOS_BUCKET=***
+TOS_REGION=***
 ```
 
 ## 独特风格
@@ -102,11 +108,29 @@ for (let file of files) {
 }
 ```
 
+### 适配器选择
+通过 `--adapter=` 参数选择运行的适配器，逗号分隔：
+```bash
+# 所有适配器
+yarn test
+
+# 仅 TOS
+yarn test --adapter=tos
+
+# 仅 FS 和 OSS
+yarn test --adapter=fs,oss
+```
+
 ### 多适配器验证
-每个测试用例在 3 个适配器上运行：
+每个测试用例在 4 个适配器上运行：
 - FSAdapter - 本地文件系统
 - OSSAdapter - 阿里云 OSS
 - VODAdapter - 阿里云 VOD
+- TOSAdapter - 火山引擎 TOS
+
+### 适配器跳过规则
+部分测试用例因服务端限制不适用于特定适配器，在 `run.js` 中通过 `skip` 参数配置：
+- TOSAdapter 跳过 `writePart`（TOS 要求分片最小 5MB，测试数据不足）
 
 ### 手动清理
 每个测试套件包含 clear 步骤：
@@ -147,8 +171,8 @@ process.on('unhandledRejection', (reason, p) => {
 - createUrl, toString, toJSON
 
 ### 高级操作 (3 个)
-- initMultipartUpload, writePart
-- createUploadToken (VOD 专用)
+- initMultipartUpload, writePart (TOS 跳过：分片最小 5MB 限制)
+- createUploadToken (OSS 专用，通过 `if (adapter.createUploadToken)` 守卫)
 
 ### VOD 专用 (1 个)
 - upload

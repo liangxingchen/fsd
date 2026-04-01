@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    // "strict": true,
+    "noImplicitAny": true,
+    // "strictNullChecks": true,
+    // "strictFunctionTypes": true,
+    // "strictBindCallApply": true,
+    // "strictPropertyInitialization": true,
+    // "noImplicitThis": true,
+    "alwaysStrict": true,
+    "newLine": "lf",
+    "moduleResolution": "node",
+    "module": "CommonJS",
+    "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "outDir": "lib",
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "../../packages/*",
+        "../../typings/*"
+      ]
+    },
+    "useDefineForClassFields": false,
+    "target": "ES2023",
+    "lib": [
+      "ES2023"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

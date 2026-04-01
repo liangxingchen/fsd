@@ -6,7 +6,7 @@
 
 ## 概述
 
-Node.js 通用文件存储驱动库，提供统一的抽象层支持多种存储后端（本地磁盘、阿里云 OSS、阿里云 VOD）。
+Node.js 通用文件存储驱动库，提供统一的抽象层支持多种存储后端（本地磁盘、阿里云 OSS、阿里云 VOD、火山引擎 TOS）。
 
 核心设计：**适配器模式** + **函数式 API**。使用 `FSD({ adapter })()` 创建文件对象，而非 `new File()`。
 
@@ -18,6 +18,7 @@ fsd/
 │   ├── fsd/          # 核心库 (FSDFile 抽象)
 │   ├── fsd-fs/       # 本地文件系统适配器
 │   ├── fsd-oss/      # 阿里云 OSS 适配器
+│   ├── fsd-tos/      # 火山引擎 TOS 适配器
 │   └── fsd-vod/      # 阿里云 VOD 适配器
 ├── test/             # 自定义测试用例 (22 个可复用测试模块)
 ├── typings/          # 第三方类型定义
@@ -33,6 +34,7 @@ fsd/
 | FS 适配器 | `packages/fsd-fs/src/index.ts` | 本地磁盘 |
 | OSS 适配器 | `packages/fsd-oss/src/index.ts` | 阿里云 OSS |
 | VOD 适配器 | `packages/fsd-vod/src/index.ts` | 阿里云 VOD |
+| TOS 适配器 | `packages/fsd-tos/src/index.ts` | 火山引擎 TOS |
 | 测试运行器 | `test/run.js` | 动态加载测试用例 |
 | 类型定义 | `packages/fsd/index.d.ts` | 核心 API 类型 |
 
@@ -121,19 +123,23 @@ let file = fsd('/file.txt');  // 文件
 
 ```bash
 # 构建所有包
-npm run build
+yarn build
 
 # 运行测试（所有适配器）
-npm test
+yarn test
+
+# 运行指定适配器测试
+yarn test --adapter=tos
+yarn test --adapter=fs,oss
 
 # 测试覆盖率报告
-npm run cover
+yarn cover
 
 # Lint 检查
-npm run eslint
+yarn eslint
 
 # 自动修复
-npm run fix
+yarn fix
 ```
 
 ## 注意事项

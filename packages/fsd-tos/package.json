@@ -1,0 +1,25 @@
+{
+  "name": "fsd-tos",
+  "version": "0.15.0",
+  "description": "Volcengine TOS adapter for fsd",
+  "main": "lib/index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "npm run build"
+  },
+  "repository": "https://github.com/liangxingchen/fsd/tree/master/packages/fsd-tos",
+  "author": {
+    "name": "Liang",
+    "email": "liang@miaomo.cn",
+    "url": "https://github.com/liangxingchen"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@volcengine/openapi": "^1.36.0",
+    "@volcengine/tos-sdk": "^2.9.1",
+    "debug": "^4.4.3",
+    "minimatch": "^9.0.5",
+    "slash": "^3.0.0"
+  }
+}

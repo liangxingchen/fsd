@@ -5,7 +5,7 @@ import delay from 'delay';
 
 export default function (fsd: FileGenerator) {
   test(`${fsd.adapter.name} > writePart`, (troot) => {
-    const DATA_STRING = _.repeat('上传，hello world', 10240);
+    const DATA_STRING = _.repeat('hello world. ', 322639); // TOS 要求 part 长度大于 4M
     const FILE_PATH = '/data.txt';
     const UPLOAD_FILE_PATH = '/upload.txt';
     const TASK_COUNT = 3;
@@ -43,7 +43,7 @@ export default function (fsd: FileGenerator) {
         t.equal(
           str,
           _.repeat(DATA_STRING, TASK_COUNT),
-          'File content error after completeMultipartUpload'
+          'File content check after completeMultipartUpload'
         );
       } else {
         t.fail('File not exists after completeMultipartUpload');
@@ -75,7 +75,7 @@ export default function (fsd: FileGenerator) {
         t.equal(
           str,
           _.repeat(DATA_STRING, TASK_COUNT),
-          'File content error after completeMultipartUpload'
+          'File content check after completeMultipartUpload'
         );
       } else {
         t.fail('File not exists after completeMultipartUpload');
@@ -111,7 +111,7 @@ export default function (fsd: FileGenerator) {
         let str = await uploadFile.read('utf8');
         t.ok(
           str === _.repeat(DATA_STRING, TASK_COUNT),
-          'File content error after completeMultipartUpload'
+          'File content check after completeMultipartUpload'
         );
       } else {
         t.fail('File not exists after completeMultipartUpload');

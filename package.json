@@ -15,7 +15,7 @@
     "eslint:fix": "eslint --fix",
     "prettier": "prettier -l \"./**/*\"",
     "prettier:fix": "prettier --write -l \"./**/*\"",
-    "fix": "npm run eslint:fix && npm run prettier:fix"
+    "fix": "yarn eslint:fix && yarn prettier:fix"
   },
   "repository": {
     "type": "git",
@@ -76,6 +76,7 @@
     "dotenv": "^17.3.1",
     "eslint": "^10.0.2",
     "glob": "^10.5.0",
+    "globals": "^17.4.0",
     "lerna": "^9.0.5",
     "lodash": "^4.17.23",
     "lru-cache": "^11.2.6",
