@@ -1,6 +1,6 @@
 {
   "name": "fsd-tos",
-  "version": "0.15.0",
+  "version": "0.15.2",
   "description": "Volcengine TOS adapter for fsd",
   "main": "lib/index.js",
   "types": "index.d.ts",
