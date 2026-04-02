@@ -16,10 +16,11 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@volcengine/openapi": "^1.36.0",
-    "@volcengine/tos-sdk": "^2.9.1",
+    "akita": "^1.3.0",
     "debug": "^4.4.3",
+    "mime-types": "^3.0.2",
     "minimatch": "^9.0.5",
-    "slash": "^3.0.0"
+    "slash": "^3.0.0",
+    "xml2js": "^0.6.2"
   }
 }

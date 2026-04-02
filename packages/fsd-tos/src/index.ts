@@ -2,9 +2,8 @@ import Path from 'path';
 import slash from 'slash';
 import { minimatch } from 'minimatch';
 import Debugger from 'debug';
-import { TosClient } from '@volcengine/tos-sdk';
-import { sts as volcSTS } from '@volcengine/openapi';
 import { PassThrough } from 'stream';
+import SimpleTOSClient, { assumeRole } from './simple-tos-client';
 import type {
   ReadStreamOptions,
   WriteStreamOptions,
@@ -23,8 +22,7 @@ export default class TOSAdapter {
   name: string;
   needEnsureDir: boolean;
   _options: TOSAdapterOptions;
-  _tos: TosClient;
-  _sts: volcSTS.StsService;
+  _tos: SimpleTOSClient;
   createUploadToken: (path: string, meta?: any, durationSeconds?: number) => Promise<UploadToken>;
   createUploadTokenWithAutoRefresh: (
     path: string,
@@ -47,29 +45,23 @@ export default class TOSAdapter {
       options.root = `/${options.root}`;
     }
     this._options = options;
-    this._tos = new TosClient({
+    let endpoint = options.endpoint || `tos-${options.region}.volces.com`;
+    this._tos = new SimpleTOSClient({
       accessKeyId: options.accessKeyId,
       accessKeySecret: options.accessKeySecret,
       region: options.region,
       bucket: options.bucket,
-      endpoint: options.endpoint,
+      endpoint,
       stsToken: options.stsToken,
-      secure: true,
-      requestTimeout: options.timeout
+      timeout: options.timeout
     });
-
-    if (options.accountId && options.roleName) {
-      this._sts = new volcSTS.StsService();
-      this._sts.setAccessKeyId(options.accessKeyId);
-      this._sts.setSecretKey(options.accessKeySecret);
-    }
 
     this.createUploadToken = async (path: string, meta?: any, durationSeconds?: number) => {
       if (!options.accountId || !options.roleName)
         throw new Error('Can not create sts token, missing options: accountId and roleName!');
 
       path = slash(Path.join(options.root, path)).substring(1);
-      let params = {
+      let result = await assumeRole(options.accessKeyId, options.accessKeySecret, {
         RoleTrn: `trn:iam::${options.accountId}:role/${options.roleName}`,
         RoleSessionName: 'fsd',
         Policy: JSON.stringify({
@@ -83,8 +75,7 @@ export default class TOSAdapter {
           ]
         }),
         DurationSeconds: durationSeconds || 3600
-      };
-      let result = await this._sts.AssumeRole(params);
+      });
       if (result.ResponseMetadata?.Error) {
         throw new Error(result.ResponseMetadata.Error.Message);
       }
@@ -145,7 +136,7 @@ export default class TOSAdapter {
       try {
         position = await this.size(path);
       } catch (_e) {}
-      await this._tos.appendObject({ key: p, body: data, offset: position });
+      await this._tos.append(p, data, position);
     } else {
       let chunks: Buffer[] = [];
       await new Promise<void>((resolve, reject) => {
@@ -158,7 +149,7 @@ export default class TOSAdapter {
       try {
         position = await this.size(path);
       } catch (_e) {}
-      await this._tos.appendObject({ key: p, body: buf, offset: position });
+      await this._tos.append(p, buf, position);
     }
   }
 
@@ -169,18 +160,20 @@ export default class TOSAdapter {
     debug('createReadStream %s options: %o', path, options);
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substring(1);
-    let input: any = { key: p };
+    let opts: any = {};
     if (options) {
       if (typeof options.start === 'number') {
-        input.rangeStart = options.start;
+        opts.headers = opts.headers || {};
+        opts.headers['Range'] = `bytes=${options.start}-`;
       }
       if (typeof options.end === 'number') {
-        input.rangeEnd = options.end;
+        opts.headers = opts.headers || {};
+        let start = options.start || 0;
+        opts.headers['Range'] = `bytes=${start}-${options.end}`;
       }
     }
-    // Default dataType='stream' returns GetObjectV2OutputStream with content: NodeJS.ReadableStream
-    let result: any = await this._tos.getObjectV2(input);
-    return result.data.content;
+    let result: any = await this._tos.get(p, opts).response();
+    return result.body;
   }
 
   async createWriteStream(
@@ -192,7 +185,7 @@ export default class TOSAdapter {
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substring(1);
     let stream: NodeJS.WritableStream & WithPromise = new PassThrough();
-    stream.promise = this._tos.putObject({ key: p, body: stream as any });
+    stream.promise = this._tos.put(p, stream as any);
     return stream;
   }
 
@@ -208,16 +201,16 @@ export default class TOSAdapter {
           continuationToken,
           maxKeys: 1000
         });
-        debug('unlink list: %O', result.data);
-        let list = result.data;
+        debug('unlink list: %O', result);
+        let list = result;
         continuationToken = list.NextContinuationToken || '';
         if (list.Contents?.length) {
           let objects = list.Contents.map((o) => ({ key: o.Key }));
-          await this._tos.deleteMultiObjects({ objects, quiet: true });
+          await this._tos.deleteMultiObjects(objects, { quiet: true });
         }
       } while (continuationToken);
     } else {
-      await this._tos.deleteObject({ key: p });
+      await this._tos.del(p);
     }
   }
 
@@ -233,7 +226,7 @@ export default class TOSAdapter {
     }
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substring(1);
-    await this._tos.putObject({ key: p, body: Buffer.from('') });
+    await this._tos.put(p, Buffer.from(''));
   }
 
   async readdir(
@@ -263,12 +256,12 @@ export default class TOSAdapter {
         continuationToken,
         maxKeys: 1000
       });
-      let list = result.data;
+      let list = result;
       debug('list: %O', list);
       continuationToken = list.NextContinuationToken || '';
       if (list.Contents) {
         hasContents = true;
-        list.Contents.forEach((object) => {
+        list.Contents.forEach((object: any) => {
           let relative = slash(Path.relative(p, object.Key));
           if (!relative) return;
           if (object.Key.endsWith('/')) relative += '/';
@@ -284,7 +277,7 @@ export default class TOSAdapter {
       }
       if (list.CommonPrefixes) {
         hasCommonPrefixes = true;
-        list.CommonPrefixes.forEach((item) => {
+        list.CommonPrefixes.forEach((item: any) => {
           let relative = slash(Path.relative(p, item.Prefix));
           if (!relative) return;
           relative += '/';
@@ -310,9 +303,8 @@ export default class TOSAdapter {
     if (urlPrefix && publicRead) {
       return urlPrefix + p;
     }
-    let url = this._tos.getPreSignedUrl({
+    let url = this._tos.getPreSignedUrl(p.substring(1), {
       method: 'GET',
-      key: p.substring(1),
       expires: options?.expires || 3600,
       response: options?.response as any
     });
@@ -340,7 +332,7 @@ export default class TOSAdapter {
           continuationToken,
           maxKeys: 1000
         });
-        let list = result.data;
+        let list = result;
         debug('list result: %O', list);
         continuationToken = list.NextContinuationToken || '';
         if (list.Contents?.length) {
@@ -348,21 +340,13 @@ export default class TOSAdapter {
             debug(' -> copy %s', object.Key);
             let relative = slash(Path.relative(from, object.Key));
             let target = slash(Path.join(to, relative));
-            await this._tos.copyObject({
-              key: target,
-              srcBucket: bucket,
-              srcKey: object.Key
-            });
+            await this._tos.copyObject(target, bucket, object.Key);
           }
         }
       } while (continuationToken);
     } else {
       debug('copy file %s -> %s', from, to);
-      await this._tos.copyObject({
-        key: to,
-        srcBucket: bucket,
-        srcKey: from
-      });
+      await this._tos.copyObject(to, bucket, from);
     }
   }
 
@@ -385,10 +369,10 @@ export default class TOSAdapter {
         prefix: p,
         maxKeys: 1
       });
-      return result.data.Contents !== null && result.data.Contents.length > 0;
+      return Array.isArray(result.Contents) && result.Contents.length > 0;
     }
     try {
-      await this._tos.headObject({ key: p });
+      await this._tos.head(p);
       return true;
     } catch (_e) {
       return false;
@@ -400,7 +384,7 @@ export default class TOSAdapter {
     const { root } = this._options;
     let p = slash(Path.join(root, path)).substring(1);
     try {
-      await this._tos.headObject({ key: p });
+      await this._tos.head(p);
       return true;
     } catch (_e) {
       return false;
@@ -411,7 +395,7 @@ export default class TOSAdapter {
     debug('check is directory %s', path);
     let p = slash(Path.join(this._options.root, path)).substring(1);
     try {
-      await this._tos.headObject({ key: p });
+      await this._tos.head(p);
       return true;
     } catch (_e) {
       return false;
@@ -421,22 +405,22 @@ export default class TOSAdapter {
   async size(path: string): Promise<number> {
     debug('get file size %s', path);
     let p = slash(Path.join(this._options.root, path)).substring(1);
-    let result = await this._tos.headObject({ key: p });
-    return parseInt(result.data['content-length']) || 0;
+    let result = await this._tos.head(p);
+    return parseInt(result.headers.get('content-length')) || 0;
   }
 
   async lastModified(path: string): Promise<Date> {
     debug('get file lastModified %s', path);
     let p = slash(Path.join(this._options.root, path)).substring(1);
-    let result = await this._tos.headObject({ key: p });
-    return new Date(result.data['last-modified']);
+    let result = await this._tos.head(p);
+    return new Date(result.headers.get('last-modified'));
   }
 
   async initMultipartUpload(path: string, partCount: number): Promise<Task[]> {
     debug('initMultipartUpload %s, partCount: %d', path, partCount);
     let p = slash(Path.join(this._options.root, path)).substring(1);
-    let result = await this._tos.createMultipartUpload({ key: p });
-    let uploadId = result.data.UploadId;
+    let result = await this._tos.createMultipartUpload(p);
+    let uploadId = result.UploadId;
     let files = [];
     for (let i = 1; i <= partCount; i += 1) {
       files.push(`task://${uploadId}?${i}`);
@@ -456,13 +440,9 @@ export default class TOSAdapter {
     if (!partTask.startsWith('task://')) throw new Error('Invalid part task id');
 
     let [uploadId, no] = partTask.replace('task://', '').split('?');
-    let result = await this._tos.uploadPart({
-      key: p,
-      uploadId,
-      partNumber: parseInt(no),
-      body: data
-    });
-    let etag = result.data.ETag;
+    let result = await this._tos.uploadPart(p, uploadId, parseInt(no), data);
+    let etag = result.headers.get('etag') || result.ETag || '';
+    etag = etag.replace(/"/g, '');
     return `${partTask.replace('task://', 'part://')}#${etag}`;
   }
 
@@ -475,10 +455,6 @@ export default class TOSAdapter {
       eTag: item.split('#')[1],
       partNumber: key + 1
     }));
-    await this._tos.completeMultipartUpload({
-      key: p,
-      uploadId,
-      parts: mappedParts
-    });
+    await this._tos.completeMultipartUpload(p, uploadId, mappedParts);
   }
 }
